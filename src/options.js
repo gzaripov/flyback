@@ -1,4 +1,5 @@
 import Logger from "./logger"
+import { parseUrl } from './utils/url'
 
 export const RecordMode = {
   NEW: "NEW", // If no tape matches the request, proxy it and save the response to a tape
@@ -14,7 +15,8 @@ export const FallbackMode = {
 FallbackMode.ALL = [FallbackMode.NOT_FOUND, FallbackMode.PROXY]
 
 const defaultOptions = {
-  port: 8080,
+  proxyUrl: undefined,
+  talkbackUrl: 'localhost:8080',
   path: "./tapes/",
   record: RecordMode.NEW,
   name: "unnamed",
@@ -50,7 +52,7 @@ export default class Options {
 
     const opts = {
       ...defaultOptions,
-      name: usrOpts.host,
+      name: usrOpts.proxyUrl,
       ...usrOpts,
       ignoreHeaders: [
         ...defaultOptions.ignoreHeaders,

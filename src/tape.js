@@ -22,7 +22,7 @@ export default class Tape {
 
     this.meta = {
       createdAt: new Date(),
-      host: this.options.host
+      endpoint: this.options.proxyUrl
     }
   }
 

@@ -80,14 +80,13 @@ export default class RequestHandler {
     const headers = {...req.headers}
     delete headers.host
 
-    const host = this.options.host
-    this.options.logger.log(`Making real request to ${host}${url}`)
+    const endpoint = this.options.proxyUrl
+    this.options.logger.log(`Making real request to ${endpoint}${url}`)
 
     if (method === "GET" || method === "HEAD") {
       body = null
     }
-
-    const fRes = await fetch(host + url, {method, headers, body, compress: false, redirect: "manual"})
+    const fRes = await fetch(endpoint + url, {method, headers, body, compress: false, redirect: "manual"})
     const buff = await fRes.buffer()
     return {
       status: fRes.status,

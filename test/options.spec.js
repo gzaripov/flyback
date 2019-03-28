@@ -18,12 +18,12 @@ describe("Options", () => {
     expect(opts.ignoreHeaders.length >= 0).to.eql(true)
   })
 
-  it("defaults name to the host", () => {
-    const host = "https://my-api.com"
-    let opts = Options.prepare({host})
-    expect(opts.name).to.eql(host)
+  it("defaults name to the proxyUrl", () => {
+    const proxyUrl = "https://my-api.com"
+    let opts = Options.prepare({ proxyUrl })
+    expect(opts.name).to.eql(proxyUrl)
 
-    opts = Options.prepare({host, name: "My Server"})
+    opts = Options.prepare({ proxyUrl, name: "My Server"})
     expect(opts.name).to.eql("My Server")
   })
 

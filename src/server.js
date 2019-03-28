@@ -5,6 +5,7 @@ const fs = require("fs");
 import RequestHandler from "./request-handler"
 import Summary from "./summary"
 import TapeStore from "./tape-store"
+import { parseUrl } from './utils/url';
 
 export default class TalkbackServer {
   constructor(options) {
@@ -46,15 +47,21 @@ export default class TalkbackServer {
     }  : () => http.createServer(app);
 
     this.server = serverFactory();
-    console.log(`Starting talkback on ${this.options.port}`)
-    this.server.listen(this.options.port, callback)
-
+    console.log(`Starting talkback on ${this.options.talkbackUrl}`)
+    const url = parseUrl(this.options.talkbackUrl);
+    const promise = new Promise((resolve) => {
+      this.server.listen(url, () => {
+        console.log(`Server started on ${JSON.stringify(url)}`)
+        callback && callback();
+        resolve(this.server);
+      })
+    })
     this.closeSignalHandler = this.close.bind(this)
     process.on("exit", this.closeSignalHandler)
     process.on("SIGINT", this.closeSignalHandler)
     process.on("SIGTERM", this.closeSignalHandler)
 
-    return this.server
+    return promise;
   }
 
   hasTapeBeenUsed(tapeName) {
