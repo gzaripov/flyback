@@ -23,7 +23,7 @@ const startTalkback = async (opts, callback) => {
       path: tapesPath,
       record: RecordMode.NEW,
       silent: true,
-      bodyMatcher: (tape, req) => {
+      bodyMatcher: (tape) => {
         return tape.meta.tag === "echo"
       },
       responseDecorator: (tape, req) => {
@@ -44,7 +44,7 @@ const startTalkback = async (opts, callback) => {
   )
   await talkbackServer.start(callback)
 
-  currentTapeId = talkbackServer.tapeStore.currentTapeId() + 1
+  currentTapeId = talkbackServer.tapeStoreManager.getTapeStore().currentTapeId() + 1
   return talkbackServer
 }
 
@@ -157,7 +157,7 @@ describe("talkback", () => {
     it("proxies and creates a new tape with a custom tape name generator", async () => {
       talkbackServer = await startTalkback(
         {
-          tapeNameGenerator: (tapeNumber, tape) => {
+          tapeNameGenerator: (tape, tapeNumber) => {
             return path.join('new-tapes', `${tape.req.method}`, `my-tape-${tapeNumber}`)
           }
         }
@@ -346,7 +346,7 @@ describe("talkback", () => {
 
     it("returns a 500 if anything goes wrong", async () => {
       talkbackServer = await startTalkback({record: RecordMode.DISABLED})
-      td.replace(talkbackServer, "tapeStore", {
+      td.replace(talkbackServer, "tapeStoreManager", {
         find: () => {
           throw "Test error"
         }

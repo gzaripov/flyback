@@ -1,5 +1,7 @@
 import MediaType from "./utils/media-type"
 
+const URL = require("url")
+const querystring = require("querystring")
 export default class TapeMatcher {
   constructor(tape, options) {
     this.tape = tape
@@ -73,5 +75,29 @@ export default class TapeMatcher {
       }
     }
     return true
+  }
+
+  matchQueryParams() {
+    if (this.queryParamsToIgnore.length === 0) {
+      return
+    }
+
+    const url = URL.parse(this.req.url, {parseQueryString: true})
+    if (!url.search) {
+      return
+    }
+
+    const query = {...url.query}
+    this.queryParamsToIgnore.forEach(q => delete query[q])
+
+    const newQuery = querystring.stringify(query)
+    if (newQuery) {
+      url.query = query
+      url.search = "?" + newQuery
+    } else {
+      url.query = null
+      url.search = null
+    }
+    this.req.url = URL.format(url)
   }
 }

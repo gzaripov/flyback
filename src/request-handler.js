@@ -1,11 +1,12 @@
 const fetch = require("node-fetch")
 
 import Tape from "./tape"
+// import TapeStore
 import Options, {RecordMode, FallbackMode} from "./options"
 
 export default class RequestHandler {
-  constructor(tapeStore, options) {
-    this.tapeStore = tapeStore
+  constructor(tapeStoreManager, options) {
+    this.tapeStoreManager = tapeStoreManager
     this.options = options
   }
 
@@ -15,8 +16,9 @@ export default class RequestHandler {
 
     Options.validateRecord(recordMode)
 
-    let newTape = new Tape(req, this.options)
-    let matchingTape = this.tapeStore.find(newTape)
+    const newTape = new Tape(req, this.options)
+    const tapeStore = this.tapeStoreManager.getTapeStore(newTape);
+    const matchingTape = tapeStore.find(newTape)
     let resObj, responseTape
 
     if (recordMode !== RecordMode.OVERWRITE && matchingTape) {
@@ -31,7 +33,7 @@ export default class RequestHandler {
       if (recordMode === RecordMode.NEW || recordMode === RecordMode.OVERWRITE) {
         resObj = await this.makeRealRequest(req)
         responseTape.res = {...resObj}
-        this.tapeStore.save(responseTape)
+        tapeStore.save(responseTape)
       } else {
         resObj = await this.onNoRecord(req)
         responseTape.res = {...resObj}
@@ -86,7 +88,8 @@ export default class RequestHandler {
     if (method === "GET" || method === "HEAD") {
       body = null
     }
-    const fRes = await fetch(endpoint + url, {method, headers, body, compress: false, redirect: "manual"})
+    const agent = this.options.agent  ||  undefined;
+    const fRes = await fetch(endpoint + url, {method, headers, body, compress: false, redirect: "manual", agent: agent})
     const buff = await fRes.buffer()
     return {
       status: fRes.status,

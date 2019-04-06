@@ -1,6 +1,6 @@
 {
   "name": "talkback",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "main": "dist/index.js",
   "license": "MIT",
   "description": "A node.js HTTP proxy that records and playbacks requests",
@@ -46,7 +46,7 @@
     "vcr",
     "playback"
   ],
-  "author": "Ignacio Piantanida",
+  "author": "Grigory Zaripov",
   "scripts": {
     "build": "node tools/build.js",
     "ci": "yarn test && yarn build && USE_DIST=1 yarn test",

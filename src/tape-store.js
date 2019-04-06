@@ -12,13 +12,14 @@ export default class TapeStore {
     this.path = path.normalize(options.path + "/")
     this.options = options
     this.tapes = []
+    this.load();
   }
 
   load() {
     mkdirp.sync(this.path)
 
     this.loadTapesAtDir(this.path)
-    console.log(`Loaded ${this.tapes.length} tapes`)
+    this.options.logger.log(`Loaded ${this.tapes.length} tapes`)
   }
 
   loadTapesAtDir(directory) {
@@ -94,7 +95,7 @@ export default class TapeStore {
     const currentTapeId = this.currentTapeId()
     let tapePath = `unnamed-${currentTapeId}.json5`
     if (this.options.tapeNameGenerator) {
-      tapePath = this.options.tapeNameGenerator(currentTapeId, tape)
+      tapePath = this.options.tapeNameGenerator(tape, currentTapeId)
     }
     let result = path.normalize(path.join(this.options.path, tapePath))
     if (!result.endsWith(".json5")) {
@@ -104,5 +105,9 @@ export default class TapeStore {
     mkdirp.sync(dir)
 
     return result
+  }
+
+  hasPath(pathToCheck) {
+    return this.path === path.normalize(pathToCheck + "/")
   }
 }

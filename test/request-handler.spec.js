@@ -1,9 +1,9 @@
 import RequestHandler from "../src/request-handler"
 import Tape from "../src/tape"
-import TapeStore from "../src/tape-store"
 import Options, {FallbackMode, RecordMode} from "../src/options"
+import TapeStoreManager from "../src/tape-store-manager";
 
-let tapeStore, reqHandler, opts, savedTape, anotherRes
+let tapeStoreManager, reqHandler, opts, savedTape, anotherRes
 
 const rawTape = {
   meta: {
@@ -35,14 +35,14 @@ function prepareForExternalRequest() {
   td.when(fakeMakeRealRequest(td.matchers.anything())).thenReturn(anotherRes)
   td.replace(reqHandler, "makeRealRequest", fakeMakeRealRequest)
 
-  td.replace(tapeStore, "save")
+  td.replace(tapeStoreManager.getTapeStore(), "save")
 }
 
 describe("RequestHandler", () => {
   beforeEach(() => {
     opts = Options.prepare({debug: false, record: RecordMode.NEW})
-    tapeStore = new TapeStore(opts)
-    reqHandler = new RequestHandler(tapeStore, opts)
+    tapeStoreManager = new TapeStoreManager(opts)
+    reqHandler = new RequestHandler(tapeStoreManager, opts)
 
     savedTape = Tape.fromStore(rawTape, opts)
     anotherRes = {
@@ -55,7 +55,7 @@ describe("RequestHandler", () => {
     context("when request opt is 'NEW'", () => {
       context("when the request matches a tape", () => {
         beforeEach(() => {
-          tapeStore.tapes = [savedTape]
+          tapeStoreManager.getTapeStore().tapes = [savedTape]
         })
 
         it("returns the matched tape response", async () => {
@@ -108,7 +108,7 @@ describe("RequestHandler", () => {
           expect(resObj.status).to.eql(200)
           expect(resObj.body).to.eql(Buffer.from("Foobar"))
 
-          td.verify(tapeStore.save(td.matchers.anything()))
+          td.verify(tapeStoreManager.getTapeStore().save(td.matchers.anything()))
         })
 
         context("when there's a responseDecorator", () => {
@@ -141,7 +141,7 @@ describe("RequestHandler", () => {
 
       context("when the request matches a tape", () => {
         beforeEach(() => {
-          tapeStore.tapes = [savedTape]
+          tapeStoreManager.tapes = [savedTape]
         })
 
         it("makes the real request and returns the response, saving the tape", async () => {
@@ -149,7 +149,7 @@ describe("RequestHandler", () => {
           expect(resObj.status).to.eql(200)
           expect(resObj.body).to.eql(Buffer.from("Foobar"))
 
-          td.verify(tapeStore.save(td.matchers.anything()))
+          td.verify(tapeStoreManager.getTapeStore().save(td.matchers.anything()))
         })
       })
 
@@ -159,7 +159,7 @@ describe("RequestHandler", () => {
           expect(resObj.status).to.eql(200)
           expect(resObj.body).to.eql(Buffer.from("Foobar"))
 
-          td.verify(tapeStore.save(td.matchers.anything()))
+          td.verify(tapeStoreManager.getTapeStore().save(td.matchers.anything()))
         })
       })
     })
@@ -171,7 +171,7 @@ describe("RequestHandler", () => {
 
       context("when the request matches a tape", () => {
         beforeEach(() => {
-          tapeStore.tapes = [savedTape]
+          tapeStoreManager.getTapeStore().tapes = [savedTape]
         })
 
         it("returns the matched tape response", async () => {
@@ -205,7 +205,7 @@ describe("RequestHandler", () => {
             expect(resObj.status).to.eql(200)
             expect(resObj.body).to.eql(Buffer.from("Foobar"))
 
-            td.verify(tapeStore.save(td.matchers.anything()), {times: 0})
+            td.verify(tapeStoreManager.getTapeStore().save(td.matchers.anything()), {times: 0})
           })
         })
 
@@ -280,7 +280,7 @@ describe("RequestHandler", () => {
         expect(resObj.status).to.eql(200)
         expect(resObj.body).to.eql(Buffer.from("Foobar"))
 
-        td.verify(tapeStore.save(td.matchers.anything()))
+        td.verify(tapeStoreManager.getTapeStore().save(td.matchers.anything()))
       })
     })
   })
