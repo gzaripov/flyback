@@ -28,6 +28,7 @@ const defaultOptions = {
     certPath: null
   },
   ignoreHeaders: ["content-length", "host"],
+  ignoreAllHeaders: false,
   ignoreQueryParams: [],
   ignoreBody: false,
 
@@ -35,6 +36,8 @@ const defaultOptions = {
   urlMatcher: null,
 
   responseDecorator: null,
+
+  tapePathGenerator: null,
 
   fallbackMode: FallbackMode.NOT_FOUND,
 

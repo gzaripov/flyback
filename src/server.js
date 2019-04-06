@@ -4,13 +4,13 @@ const fs = require("fs");
 
 import RequestHandler from "./request-handler"
 import Summary from "./summary"
-import TapeStore from "./tape-store"
+import TapeStoreManager from "./tape-store-manager"
 import { parseUrl } from './utils/url';
 
 export default class TalkbackServer {
   constructor(options) {
     this.options = options
-    this.tapeStore = new TapeStore(this.options)
+    this.tapeStoreManager = new TapeStoreManager(this.options);
   }
 
   handleRequest(req, res) {
@@ -21,7 +21,7 @@ export default class TalkbackServer {
       try {
         reqBody = Buffer.concat(reqBody)
         req.body = reqBody
-        const requestHandler = new RequestHandler(this.tapeStore, this.options)
+        const requestHandler = new RequestHandler(this.tapeStoreManager, this.options)
         const fRes = await requestHandler.handle(req)
 
         res.writeHead(fRes.status, fRes.headers)
@@ -35,7 +35,6 @@ export default class TalkbackServer {
   }
 
   start(callback) {
-    this.tapeStore.load()
     const app = this.handleRequest.bind(this);
 
     const serverFactory = this.options.https.enabled ? () => {
@@ -51,7 +50,6 @@ export default class TalkbackServer {
     const url = parseUrl(this.options.talkbackUrl);
     const promise = new Promise((resolve) => {
       this.server.listen(url, () => {
-        console.log(`Server started on ${JSON.stringify(url)}`)
         callback && callback();
         resolve(this.server);
       })
@@ -65,11 +63,11 @@ export default class TalkbackServer {
   }
 
   hasTapeBeenUsed(tapeName) {
-    return this.tapeStore.hasTapeBeenUsed(tapeName);
+    return this.tapeStoreManager.hasTapeBeenUsed(tapeName);
   }
 
   resetTapeUsage() {
-    this.tapeStore.resetTapeUsage();
+    this.tapeStoreManager.resetTapeUsage();
   }
 
   close(callback) {
@@ -84,7 +82,7 @@ export default class TalkbackServer {
     process.removeListener("SIGTERM", this.closeSignalHandler)
 
     if (this.options.summary) {
-      const summary = new Summary(this.tapeStore.tapes, this.options)
+      const summary = new Summary(this.tapeStoreManager.getAllTapes(), this.options)
       summary.print()
     }
   }
