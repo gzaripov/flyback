@@ -1,14 +1,19 @@
 {
   "presets": [
-    ["@babel/env", {
-      "targets": {
-        "node": "current"
+    "@babel/preset-typescript",
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "node": "8.12.0"
+        },
+        "modules": "commonjs"
       }
-    }]
+    ]
   ],
   "plugins": [
-    "istanbul",
-    "@babel/plugin-proposal-object-rest-spread",
+    "@babel/plugin-transform-modules-commonjs",
+    "@babel/plugin-proposal-class-properties",
     "@babel/plugin-transform-runtime"
   ]
 }

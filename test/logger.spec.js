@@ -1,60 +1,71 @@
-import Logger from "../src/logger"
+import Logger from '../src/logger.ts';
 
-let log, debug, error
-describe("Logger", () => {
+let log;
+
+let debug;
+
+let error;
+
+describe('Logger', () => {
   beforeEach(() => {
-    log = td.replace(console, 'log')
-    debug = td.replace(console, 'debug')
-    error = td.replace(console, 'error')
-  })
+    log = td.replace(console, 'log');
+    debug = td.replace(console, 'debug');
+    error = td.replace(console, 'error');
+  });
 
-  afterEach(() => td.reset())
+  afterEach(() => td.reset());
 
-  describe("#log", () => {
-    it("does nothing if silent option is enabled", () => {
-      const logger = new Logger({silent: true})
-      logger.log("Test")
+  describe('#log', () => {
+    it('does nothing if silent option is enabled', () => {
+      const logger = new Logger({ silent: true });
 
-      td.verify(log("Test"), {times: 0})
-    })
+      logger.log('Test');
 
-    it("writes to log console if silent option is disabled", () => {
-      const logger = new Logger({silent: false})
-      logger.log("Test")
+      td.verify(log('Test'), { times: 0 });
+    });
 
-      td.verify(log("Test"))
-    })
-  })
+    it('writes to log console if silent option is disabled', () => {
+      const logger = new Logger({ silent: false });
 
-  describe("#debug", () => {
-    it("does nothing if debug option is disabled", () => {
-      const logger = new Logger({debug: false})
-      logger.debug("Test")
+      logger.log('Test');
 
-      td.verify(debug("Test"), {times: 0})
-    })
+      td.verify(log('Test'));
+    });
+  });
 
-    it("writes to debug console if debug option is enabled", () => {
-      const logger = new Logger({debug: true})
-      logger.debug("Test")
+  describe('#debug', () => {
+    it('does nothing if debug option is disabled', () => {
+      const logger = new Logger({ debug: false });
 
-      td.verify(debug("Test"))
-    })
-  })
+      logger.debug('Test');
 
-  describe("#error", () => {
-    it("writes to error console if silent option is enabled", () => {
-      const logger = new Logger({silent: true})
-      logger.error("Test")
+      td.verify(debug('Test'), { times: 0 });
+    });
 
-      td.verify(error("Test"))
-    })
+    it('writes to debug console if debug option is enabled', () => {
+      const logger = new Logger({ debug: true });
 
-    it("writes to error console if silent option is disabled", () => {
-      const logger = new Logger({silent: false})
-      logger.error("Test")
+      logger.debug('Test');
 
-      td.verify(error("Test"))
-    })
-  })
-})
+      td.verify(debug('Test'));
+    });
+  });
+
+  describe('#error', () => {
+    it('writes to error console if silent option is enabled', () => {
+      const logger = new Logger({ silent: true });
+
+      logger.error('Test');
+
+      td.verify(error('Test'));
+    });
+
+    it('writes to error console if silent option is disabled', () => {
+      const logger = new Logger({ silent: false });
+
+      logger.error('Test');
+
+      td.verify(error('Test'));
+    });
+  });
+});
