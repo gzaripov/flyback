@@ -1,6 +1,6 @@
 import fetch, { Headers as FetchHeaders } from 'node-fetch';
 import Tape from './tape';
-import { Opts, Options } from './options';
+import { validateRecord, validateFallbackMode, Options } from './options';
 import TapeStoreManager from './tape-store-manager';
 import { Request, Response } from './types/http';
 
@@ -17,7 +17,7 @@ export default class RequestHandler {
     const recordMode =
       typeof this.options.record !== 'function' ? this.options.record : this.options.record(req);
 
-    Opts.validateRecord(recordMode);
+    validateRecord(recordMode);
 
     const newTape = new Tape(req, this.options);
     const tapeStore = this.tapeStoreManager.getTapeStore(newTape);
@@ -72,7 +72,7 @@ export default class RequestHandler {
         ? this.options.fallbackMode
         : this.options.fallbackMode(req);
 
-    Opts.validateFallbackMode(fallbackMode);
+    validateFallbackMode(fallbackMode);
 
     this.options.logger.log(
       `Tape for ${req.url} not found and recording is disabled (fallbackMode: ${fallbackMode})`,

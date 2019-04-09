@@ -1,11 +1,10 @@
-import { UserOptions } from './options';
+import { Options } from './options';
 
-/* eslint-disable no-console */
 export default class Logger {
-  private options: UserOptions;
+  private options: Options;
 
-  constructor(options?: UserOptions) {
-    this.options = options || ({} as UserOptions);
+  constructor(options?: Options) {
+    this.options = options || ({} as Options);
     if (this.options.debug) {
       console.debug('DEBUG mode active');
     }

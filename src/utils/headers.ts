@@ -11,12 +11,9 @@ const HeadersUtil = {
     }
   },
 
-  write(headers: Headers, headerName: string, value: string, type: string) {
-    if (type !== 'req') {
-      throw new Error('expect type req');
-    }
+  write(headers: Headers, headerName: string, value: string) {
     headers[headerName] = [value];
   },
 };
 
-export { HeadersUtil, Headers };
+export { HeadersUtil };

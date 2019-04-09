@@ -17,7 +17,7 @@ export default class TapeStoreManager {
     }
   }
 
-  getTapeStore(tape: Tape) {
+  getTapeStore(tape?: Tape) {
     if (tape && this.options.tapePathGenerator) {
       const path = this.options.tapePathGenerator(tape);
 

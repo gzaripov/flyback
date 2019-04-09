@@ -1,0 +1,494 @@
+import JSON5 from 'json5';
+import fs from 'fs';
+import path from 'path';
+import fetch from 'node-fetch';
+import del from 'del';
+import talkback from '../src/index';
+import testServer from './support/test-server';
+import { parseUrl } from '../src/utils/url';
+
+let talkbackServer;
+let proxiedServer;
+let currentTapeId;
+const tapesPath = `${__dirname}/tapes`;
+
+const proxyUrl = `http://localhost:8898`;
+const talkbackUrl = `http://localhost:8899`;
+
+function readJSONFromFile(tapesPath, currentTapeId) {
+  return JSON5.parse(fs.readFileSync(`${tapesPath}/unnamed-${currentTapeId}.json5`).toString());
+}
+
+const startTalkback = async (opts?, callback?) => {
+  const talkbackServer = talkback({
+    proxyUrl,
+    talkbackUrl,
+    path: tapesPath,
+    record: 'NEW',
+    silent: true,
+    bodyMatcher: (tape) => {
+      return tape.meta.tag === 'echo';
+    },
+    responseDecorator: (tape, req) => {
+      if (tape.meta.tag === 'echo') {
+        tape.res.body = req.body;
+      }
+
+      let location = tape.res.headers['location'];
+
+      if (location && location[0]) {
+        location = location[0];
+        tape.res.headers['location'] = [location.replace(proxyUrl, talkbackUrl)];
+      }
+
+      return tape;
+    },
+    ...opts,
+  });
+
+  await talkbackServer.start(callback);
+
+  currentTapeId = talkbackServer.tapeStoreManager.getTapeStore().currentTapeId() + 1;
+
+  return talkbackServer;
+};
+
+const cleanupTapes = () => {
+  // Delete all unnamed tapes
+  const files = fs.readdirSync(tapesPath);
+
+  for (let i = 0, len = files.length; i < len; i++) {
+    const match = files[i].match(/unnamed-/);
+
+    if (match !== null) {
+      fs.unlinkSync(path.join(tapesPath, files[i]));
+    }
+  }
+  const newTapesPath = path.join(tapesPath, 'new-tapes');
+
+  del.sync(newTapesPath);
+};
+
+describe('talkback', () => {
+  beforeEach(() => cleanupTapes());
+
+  beforeAll(async () => {
+    proxiedServer = testServer();
+    await proxiedServer.listen(parseUrl(proxyUrl));
+  });
+
+  afterAll(() => {
+    if (proxiedServer) {
+      proxiedServer.close();
+      proxiedServer = null;
+    }
+  });
+
+  afterEach(() => {
+    if (talkbackServer) {
+      talkbackServer.close();
+      talkbackServer = null;
+    }
+  });
+
+  describe('## record mode NEW', () => {
+    it('proxies and creates a new tape when the POST request is unknown with human readable req and res', async () => {
+      talkbackServer = await startTalkback();
+
+      const reqBody = JSON.stringify({ foo: 'bar' });
+      const headers = { 'content-type': 'application/json' };
+      const res = await fetch(`${talkbackUrl}/test/1`, {
+        compress: false,
+        method: 'POST',
+        headers,
+        body: reqBody,
+      });
+
+      expect(res.status).toEqual(200);
+
+      const expectedResBody = { ok: true, body: { foo: 'bar' } };
+      const body = await res.json();
+
+      expect(body).toEqual(expectedResBody);
+
+      const tape = JSON5.parse(
+        fs.readFileSync(`${tapesPath}/unnamed-${currentTapeId}.json5`).toString(),
+      );
+
+      expect(tape.meta.reqHumanReadable).toEqual(true);
+      expect(tape.meta.resHumanReadable).toEqual(true);
+      expect(tape.req.url).toEqual('/test/1');
+      expect(tape.res.body).toEqual(expectedResBody);
+    });
+
+    it('proxies and creates a new tape when the GET request is unknown', async () => {
+      talkbackServer = await startTalkback();
+
+      const res = await fetch(`${talkbackUrl}/test/1`, { compress: false, method: 'GET' });
+
+      expect(res.status).toEqual(200);
+
+      const expectedResBody = { ok: true, body: null };
+      const body = await res.json();
+
+      expect(body).toEqual(expectedResBody);
+
+      const tape = readJSONFromFile(tapesPath, currentTapeId);
+
+      expect(tape.meta.reqHumanReadable).toEqual(undefined);
+      expect(tape.meta.resHumanReadable).toEqual(true);
+      expect(tape.req.url).toEqual('/test/1');
+      expect(tape.res.body).toEqual(expectedResBody);
+    });
+
+    it('proxies and creates a new tape when the POST request is unknown with human readable req and res', async () => {
+      talkbackServer = await startTalkback();
+
+      const reqBody = JSON.stringify({ foo: 'bar' });
+      const headers = { 'content-type': 'application/json' };
+      const res = await fetch(`${talkbackUrl}/test/1`, {
+        compress: false,
+        method: 'POST',
+        headers,
+        body: reqBody,
+      });
+
+      expect(res.status).toEqual(200);
+
+      const expectedResBody = { ok: true, body: { foo: 'bar' } };
+      const body = await res.json();
+
+      expect(body).toEqual(expectedResBody);
+
+      const tape = JSON5.parse(fs.readFileSync(`${tapesPath}/unnamed-${currentTapeId}.json5`));
+
+      expect(tape.meta.reqHumanReadable).toEqual(true);
+      expect(tape.meta.resHumanReadable).toEqual(true);
+      expect(tape.req.url).toEqual('/test/1');
+      expect(tape.res.body).toEqual(expectedResBody);
+    });
+
+    it('proxies and creates a new tape when the HEAD request is unknown', async () => {
+      talkbackServer = await startTalkback();
+
+      const headers = { 'content-type': 'application/json' };
+      const res = await fetch(`${talkbackUrl}/test/head`, { method: 'HEAD', headers });
+
+      expect(res.status).toEqual(200);
+
+      const tape = JSON5.parse(fs.readFileSync(`${tapesPath}/unnamed-${currentTapeId}.json5`));
+
+      expect(tape.meta.reqHumanReadable).toEqual(undefined);
+      expect(tape.meta.resHumanReadable).toEqual(undefined);
+      expect(tape.req.url).toEqual('/test/head');
+      expect(tape.req.body).toEqual('');
+      expect(tape.res.body).toEqual('');
+    });
+
+    it('proxies and creates a new tape with a custom tape name generator', async () => {
+      talkbackServer = await startTalkback({
+        tapeNameGenerator: (tape, tapeNumber) => {
+          return path.join('new-tapes', `${tape.req.method}`, `my-tape-${tapeNumber}`);
+        },
+      });
+
+      const res = await fetch(`${talkbackUrl}/test/1`, { compress: false, method: 'GET' });
+
+      expect(res.status).toEqual(200);
+
+      const tape = JSON5.parse(
+        fs.readFileSync(`${tapesPath}/new-tapes/GET/my-tape-${currentTapeId}.json5`),
+      );
+
+      expect(tape.req.url).toEqual('/test/1');
+    });
+
+    it('decorates proxied responses', async () => {
+      talkbackServer = await startTalkback();
+
+      const res = await fetch(`${talkbackUrl}/test/redirect/1`, {
+        compress: false,
+        method: 'GET',
+        redirect: 'manual',
+      });
+
+      expect(res.status).toEqual(302);
+
+      const location = res.headers.get('location');
+
+      expect(location).toEqual(`${talkbackUrl}/test/1`);
+    });
+
+    it('handles when the proxied server returns a 500', async () => {
+      talkbackServer = await startTalkback();
+
+      const res = await fetch(`${talkbackUrl}/test/3`);
+
+      expect(res.status).toEqual(500);
+
+      const tape = JSON5.parse(fs.readFileSync(`${tapesPath}/unnamed-${currentTapeId}.json5`));
+
+      expect(tape.req.url).toEqual('/test/3');
+      expect(tape.res.status).toEqual(500);
+    });
+
+    it('loads existing tapes and uses them if they match', async () => {
+      talkbackServer = await startTalkback({ record: RecordMode.DISABLED });
+
+      const res = await fetch(`${talkbackUrl}/test/3`, { compress: false });
+
+      expect(res.status).toEqual(200);
+
+      const body = await res.json();
+
+      expect(body).toEqual({ ok: true });
+    });
+
+    it('matches and returns pretty printed tapes', async () => {
+      talkbackServer = await startTalkback({ record: RecordMode.DISABLED });
+
+      const headers = { 'content-type': 'application/json' };
+      const body = JSON.stringify({ param1: 3, param2: { subParam: 1 } });
+
+      const res = await fetch(`${talkbackUrl}/test/pretty`, {
+        compress: false,
+        method: 'POST',
+        headers,
+        body,
+      });
+
+      expect(res.status).toEqual(200);
+
+      const resClone = res.clone();
+
+      const resBody = await res.json();
+
+      expect(resBody).toEqual({ ok: true, foo: { bar: 3 } });
+
+      const resBodyAsText = await resClone.text();
+
+      expect(resBodyAsText).toEqual('{\n  "ok": true,\n  "foo": {\n    "bar": 3\n  }\n}');
+    });
+
+    it('calls provided callback', async () => {
+      const counter = { count: 0 };
+
+      talkbackServer = await startTalkback({ record: RecordMode.DISABLED }, () => {
+        counter.count += 1;
+      });
+      expect(counter.count).toEqual(1);
+    });
+
+    it("doesn't match pretty printed tapes with different body", async () => {
+      const makeRequest = async (body) => {
+        const res = await fetch(`${talkbackUrl}/test/pretty`, {
+          compress: false,
+          method: 'POST',
+          headers,
+          body,
+        });
+
+        expect(res.status).toEqual(404);
+      };
+
+      talkbackServer = await startTalkback({ record: RecordMode.DISABLED });
+
+      const headers = { 'content-type': 'application/json' };
+
+      // Different nested object
+      let body = JSON.stringify({ param1: 3, param2: { subParam: 2 } });
+
+      await makeRequest(body);
+
+      // Different key order
+      body = JSON.stringify({ param2: { subParam: 1 }, param1: 3 });
+      await makeRequest(body);
+
+      // Extra key
+      body = JSON.stringify({ param1: 3, param2: { subParam: 1 }, param3: false });
+      await makeRequest(body);
+    });
+
+    it('decorates the response of an existing tape', async () => {
+      talkbackServer = await startTalkback({ record: RecordMode.DISABLED });
+
+      const headers = { 'content-type': 'application/json' };
+      const body = JSON.stringify({ text: 'my-test' });
+
+      const res = await fetch(`${talkbackUrl}/test/echo`, {
+        compress: false,
+        method: 'POST',
+        headers,
+        body,
+      });
+
+      expect(res.status).toEqual(200);
+
+      const resBody = await res.json();
+
+      expect(resBody).toEqual({ text: 'my-test' });
+    });
+  });
+
+  describe('## record mode OVERWRITE', () => {
+    it('overwrites an existing tape', async () => {
+      talkbackServer = await startTalkback({
+        record: RecordMode.OVERWRITE,
+        ignoreHeaders: ['x-talkback-ping'],
+        silent: false,
+        debug: true,
+      });
+
+      const nextTapeId = currentTapeId;
+
+      let headers = { 'x-talkback-ping': 'test1' };
+
+      let res = await fetch(`${talkbackUrl}/test/1`, { compress: false, headers });
+
+      expect(res.status).toEqual(200);
+      let resBody = await res.json();
+      let expectedBody = { ok: true, body: 'test1' };
+
+      expect(resBody).toEqual(expectedBody);
+
+      let tape = JSON5.parse(fs.readFileSync(`${tapesPath}/unnamed-${nextTapeId}.json5`));
+
+      expect(tape.req.url).toEqual('/test/1');
+      expect(tape.res.body).toEqual(expectedBody);
+
+      headers = { 'x-talkback-ping': 'test2' };
+
+      res = await fetch(`${talkbackUrl}/test/1`, { compress: false, headers });
+      expect(res.status).toEqual(200);
+      resBody = await res.json();
+      expectedBody = { ok: true, body: 'test2' };
+      expect(resBody).toEqual(expectedBody);
+
+      tape = JSON5.parse(fs.readFileSync(`${tapesPath}/unnamed-${nextTapeId}.json5`));
+      expect(tape.req.url).toEqual('/test/1');
+      expect(tape.res.body).toEqual(expectedBody);
+    });
+  });
+
+  describe('## record mode DISABLED', () => {
+    it('returns a 404 on unkwown request with fallbackMode NOT_FOUND (default)', async () => {
+      talkbackServer = await startTalkback({ record: RecordMode.DISABLED });
+
+      const res = await fetch(`${talkbackUrl}/test/1`, { compress: false });
+
+      expect(res.status).toEqual(404);
+    });
+
+    it('proxies request to host on unkwown request with fallbackMode PROXY', async () => {
+      talkbackServer = await startTalkback({
+        record: RecordMode.DISABLED,
+        fallbackMode: FallbackMode.PROXY,
+      });
+
+      const reqBody = JSON.stringify({ foo: 'bar' });
+      const headers = { 'content-type': 'application/json' };
+      const res = await fetch(`${talkbackUrl}/test/1`, {
+        compress: false,
+        method: 'POST',
+        headers,
+        body: reqBody,
+      });
+
+      expect(res.status).toEqual(200);
+
+      const expectedResBody = { ok: true, body: { foo: 'bar' } };
+      const body = await res.json();
+
+      expect(body).toEqual(expectedResBody);
+
+      expect(fs.existsSync(`${tapesPath}/unnamed-3.json5`)).toEqual(false);
+    });
+  });
+
+  describe('error handling', () => {
+    afterEach(() => td.reset());
+
+    it('returns a 500 if anything goes wrong', async () => {
+      talkbackServer = await startTalkback({ record: RecordMode.DISABLED });
+      td.replace(talkbackServer, 'tapeStoreManager', {
+        find: () => {
+          throw 'Test error';
+        },
+      });
+
+      const res = await fetch(`${talkbackUrl}/test/1`, { compress: false });
+
+      expect(res.status).toEqual(500);
+    });
+  });
+
+  describe('summary printing', () => {
+    let log;
+
+    beforeEach(() => {
+      log = td.replace(console, 'log');
+    });
+
+    afterEach(() => td.reset());
+
+    it('prints the summary when enabled', async () => {
+      talkbackServer = await startTalkback({ summary: true });
+      talkbackServer.close();
+
+      td.verify(log(td.matchers.contains('SUMMARY')));
+    });
+
+    it("doesn't print the summary when disabled", async () => {
+      talkbackServer = await startTalkback({ summary: false });
+      talkbackServer.close();
+
+      td.verify(log(td.matchers.contains('SUMMARY')), { times: 0 });
+    });
+  });
+
+  describe('tape usage information', () => {
+    it('should indicate that a tape has been used after usage', async () => {
+      talkbackServer = await startTalkback({ record: RecordMode.DISABLED });
+
+      expect(talkbackServer.hasTapeBeenUsed('saved-request.json5')).toEqual(false);
+
+      const res = await fetch(`${talkbackUrl}/test/3`, { compress: false });
+
+      expect(res.status).toEqual(200);
+
+      expect(talkbackServer.hasTapeBeenUsed('saved-request.json5')).toEqual(true);
+
+      talkbackServer.resetTapeUsage();
+
+      expect(talkbackServer.hasTapeBeenUsed('saved-request.json5')).toEqual(false);
+
+      const body = await res.json();
+
+      expect(body).toEqual({ ok: true });
+    });
+  });
+
+  describe('https', () => {
+    it('should be able to run a https server', async () => {
+      const talkbackUrl = 'https://localhost:8899';
+      const options = {
+        talkbackUrl,
+        record: RecordMode.DISABLED,
+        https: {
+          enabled: true,
+          keyPath: './example/httpsCert/localhost.key',
+          certPath: './example/httpsCert/localhost.crt',
+        },
+      };
+
+      talkbackServer = await startTalkback(options);
+
+      // Disable self-signed certificate check
+      process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+      const res = await fetch(`${talkbackUrl}/test/3`, { compress: false });
+
+      expect(res.status).toEqual(200);
+    });
+  });
+});

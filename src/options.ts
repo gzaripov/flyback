@@ -55,36 +55,34 @@ const defaultOptions = {
 
 export type Options = UserOptions & typeof defaultOptions;
 
-export class Opts {
-  static prepare(userOpts: UserOptions) {
-    this.validateOptions(userOpts);
-
-    const opts = {
-      ...defaultOptions,
-      name: userOpts.proxyUrl,
-      logger: new Logger(userOpts),
-      ...userOpts,
-    };
-
-    return opts;
+export function validateRecord(record?: RecordMode | ((request: Request) => RecordMode)) {
+  if (typeof record === 'string' && !RecordModes.includes(record)) {
+    throw new Error(`INVALID OPTION: record has an invalid value of '${record}'`);
   }
+}
 
-  private static validateOptions(opts: UserOptions) {
-    this.validateRecord(opts.record);
-    this.validateFallbackMode(opts.fallbackMode);
+export function validateFallbackMode(
+  fallbackMode?: FallbackMode | ((request: Request) => FallbackMode),
+) {
+  if (typeof fallbackMode === 'string' && !FallbackModes.includes(fallbackMode)) {
+    throw new Error(`INVALID OPTION: fallbackMode has an invalid value of '${fallbackMode}'`);
   }
+}
 
-  public static validateRecord(record?: RecordMode | ((request: Request) => RecordMode)) {
-    if (typeof record === 'string' && !RecordModes.includes(record)) {
-      throw new Error(`INVALID OPTION: record has an invalid value of '${record}'`);
-    }
-  }
+function validateOptions(opts: UserOptions) {
+  validateRecord(opts.record);
+  validateFallbackMode(opts.fallbackMode);
+}
 
-  public static validateFallbackMode(
-    fallbackMode?: FallbackMode | ((request: Request) => FallbackMode),
-  ) {
-    if (typeof fallbackMode === 'string' && !FallbackModes.includes(fallbackMode)) {
-      throw new Error(`INVALID OPTION: fallbackMode has an invalid value of '${fallbackMode}'`);
-    }
-  }
+export function prepareOptions(userOpts: UserOptions) {
+  validateOptions(userOpts);
+
+  const opts = {
+    ...defaultOptions,
+    name: userOpts.proxyUrl,
+    logger: new Logger({ ...defaultOptions, ...userOpts }),
+    ...userOpts,
+  };
+
+  return opts;
 }

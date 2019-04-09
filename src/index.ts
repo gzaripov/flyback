@@ -1,8 +1,8 @@
 import Server from './server';
-import { Opts, UserOptions } from './options';
+import { prepareOptions, UserOptions } from './options';
 
 const talkback = (usrOpts: UserOptions) => {
-  const opts = Opts.prepare(usrOpts);
+  const opts = prepareOptions(usrOpts);
 
   return new Server(opts);
 };
