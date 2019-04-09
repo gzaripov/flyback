@@ -1,5 +1,5 @@
 {
-  "name": "talkback",
+  "name": "vcrjs",
   "version": "1.10.1",
   "main": "dist/index.js",
   "license": "MIT",
@@ -8,7 +8,8 @@
     "build": "node tools/build.js",
     "ci": "yarn test && yarn build && USE_DIST=1 yarn test",
     "start": "node ./example/start.js",
-    "test": "cross-env NODE_ENV=test nyc --reporter=lcov --reporter=text-summary mocha -r @babel/register -r mocha-setup.js --recursive test"
+    "test": "cross-env NODE_ENV=test nyc --reporter=lcov --reporter=text-summary mocha -r @babel/register -r mocha-setup.js --recursive test",
+    "jest": "jest"
   },
   "dependencies": {
     "@babel/runtime": "^7.4.3",
@@ -28,13 +29,15 @@
     "@babel/register": "^7.4.0",
     "@types/content-type": "^1.1.3",
     "@types/eslint": "^4.16.6",
+    "@types/jest": "^24.0.11",
     "@types/mkdirp": "^0.5.2",
-    "@types/node": "^11.13.0",
+    "@types/node": "^11.13.1",
     "@types/node-fetch": "^2.3.0",
     "@typescript-eslint/eslint-plugin": "^1.6.0",
     "@typescript-eslint/parser": "^1.6.0",
     "babel-core": "^6.26.3",
     "babel-eslint": "^10.0.1",
+    "babel-jest": "^24.7.1",
     "babel-plugin-dynamic-import-node": "^2.2.0",
     "babel-plugin-istanbul": "^5.1.1",
     "chai": "^4.2.0",
@@ -44,6 +47,8 @@
     "eslint-config-prettier": "^4.1.0",
     "eslint-plugin-babel": "^5.3.0",
     "eslint-plugin-prettier": "^3.0.1",
+    "jest": "^24.7.1",
+    "jest-environment-node": "^24.7.1",
     "mocha": "^6.0.2",
     "nyc": "^13.3.0",
     "prettier": "^1.16.4",

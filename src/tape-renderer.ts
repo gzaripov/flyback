@@ -19,12 +19,7 @@ export default class TapeRenderer {
         const json = JSON.stringify(reqOrRes.body, null, 2);
 
         if (HeadersUtil.read(reqOrRes.headers, 'content-length')) {
-          HeadersUtil.write(
-            reqOrRes.headers,
-            'content-length',
-            Buffer.byteLength(json).toString(),
-            metaPrefix,
-          );
+          HeadersUtil.write(reqOrRes.headers, 'content-length', Buffer.byteLength(json).toString());
         }
 
         return Buffer.from(json);

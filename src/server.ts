@@ -14,7 +14,7 @@ type Server = HttpServer | HttpsServer;
 export default class TalkbackServer {
   private options: Options;
   private server: Server;
-  private tapeStoreManager: TapeStoreManager;
+  public tapeStoreManager: TapeStoreManager;
   // private closeHandler:
 
   constructor(options: Options) {
