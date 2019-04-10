@@ -1,5 +1,6 @@
 import TapeRenderer from '../src/tape-renderer';
-import Options from '../src/options';
+import { prepareOptions } from '../src/options';
+import Tape from '../src/tape';
 
 const raw = {
   meta: {
@@ -27,24 +28,25 @@ const raw = {
   },
 };
 
-const opts = Options.prepare({
+const opts = prepareOptions({
+  proxyUrl: 'http://localhost:8080',
   ignoreHeaders: ['x-ignored'],
   ignoreQueryParams: ['ignored1', 'ignored2'],
 });
 
-const tape = TapeRenderer.fromStore(raw, opts);
+const tape = Tape.fromJSON(raw, opts);
 
 describe('TapeRenderer', () => {
   describe('.fromStore', () => {
     it('creates a tape from the raw file data with req and res human readable', () => {
-      expect(tape.req.url).toEqual('/foo/bar/1?real=3');
-      expect(tape.req.headers['accept']).toEqual('text/unknown');
-      expect(tape.req.headers['x-ignored']).toBe(undefined);
-      expect(tape.req.body.equals(Buffer.from('ABC'))).toBe(true);
+      expect(tape.request.url).toEqual('/foo/bar/1?real=3');
+      expect(tape.request.headers['accept']).toEqual('text/unknown');
+      expect(tape.request.headers['x-ignored']).toBe(undefined);
+      expect(tape.request.body.equals(Buffer.from('ABC'))).toBe(true);
 
-      expect(tape.res.headers['content-type']).toEqual(['text/unknown']);
-      expect(tape.res.headers['x-ignored']).toEqual(['2']);
-      expect(tape.res.body.equals(Buffer.from('Hello'))).toBe(true);
+      expect(tape.response.headers['content-type']).toEqual(['text/unknown']);
+      expect(tape.response.headers['x-ignored']).toEqual(['2']);
+      expect(tape.response.body.equals(Buffer.from('Hello'))).toBe(true);
     });
 
     it('creates a tape from the raw file data with req and res not human readable', () => {
@@ -65,16 +67,16 @@ describe('TapeRenderer', () => {
         },
       };
 
-      const tape = TapeRenderer.fromStore(newRaw, opts);
+      const tape = Tape.fromJSON(newRaw, opts);
 
-      expect(tape.req.url).toEqual('/foo/bar/1?real=3');
-      expect(tape.req.headers['accept']).toEqual('text/unknown');
-      expect(tape.req.headers['x-ignored']).toBe(undefined);
-      expect(tape.req.body.equals(Buffer.from('Hello'))).toBe(true);
+      expect(tape.request.url).toEqual('/foo/bar/1?real=3');
+      expect(tape.request.headers['accept']).toEqual('text/unknown');
+      expect(tape.request.headers['x-ignored']).toBe(undefined);
+      expect(tape.request.body.equals(Buffer.from('Hello'))).toBe(true);
 
-      expect(tape.res.headers['content-type']).toEqual(['text/unknown']);
-      expect(tape.res.headers['x-ignored']).toEqual(['2']);
-      expect(tape.res.body.equals(Buffer.from('ABC'))).toBe(true);
+      expect(tape.response.headers['content-type']).toEqual(['text/unknown']);
+      expect(tape.response.headers['x-ignored']).toEqual(['2']);
+      expect(tape.response.body.equals(Buffer.from('ABC'))).toBe(true);
     });
 
     it('can read pretty JSON', () => {
@@ -116,16 +118,16 @@ describe('TapeRenderer', () => {
         },
       };
 
-      let tape = TapeRenderer.fromStore(newRaw, opts);
+      let tape = Tape.fromJSON(newRaw, opts);
 
-      expect(tape.req.body).toEqual(Buffer.from(JSON.stringify(newRaw.req.body, null, 2)));
+      expect(tape.request.body).toEqual(Buffer.from(JSON.stringify(newRaw.req.body, null, 2)));
 
-      expect(tape.res.body).toEqual(Buffer.from(JSON.stringify(newRaw.res.body, null, 2)));
-      expect(tape.res.headers['content-length']).toEqual([68]);
+      expect(tape.response.body).toEqual(Buffer.from(JSON.stringify(newRaw.res.body, null, 2)));
+      expect(tape.response.headers['content-length']).toEqual([68]);
 
       delete newRaw.res.headers['content-length'];
-      tape = TapeRenderer.fromStore(newRaw, opts);
-      expect(tape.res.headers['content-length']).toEqual(undefined);
+      tape = Tape.fromJSON(newRaw, opts);
+      expect(tape.response.headers['content-length']).toEqual(undefined);
     });
   });
 
@@ -174,7 +176,7 @@ describe('TapeRenderer', () => {
           },
         },
       };
-      const newTape = TapeRenderer.fromStore(newRaw, opts);
+      const newTape = Tape.fromJSON(newRaw, opts);
 
       delete newRaw.req.headers['x-ignored'];
       expect(new TapeRenderer(newTape).render()).toEqual(newRaw);
@@ -201,7 +203,7 @@ describe('TapeRenderer', () => {
           body: '',
         },
       };
-      const newTape = TapeRenderer.fromStore(newRaw, opts);
+      const newTape = Tape.fromJSON(newRaw, opts);
 
       delete newRaw.req.headers['x-ignored'];
       expect(new TapeRenderer(newTape).render()).toEqual(newRaw);

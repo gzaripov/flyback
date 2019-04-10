@@ -62,7 +62,7 @@ export default class Tape {
     const tape = new Tape(json.request, options);
 
     tape.meta = json.meta;
-    tape.response = json.reponse;
+    tape.response = json.response;
 
     if (tape.response) {
       tape.response.body = TapeRenderer.prepareBody(tape, tape.response, 'res');

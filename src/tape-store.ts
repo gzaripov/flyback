@@ -42,8 +42,7 @@ export default class TapeStore {
           tape.path = filename;
           this.tapes.push(tape);
         } catch (e) {
-          this.options.logger.error(`Error reading tape ${fullPath}`);
-          this.options.logger.error(e);
+          this.options.logger.error(`Error reading tape ${fullPath}\n${e.toString()}`);
         }
       } else {
         this.loadTapesAtDir(`${fullPath}/`);
