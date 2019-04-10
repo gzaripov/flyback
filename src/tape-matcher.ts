@@ -83,7 +83,11 @@ export default class TapeMatcher {
           JSON.stringify(JSON.parse(req.body.toString())) ===
           JSON.stringify(JSON.parse(otherReq.body.toString()));
       } else {
-        sameBody = req.body.equals(otherReq.body);
+        if (req.body instanceof Buffer && otherReq.body instanceof Buffer) {
+          sameBody = req.body.equals(otherReq.body);
+        } else {
+          sameBody = req.body.toString() === otherReq.body.toString();
+        }
       }
 
       if (!sameBody) {

@@ -27,6 +27,7 @@ export type UserOptions = {
     certPath: string;
   };
   agent?: Agent;
+  ignoreQueryParams: string[];
   ignoreHeaders?: string[];
   ignoreAllHeaders?: boolean;
   ignoreBody?: boolean;
@@ -44,9 +45,6 @@ const defaultOptions = {
   fallbackMode: 'NOT_FOUND' as FallbackMode | ((request: Request) => FallbackMode),
   name: 'unnamed',
   ignoreHeaders: ['content-length', 'host'],
-  ignoreAllHeaders: false,
-  ignoreQueryParams: [],
-  ignoreBody: false,
   silent: false,
   summary: true,
   debug: false,
