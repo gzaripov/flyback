@@ -1,5 +1,5 @@
 import fetch, { Headers as FetchHeaders } from 'node-fetch';
-import Tape from './tape';
+import { createTape, cloneTape } from './tape';
 import { validateRecord, validateFallbackMode, Options } from './options';
 import TapeStoreManager from './tape-store-manager';
 import { Request, Response } from './types/http';
@@ -19,37 +19,43 @@ export default class RequestHandler {
 
     validateRecord(recordMode);
 
-    const newTape = new Tape(req, this.options);
-    const tapeStore = this.tapeStoreManager.getTapeStore(newTape);
-    const matchingTape = tapeStore.find(newTape);
+    const tapeStore = this.tapeStoreManager.getTapeStore(req);
+    const matchingTape = tapeStore.find(req);
 
     let resObj;
 
-    let responseTape;
+    let resultTape;
 
-    if (recordMode !== 'OVERWRITE' && matchingTape) {
-      responseTape = matchingTape;
-    } else {
+    if (recordMode === 'OVERWRITE') {
+      const res = await this.makeRealRequest(req);
+
+      resultTape = createTape(req, res, this.options);
+      tapeStore.save(resultTape);
+    } else if (recordMode === 'NEW') {
       if (matchingTape) {
-        responseTape = matchingTape;
+        resultTape = matchingTape;
       } else {
-        responseTape = newTape;
-      }
+        const res = await this.makeRealRequest(req);
 
-      if (recordMode === 'NEW' || recordMode === 'OVERWRITE') {
-        resObj = await this.makeRealRequest(req);
-        responseTape.response = { ...resObj };
-        tapeStore.save(responseTape);
-      } else {
-        resObj = await this.onNoRecord(req);
-        responseTape.response = { ...resObj };
+        resultTape = createTape(req, res, this.options);
+        tapeStore.save(resultTape);
       }
+    } else if (recordMode === 'DISABLED') {
+      if (matchingTape) {
+        resultTape = matchingTape;
+      } else {
+        const res = await this.onNoRecord(req);
+
+        resultTape = createTape(req, res, this.options);
+      }
+    } else {
+      throw new Error(`Unkown record mode is passed ${recordMode}`);
     }
 
-    resObj = responseTape.response;
+    resObj = resultTape.response;
 
     if (this.options.tapeDecorator) {
-      const resTape = this.options.tapeDecorator(responseTape.clone());
+      const resTape = this.options.tapeDecorator(cloneTape(resultTape));
 
       if (resTape.response && resTape.response.headers['content-length']) {
         resTape.response.headers['content-length'] = [resTape.response.body.length.toString()];

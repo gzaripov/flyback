@@ -1,6 +1,7 @@
 import MediaType from './utils/media-type';
 import { Options } from './options';
-import Tape from './tape';
+import { Tape } from './tape';
+import { Request, Headers } from './types/http';
 
 export default class TapeMatcher {
   private tape: Tape;
@@ -11,14 +12,14 @@ export default class TapeMatcher {
     this.options = options;
   }
 
-  sameAs(otherTape: Tape) {
+  matches(request: Request) {
     if (this.options.tapeMatcher) {
-      return this.options.tapeMatcher(this.tape, otherTape);
+      return this.options.tapeMatcher(this.tape, request);
     }
 
-    const otherReq = otherTape.request;
+    const otherReq = request;
     const req = this.tape.request;
-    const sameURL = req.url === otherReq.url;
+    const sameURL = this.matchUrls(req.url, otherReq.url);
 
     if (!sameURL) {
       this.options.logger.debug(`Not same URL ${req.url} vs ${otherReq.url}`);
@@ -34,26 +35,7 @@ export default class TapeMatcher {
       return false;
     }
 
-    const currentHeadersLength = Object.keys(req.headers).length;
-    const otherHeadersLength = Object.keys(otherReq.headers).length;
-    const sameNumberOfHeaders = currentHeadersLength === otherHeadersLength;
-
-    if (!sameNumberOfHeaders) {
-      this.options.logger.debug(
-        `Not same #HEADERS ${JSON.stringify(req.headers)} vs ${JSON.stringify(otherReq.headers)}`,
-      );
-
-      return false;
-    }
-
-    let headersSame = true;
-
-    Object.keys(req.headers).forEach((k) => {
-      const entryHeader = req.headers[k];
-      const header = otherReq.headers[k];
-
-      headersSame = headersSame && entryHeader === header;
-    });
+    const headersSame = this.matchHeaders(req.headers, otherReq.headers);
 
     if (!headersSame) {
       this.options.logger.debug(
@@ -83,11 +65,7 @@ export default class TapeMatcher {
           JSON.stringify(JSON.parse(req.body.toString())) ===
           JSON.stringify(JSON.parse(otherReq.body.toString()));
       } else {
-        if (req.body instanceof Buffer && otherReq.body instanceof Buffer) {
-          sameBody = req.body.equals(otherReq.body);
-        } else {
-          sameBody = req.body.toString() === otherReq.body.toString();
-        }
+        sameBody = req.body.equals(otherReq.body);
       }
 
       if (!sameBody) {
@@ -98,5 +76,63 @@ export default class TapeMatcher {
     }
 
     return true;
+  }
+
+  matchUrls(url: string, otherUrl: string): boolean {
+    const [base, params = ''] = url.split('?');
+    const [otherBase, otherParams = ''] = otherUrl.split('?');
+
+    const basesSame = base === otherBase;
+
+    if (this.options.ignoreAllQueryParams && basesSame) {
+      return true;
+    }
+
+    if (this.options.ignoreQueryParams) {
+      const ignoreParams = this.options.ignoreQueryParams;
+      const matchParams = params
+        .split('&')
+        .filter((p) => {
+          const paramName = p.split('=')[0];
+
+          return !ignoreParams.includes(paramName);
+        })
+        .join('');
+
+      const otherMatchParams = otherParams
+        .split('&')
+        .filter((p) => {
+          const paramName = p.split('=')[0];
+
+          return !ignoreParams.includes(paramName);
+        })
+        .join('');
+
+      return basesSame && matchParams === otherMatchParams;
+    }
+
+    return basesSame;
+  }
+
+  matchHeaders(headers: Headers, otherHeaders: Headers): boolean {
+    if (this.options.ignoreAllHeaders) {
+      return true;
+    }
+
+    const ignoreHeaders = this.options.ignoreHeaders || [];
+
+    const matchHeaders = Object.keys(headers).filter((header) => !ignoreHeaders.includes(header));
+
+    const otherMatchHeaders = Object.keys(otherHeaders).filter(
+      (header) => !ignoreHeaders.includes(header),
+    );
+
+    if (matchHeaders.length !== otherMatchHeaders.length) {
+      return false;
+    }
+
+    return matchHeaders.every((header) => {
+      return headers[header].join() === otherHeaders[header].join();
+    });
   }
 }

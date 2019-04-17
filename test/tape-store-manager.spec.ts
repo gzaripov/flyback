@@ -1,25 +1,24 @@
 import path from 'path';
 import TapeStoreManager from '../src/tape-store-manager';
-import Tape from '../src/tape';
+import { SerializedTape, createTapeFromJSON } from '../src/tape';
 import { prepareOptions } from '../src/options';
 
-const raw = {
+const serializedTape: SerializedTape = {
   meta: {
+    endpoint: 'test.localhost.proxy',
     createdAt: new Date(),
-    reqHumanReadable: true,
-    resHumanReadable: false,
   },
-  req: {
+  request: {
     url: '/foo/bar/1?real=3',
     method: 'GET',
     headers: {
-      accept: 'text/unknown',
-      'content-type': 'text/plain',
-      testpath: path.normalize(`${path.join(__dirname, 'tapes')}/`),
+      accept: ['text/unknown'],
+      'content-type': ['text/plain'],
+      testpath: [path.normalize(`${path.join(__dirname, 'tapes')}/`)],
     },
     body: 'ABC',
   },
-  res: {
+  response: {
     status: 200,
     headers: {
       'content-type': ['text/unknown'],
@@ -33,16 +32,16 @@ describe('TapeStoreManager', () => {
   it('returns store with path from tapePathGenerator', () => {
     const opts = prepareOptions({
       proxyUrl: 'localhost:8080',
-      tapePathGenerator: (tape) => {
-        return tape.request.headers.testpath[0];
+      tapePathGenerator: (request) => {
+        return request.headers.testpath[0];
       },
     });
 
-    const tape = Tape.fromJSON(raw, opts);
+    const tape = createTapeFromJSON(serializedTape);
     const tapeStoreManager = new TapeStoreManager(opts);
 
-    const tapeStore = tapeStoreManager.getTapeStore(tape);
+    const tapeStore = tapeStoreManager.getTapeStore(tape.request);
 
-    expect(tapeStore.hasPath(raw.req.headers.testpath)).toBe(true);
+    expect(tapeStore.hasPath(serializedTape.request.headers.testpath[0])).toBe(true);
   });
 });

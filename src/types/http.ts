@@ -6,7 +6,6 @@ export interface Request {
   url: string;
   method: string;
   headers: Headers;
-  // TODO: why optional
   body?: Buffer;
 }
 

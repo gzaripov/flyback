@@ -1,24 +1,22 @@
 import TapeRenderer from '../src/tape-renderer';
-import { prepareOptions } from '../src/options';
-import Tape from '../src/tape';
+import { createTapeFromJSON, SerializedTape } from '../src/tape';
 
-const raw = {
+const serializedTape: SerializedTape = {
   meta: {
+    endpoint: 'proxy.test.com',
     createdAt: new Date(),
-    reqHumanReadable: true,
-    resHumanReadable: false,
   },
-  req: {
+  request: {
     url: '/foo/bar/1?real=3',
     method: 'GET',
     headers: {
-      accept: 'text/unknown',
-      'content-type': 'text/plain',
-      'x-ignored': '1',
+      accept: ['text/unknown'],
+      'content-type': ['text/plain'],
+      'x-ignored': ['1'],
     },
     body: 'ABC',
   },
-  res: {
+  response: {
     status: 200,
     headers: {
       'content-type': ['text/unknown'],
@@ -28,184 +26,169 @@ const raw = {
   },
 };
 
-const opts = prepareOptions({
-  proxyUrl: 'http://localhost:8080',
-  ignoreHeaders: ['x-ignored'],
-  ignoreQueryParams: ['ignored1', 'ignored2'],
-});
-
-const tape = Tape.fromJSON(raw, opts);
+const tape = createTapeFromJSON(serializedTape);
 
 describe('TapeRenderer', () => {
   describe('.fromStore', () => {
     it('creates a tape from the raw file data with req and res human readable', () => {
       expect(tape.request.url).toEqual('/foo/bar/1?real=3');
-      expect(tape.request.headers['accept']).toEqual('text/unknown');
-      expect(tape.request.headers['x-ignored']).toBe(undefined);
-      expect(tape.request.body.equals(Buffer.from('ABC'))).toBe(true);
+      expect(tape.request.headers['accept'][0]).toEqual('text/unknown');
+      expect(tape.request.headers['x-ignored'][0]).toBe('1');
+      expect(tape.request.body).toEqual(Buffer.from('ABC'));
 
       expect(tape.response.headers['content-type']).toEqual(['text/unknown']);
       expect(tape.response.headers['x-ignored']).toEqual(['2']);
-      expect(tape.response.body.equals(Buffer.from('Hello'))).toBe(true);
+      expect(tape.response.body).toEqual(Buffer.from(Buffer.from('Hello').toString('base64')));
     });
 
     it('creates a tape from the raw file data with req and res not human readable', () => {
-      const newRaw = {
-        ...raw,
+      const newRaw: SerializedTape = {
+        ...serializedTape,
         meta: {
-          ...raw.meta,
-          reqHumanReadable: false,
-          resHumanReadable: true,
+          ...serializedTape.meta,
         },
-        req: {
-          ...raw.req,
+        request: {
+          ...serializedTape.request,
           body: 'SGVsbG8=',
         },
-        res: {
-          ...raw.res,
+        response: {
+          ...serializedTape.response,
           body: 'ABC',
         },
       };
 
-      const tape = Tape.fromJSON(newRaw, opts);
+      const tape = createTapeFromJSON(newRaw);
 
       expect(tape.request.url).toEqual('/foo/bar/1?real=3');
-      expect(tape.request.headers['accept']).toEqual('text/unknown');
-      expect(tape.request.headers['x-ignored']).toBe(undefined);
-      expect(tape.request.body.equals(Buffer.from('Hello'))).toBe(true);
+      expect(tape.request.headers['accept']).toEqual(['text/unknown']);
+      expect(tape.request.headers['x-ignored']).toEqual(['1']);
+      expect(tape.request.body).toEqual(Buffer.from('SGVsbG8='));
 
       expect(tape.response.headers['content-type']).toEqual(['text/unknown']);
       expect(tape.response.headers['x-ignored']).toEqual(['2']);
-      expect(tape.response.body.equals(Buffer.from('ABC'))).toBe(true);
+      expect(tape.response.body).toEqual(Buffer.from('ABC'));
     });
 
     it('can read pretty JSON', () => {
-      const newRaw = {
-        ...raw,
+      const newRaw: SerializedTape = {
+        ...serializedTape,
         meta: {
-          ...raw.meta,
-          reqHumanReadable: true,
-          resHumanReadable: true,
+          ...serializedTape.meta,
         },
-        req: {
-          ...raw.req,
+        request: {
+          ...serializedTape.request,
           headers: {
-            ...raw.req.headers,
-            'content-type': 'application/json',
-            'content-length': 20,
+            ...serializedTape.request.headers,
+            'content-type': ['application/json'],
+            'content-length': ['20'],
           },
-          body: {
+          body: JSON.stringify({
             param: 'value',
             nested: {
               param2: 3,
             },
-          },
+          }),
         },
-        res: {
-          ...raw.res,
+        response: {
+          ...serializedTape.response,
           headers: {
-            ...raw.res.headers,
+            ...serializedTape.response.headers,
             'content-type': ['application/json'],
-            'content-length': [20],
+            'content-length': ['20'],
           },
-          body: {
+          body: JSON.stringify({
             foo: 'bar',
             utf8: '🔤',
             nested: {
               fuu: 3,
             },
-          },
+          }),
         },
       };
 
-      let tape = Tape.fromJSON(newRaw, opts);
+      let tape = createTapeFromJSON(newRaw);
 
-      expect(tape.request.body).toEqual(Buffer.from(JSON.stringify(newRaw.req.body, null, 2)));
+      expect(tape.request.body).toEqual(Buffer.from(newRaw.request.body));
 
-      expect(tape.response.body).toEqual(Buffer.from(JSON.stringify(newRaw.res.body, null, 2)));
-      expect(tape.response.headers['content-length']).toEqual([68]);
+      expect(tape.response.body).toEqual(Buffer.from(newRaw.response.body));
+      expect(tape.response.headers['content-length']).toEqual(['20']);
 
-      delete newRaw.res.headers['content-length'];
-      tape = Tape.fromJSON(newRaw, opts);
+      delete newRaw.response.headers['content-length'];
+      tape = createTapeFromJSON(newRaw);
       expect(tape.response.headers['content-length']).toEqual(undefined);
     });
   });
 
   describe('#render', () => {
     it('renders a tape', () => {
-      const rawDup = {
-        ...raw,
-        req: {
-          ...raw.req,
+      const rawDup: SerializedTape = {
+        ...serializedTape,
+        request: {
+          ...serializedTape.request,
           headers: {
-            ...raw.req.headers,
+            ...serializedTape.request.headers,
           },
         },
       };
-
-      delete rawDup.req.headers['x-ignored'];
 
       expect(new TapeRenderer(tape).render()).toEqual(rawDup);
     });
 
     it('renders json response as an object', () => {
-      const newRaw = {
-        ...raw,
+      const newRaw: SerializedTape = {
+        ...serializedTape,
         meta: {
-          ...raw.meta,
-          resHumanReadable: true,
+          ...serializedTape.meta,
         },
-        req: {
-          ...raw.req,
+        request: {
+          ...serializedTape.request,
           headers: {
-            ...raw.req.headers,
+            ...serializedTape.request.headers,
           },
         },
-        res: {
-          ...raw.res,
+        response: {
+          ...serializedTape.response,
           headers: {
-            ...raw.res.headers,
+            ...serializedTape.response.headers,
             'content-type': ['application/json'],
-            'content-length': [20],
+            'content-length': ['20'],
           },
-          body: {
+          body: JSON.stringify({
             foo: 'bar',
             nested: {
               fuu: 3,
             },
-          },
+          }),
         },
       };
-      const newTape = Tape.fromJSON(newRaw, opts);
+      const newTape = createTapeFromJSON(newRaw);
 
-      delete newRaw.req.headers['x-ignored'];
       expect(new TapeRenderer(newTape).render()).toEqual(newRaw);
     });
 
     it('renders tapes with empty bodies', () => {
-      const newRaw = {
-        ...raw,
-        req: {
-          ...raw.req,
+      const newRaw: SerializedTape = {
+        ...serializedTape,
+        request: {
+          ...serializedTape.request,
           body: '',
           method: 'HEAD',
           headers: {
-            ...raw.req.headers,
+            ...serializedTape.request.headers,
             'content-type': ['application/json'],
           },
         },
-        res: {
-          ...raw.res,
+        response: {
+          ...serializedTape.response,
           headers: {
-            ...raw.res.headers,
+            ...serializedTape.response.headers,
             'content-type': ['application/json'],
           },
           body: '',
         },
       };
-      const newTape = Tape.fromJSON(newRaw, opts);
+      const newTape = createTapeFromJSON(newRaw);
 
-      delete newRaw.req.headers['x-ignored'];
       expect(new TapeRenderer(newTape).render()).toEqual(newRaw);
     });
   });

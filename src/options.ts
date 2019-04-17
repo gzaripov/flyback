@@ -1,5 +1,5 @@
 import Logger from './logger';
-import Tape from './tape';
+import { Tape } from './tape';
 import { Agent } from 'https';
 import { Request } from './types/http';
 
@@ -21,17 +21,18 @@ export type UserOptions = {
   fallbackMode?: FallbackMode | ((request: Request) => FallbackMode);
   name?: string;
   tapeNameGenerator?: (tape: Tape, tapeId: number) => string;
-  tapePathGenerator?: (tape: Tape) => string;
+  tapePathGenerator?: (tape: Request) => string;
   https?: {
     keyPath: string;
     certPath: string;
   };
   agent?: Agent;
-  ignoreQueryParams: string[];
+  ignoreQueryParams?: string[];
+  ignoreAllQueryParams?: boolean;
   ignoreHeaders?: string[];
   ignoreAllHeaders?: boolean;
   ignoreBody?: boolean;
-  tapeMatcher?: (tape: Tape, savedTape: Tape) => boolean;
+  tapeMatcher?: (tape: Tape, request: Request) => boolean;
   tapeDecorator?: (tape: Tape) => Tape;
   silent?: boolean;
   summary?: boolean;

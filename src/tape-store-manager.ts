@@ -1,6 +1,7 @@
 import TapeStore from './tape-store';
-import Tape from './tape';
 import { Options } from './options';
+import { Request } from './types/http';
+import { Tape } from './tape';
 
 export default class TapeStoreManager {
   private options: Options;
@@ -17,9 +18,9 @@ export default class TapeStoreManager {
     }
   }
 
-  getTapeStore(tape?: Tape) {
-    if (tape && this.options.tapePathGenerator) {
-      const path = this.options.tapePathGenerator(tape);
+  getTapeStore(request?: Request) {
+    if (request && this.options.tapePathGenerator) {
+      const path = this.options.tapePathGenerator(request);
 
       if (path) {
         let tapeStore = this.findTapeStore(path);

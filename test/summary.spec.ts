@@ -1,7 +1,7 @@
 import { Options } from '../src/options';
 import Summary from '../src/summary';
 import Logger from '../src/logger';
-import Tape from '../src/tape';
+import { Tape } from '../src/tape';
 
 jest.mock('../src/logger');
 
@@ -38,11 +38,11 @@ describe('Summary', () => {
     it('prints the path of new tapes', () => {
       const logger = new Logger();
       const summary = new Summary(
-        [
-          { new: true, used: true, path: 'path1' },
-          { used: true, path: 'path2' },
-          { new: true, used: true, path: 'path3' },
-        ] as Tape[],
+        ([
+          { meta: { new: true, used: true, path: 'path1' } },
+          { meta: { used: true, path: 'path2' } },
+          { meta: { new: true, used: true, path: 'path3' } },
+        ] as any) as Tape[],
         createMockOptions({ logger }),
       );
 
@@ -56,7 +56,11 @@ describe('Summary', () => {
     it('prints the path of unused tapes', () => {
       const logger = new Logger();
       const summary = new Summary(
-        [{ path: 'path1' }, { used: true, path: 'path2' }, { path: 'path3' }] as Tape[],
+        ([
+          { meta: { path: 'path1' } },
+          { meta: { used: true, path: 'path2' } },
+          { meta: { path: 'path3' } },
+        ] as any) as Tape[],
         createMockOptions({ logger }),
       );
 

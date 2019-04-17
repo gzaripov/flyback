@@ -1,6 +1,6 @@
 import MediaType from './utils/media-type';
 import TapeRenderer from './tape-renderer';
-import { Request, Response } from './types/http';
+import { Request, Response, Headers } from './types/http';
 import { Options } from './options';
 
 type Meta = {
@@ -9,65 +9,75 @@ type Meta = {
   [key: string]: any;
 };
 
-export default class Tape {
-  public meta: Meta;
-  public request: Request;
-  public response?: Response;
-  public new = false;
-  public used = false;
-  public path?: string;
+export type SerializedTape = {
+  meta: Meta;
+  request: {
+    url: string;
+    method: string;
+    headers: Headers;
+    body?: string;
+  };
+  response: {
+    status: number;
+    headers: Headers;
+    body?: string;
+  };
+};
 
-  private options: Options;
+export type Tape = {
+  meta: Meta;
+  request: Request;
+  response: Response;
+};
 
-  constructor(req: Request, options: Options) {
-    this.request = {
-      url: req.url,
-      method: req.method,
-      headers: req.headers,
-      body: req.body,
-    };
-    this.options = options;
-    this.normalizeBody();
-    this.meta = {
+function prettifyJSON(json: string): string {
+  return JSON.stringify(JSON.parse(json), null, 2);
+}
+
+export function createTape(request: Request, response: Response, options: Options): Tape {
+  const mediaType = new MediaType(request);
+
+  if (mediaType.isJSON() && request.body && request.body.length > 0) {
+    request.body = Buffer.from(prettifyJSON(request.body.toString()));
+  }
+
+  return {
+    meta: {
       createdAt: new Date(),
-      endpoint: this.options.proxyUrl,
-    };
-  }
+      endpoint: options.proxyUrl,
+    },
+    request,
+    response,
+  };
+}
 
-  normalizeBody() {
-    const mediaType = new MediaType(this.request);
+export function createTapeFromJSON(serializedTape: SerializedTape): Tape {
+  const { meta, request, response } = serializedTape;
 
-    if (mediaType.isJSON() && this.request.body && this.request.body.length > 0) {
-      this.request.body = Buffer.from(
-        JSON.stringify(JSON.parse(this.request.body.toString()), null, 2),
-      );
-    }
-  }
+  const requestBody = request.body !== undefined ? Buffer.from(request.body) : undefined;
+  const responseBody = Buffer.from(response.body !== undefined ? response.body : '');
 
-  clone() {
-    const json = new TapeRenderer(this).render();
+  const tape = {
+    meta,
+    request: {
+      ...request,
+      body: requestBody,
+    },
+    response: {
+      ...response,
+      body: responseBody,
+    },
+  };
 
-    return Tape.fromJSON(json, this.options);
-  }
+  // if (tape.response) {
+  //   tape.response.body = TapeRenderer.prepareBody(tape, tape.response, 'res');
+  // }
 
-  toJSON() {
-    return {
-      meta: this.meta,
-      request: this.request,
-      response: this.response,
-    };
-  }
+  return tape;
+}
 
-  static fromJSON(json: any, options: Options) {
-    const tape = new Tape(json.request, options);
+export function cloneTape(tape: Tape) {
+  const json = new TapeRenderer(tape).render();
 
-    tape.meta = json.meta;
-    tape.response = json.response;
-
-    if (tape.response) {
-      tape.response.body = TapeRenderer.prepareBody(tape, tape.response, 'res');
-    }
-
-    return tape;
-  }
+  return createTapeFromJSON(json);
 }

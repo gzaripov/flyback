@@ -1,10 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 import mkdirp from 'mkdirp';
-import Tape from './tape';
-import TapeMatcher from './tape-matcher';
+import { Tape, createTapeFromJSON } from './tape';
+import TapeFinder from './tape-matcher';
 import TapeRenderer from './tape-renderer';
 import { Options } from './options';
+import { Request } from './types/http';
 
 export default class TapeStore {
   public tapes: Tape[];
@@ -37,9 +38,9 @@ export default class TapeStore {
         try {
           const data = fs.readFileSync(fullPath, 'utf8');
           const raw = JSON.parse(data);
-          const tape = Tape.fromJSON(raw, this.options);
+          const tape = createTapeFromJSON(raw);
 
-          tape.path = filename;
+          tape.meta.path = filename;
           this.tapes.push(tape);
         } catch (e) {
           this.options.logger.error(`Error reading tape ${fullPath}\n${e.toString()}`);
@@ -50,18 +51,16 @@ export default class TapeStore {
     }
   }
 
-  find(newTape: Tape) {
+  find(request: Request) {
     const foundTape = this.tapes.find((t) => {
-      this.options.logger.debug(`Comparing against tape ${t.path}`);
+      this.options.logger.debug(`Comparing against tape ${t.meta.path}`);
 
-      return new TapeMatcher(t, this.options).sameAs(newTape);
+      return new TapeFinder(t, this.options).matches(request);
     });
 
     if (foundTape) {
-      foundTape.used = true;
-      this.options.logger.log(
-        `Found matching tape for ${newTape.request.url} at ${foundTape.path}`,
-      );
+      foundTape.meta.used = true;
+      this.options.logger.log(`Found matching tape for ${request.url} at ${foundTape.meta.path}`);
 
       return foundTape;
     }
@@ -70,10 +69,10 @@ export default class TapeStore {
   }
 
   save(tape: Tape) {
-    tape.new = true;
-    tape.used = true;
+    tape.meta.new = true;
+    tape.meta.used = true;
 
-    const tapePath = tape.path;
+    const tapePath = tape.meta.path;
 
     let fullFilename;
 
@@ -84,9 +83,9 @@ export default class TapeStore {
       this.tapes.push(tape);
 
       fullFilename = this.createTapePath(tape);
-      tape.path = path.relative(this.path, fullFilename);
+      tape.meta.path = path.relative(this.path, fullFilename);
     }
-    this.options.logger.log(`Saving request ${tape.request.url} at ${tape.path}`);
+    this.options.logger.log(`Saving request ${tape.request.url} at ${tape.meta.path}`);
 
     const toSave = new TapeRenderer(tape).render();
 
@@ -98,11 +97,11 @@ export default class TapeStore {
   }
 
   hasTapeBeenUsed(tapeName: string) {
-    return this.tapes.some((t) => t.used && t.path === tapeName);
+    return this.tapes.some((t) => t.meta.used && t.meta.path === tapeName);
   }
 
   resetTapeUsage() {
-    return this.tapes.forEach((t) => (t.used = false));
+    return this.tapes.forEach((t) => (t.meta.used = false));
   }
 
   createTapePath(tape: Tape) {
@@ -117,7 +116,7 @@ export default class TapeStore {
     let result;
 
     if (this.options.tapePathGenerator) {
-      result = this.options.tapePathGenerator(tape);
+      result = this.options.tapePathGenerator(tape.request);
     }
 
     if (!result && this.options.tapesPath) {
@@ -125,7 +124,7 @@ export default class TapeStore {
     }
 
     if (!result) {
-      throw new Error(`Cant create path for tape ${tape.toJSON()}`);
+      throw new Error(`Cant create path for tape ${tape.request.url}`);
     }
 
     if (!result.endsWith('.json')) {
