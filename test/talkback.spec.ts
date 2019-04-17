@@ -6,7 +6,7 @@ import talkback from '../src/index';
 import testServer from './support/test-server';
 import { parseUrl } from '../src/utils/url';
 import Logger from '../src/logger';
-import Tape from '../src/tape';
+import { Tape } from '../src/tape';
 
 // malfromed-tape.json parse error message is expected,
 // so dont pollute test logs
@@ -115,8 +115,8 @@ describe('talkback', () => {
     }
   });
 
-  describe.only('## record mode NEW', () => {
-    it.only('proxies and creates a new tape when the POST request is unknown with human readable req and res', async () => {
+  describe('## record mode NEW', () => {
+    it('proxies and creates a new tape when the POST request is unknown with human readable req and res', async () => {
       talkbackServer = await startTalkback();
 
       const reqBody = JSON.stringify({ foo: 'bar' });
@@ -138,8 +138,6 @@ describe('talkback', () => {
 
       const tape = readJSONFromFile(tapesPath, url);
 
-      expect(tape.meta.requestHumanReadable).toEqual(true);
-      expect(tape.meta.responseHumanReadable).toEqual(true);
       expect(tape.request.url).toEqual('/test/1');
       expect(tape.response.body).toEqual(expectedResBody);
     });
@@ -158,8 +156,6 @@ describe('talkback', () => {
 
       const tape = readJSONFromFile(tapesPath, url);
 
-      expect(tape.meta.requestHumanReadable).toEqual(undefined);
-      expect(tape.meta.responseHumanReadable).toEqual(true);
       expect(tape.request.url).toEqual('/test/1');
       expect(tape.response.body).toEqual(expectedResBody);
     });
@@ -186,8 +182,6 @@ describe('talkback', () => {
 
       const tape = readJSONFromFile(tapesPath, url);
 
-      expect(tape.meta.requestHumanReadable).toEqual(true);
-      expect(tape.meta.responseHumanReadable).toEqual(true);
       expect(tape.request.url).toEqual('/test/1');
       expect(tape.response.body).toEqual(expectedResBody);
     });
@@ -203,8 +197,6 @@ describe('talkback', () => {
 
       const tape = readJSONFromFile(tapesPath, url);
 
-      expect(tape.meta.requestHumanReadable).toEqual(undefined);
-      expect(tape.meta.responseHumanReadable).toEqual(undefined);
       expect(tape.request.url).toEqual('/test/head');
       expect(tape.request.body).toEqual('');
       expect(tape.response.body).toEqual('');

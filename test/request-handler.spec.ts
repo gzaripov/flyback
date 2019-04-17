@@ -1,136 +1,154 @@
 import RequestHandler from '../src/request-handler';
-import Tape from '../src/tape';
+import { createTapeFromJSON, SerializedTape } from '../src/tape';
 import { Options, prepareOptions } from '../src/options';
 import TapeStoreManager from '../src/tape-store-manager';
 
-let tapeStoreManager;
-let reqHandler;
-let opts;
-let savedTape;
-let anotherRes;
+let opts: Options;
 
-const rawTape = {
-  meta: {
-    createdAt: new Date(),
-    reqHumanReadable: true,
-    resHumanReadable: false,
-  },
-  req: {
-    url: '/foo/bar/1?real=3',
-    method: 'GET',
-    headers: {
-      accept: 'application/json',
-      'x-ignored': '1',
+const helloBase64 = Buffer.from('Hello').toString('base64');
+
+function getMockTape() {
+  const rawTape: SerializedTape = {
+    meta: {
+      endpoint: 'test-proxy.com',
+      createdAt: new Date(),
     },
-    body: 'ABC',
-  },
-  res: {
-    status: 200,
-    headers: {
-      accept: ['application/json'],
-      'x-ignored': ['2'],
+    request: {
+      url: '/foo/bar/1?real=3',
+      method: 'GET',
+      headers: {
+        accept: ['application/json'],
+        'x-ignored': ['1'],
+      },
+      body: 'ABC',
     },
-    body: Buffer.from('Hello').toString('base64'),
-  },
-};
+    response: {
+      status: 200,
+      headers: {
+        accept: ['application/json'],
+        'x-ignored': ['2'],
+      },
+      body: helloBase64,
+    },
+  };
 
-function prepareForExternalRequest() {
-  const fakeMakeRealRequest = jest.fn();
+  return createTapeFromJSON(rawTape);
+}
 
-  fakeMakeRealRequest.mockReturnValue(anotherRes);
-  jest.spyOn(reqHandler, 'makeRealRequest').mockImplementation(fakeMakeRealRequest);
+function getMockTapeStoreManager(tapes = []) {
+  const tapeStoreManager = new TapeStoreManager(opts);
+
+  tapeStoreManager.getTapeStore().tapes = tapes;
+
   jest.spyOn(tapeStoreManager.getTapeStore(), 'save');
+
+  return tapeStoreManager;
+}
+
+function getMockRequestHandler(
+  opts: Options,
+  { tapeStoreManager = getMockTapeStoreManager(), makeRealRequest = () => null } = {},
+) {
+  const requestHandler = new RequestHandler(tapeStoreManager, opts);
+
+  jest.spyOn(requestHandler, 'makeRealRequest').mockImplementation(jest.fn(makeRealRequest));
+
+  return requestHandler;
 }
 
 describe('RequestHandler', () => {
   beforeEach(() => {
-    opts = prepareOptions({ debug: false, record: 'NEW' } as Options);
-    tapeStoreManager = new TapeStoreManager(opts);
-    reqHandler = new RequestHandler(tapeStoreManager, opts);
-
-    savedTape = Tape.fromJSON(rawTape, opts);
-    anotherRes = {
-      ...savedTape.res,
-      body: Buffer.from('Foobar'),
-    };
+    opts = prepareOptions({
+      debug: false,
+      record: 'NEW',
+      tapesPath: `${__dirname}/tapes`,
+    } as Options);
   });
 
   describe('#handle', () => {
     describe("when request opt is 'NEW'", () => {
       describe('when the request matches a tape', () => {
-        beforeEach(() => {
-          tapeStoreManager.getTapeStore().tapes = [savedTape];
-        });
-
         it('returns the matched tape response', async () => {
-          const resObj = await reqHandler.handle(savedTape.req);
+          const tapeStoreManager = getMockTapeStoreManager([getMockTape()]);
+          const response = await getMockRequestHandler(opts, { tapeStoreManager }).handle(
+            getMockTape().request,
+          );
 
-          expect(resObj.status).toEqual(200);
-          expect(resObj.body).toEqual(Buffer.from('Hello'));
+          expect(response.status).toEqual(200);
+          expect(response.body).toEqual(Buffer.from(helloBase64));
         });
 
         describe("when there's a responseDecorator", () => {
           beforeEach(() => {
-            opts.responseDecorator = (tape, req) => {
-              tape.res.body = req.body;
+            opts.tapeDecorator = (tape) => {
+              tape.response.body = tape.request.body;
 
               return tape;
             };
           });
 
           it('returns the decorated response', async () => {
-            const resObj = await reqHandler.handle(savedTape.req);
+            const response = await getMockRequestHandler(opts).handle(getMockTape().request);
 
-            expect(resObj.status).toEqual(200);
-            expect(resObj.body).toEqual(Buffer.from('ABC'));
-            expect(savedTape.res.body).toEqual(Buffer.from('Hello'));
+            expect(response.status).toEqual(200);
+            expect(response.body).toEqual(Buffer.from('ABC'));
+            expect(getMockTape().response.body).toEqual(Buffer.from(helloBase64));
           });
 
           it("doesn't add a content-length header if it isn't present in the original response", async () => {
-            const resObj = await reqHandler.handle(savedTape.req);
+            const tapeStoreManager = getMockTapeStoreManager([getMockTape()]);
+            const response = await getMockRequestHandler(opts, { tapeStoreManager }).handle(
+              getMockTape().request,
+            );
 
-            expect(resObj.headers['content-length']).toBe(undefined);
-          });
-
-          it('updates the content-length header if it is present in the original response', async () => {
-            savedTape.res.headers['content-length'] = [999];
-
-            const resObj = await reqHandler.handle(savedTape.req);
-
-            expect(resObj.headers['content-length']).toEqual(3);
+            expect(response.headers['content-length']).toBe(undefined);
           });
         });
       });
 
       describe("when the request doesn't match a tape", () => {
-        beforeEach(() => {
-          prepareForExternalRequest();
-        });
-
         it('makes the real request and returns the response, saving the tape', async () => {
-          const resObj = await reqHandler.handle(savedTape.req);
+          const tapeStoreManager = getMockTapeStoreManager();
+          const requestHandler = getMockRequestHandler(opts, {
+            tapeStoreManager,
+            makeRealRequest: () => ({
+              ...getMockTape().response,
+              body: Buffer.from('Foobar'),
+            }),
+          });
 
-          expect(resObj.status).toEqual(200);
-          expect(resObj.body).toEqual(Buffer.from('Foobar'));
+          const response = await requestHandler.handle(getMockTape().request);
+
+          console.log(response.body.toString());
+
+          expect(response.status).toEqual(200);
+          expect(response.body).toEqual(Buffer.from('Foobar'));
 
           expect(tapeStoreManager.getTapeStore().save).toHaveBeenCalled();
         });
 
         describe("when there's a responseDecorator", () => {
           beforeEach(() => {
-            opts.responseDecorator = (tape, req) => {
-              tape.res.body = req.body;
+            opts.tapeDecorator = (tape) => {
+              tape.response.body = tape.request.body;
 
               return tape;
             };
           });
 
           it('returns the decorated response', async () => {
-            const resObj = await reqHandler.handle(savedTape.req);
+            const requestHandler = getMockRequestHandler(opts, {
+              makeRealRequest: () => ({
+                ...getMockTape().response,
+                body: Buffer.from('Foobar'),
+              }),
+            });
 
-            expect(resObj.status).toEqual(200);
-            expect(resObj.body).toEqual(Buffer.from('ABC'));
-            expect(savedTape.res.body).toEqual(Buffer.from('Hello'));
+            const response = await requestHandler.handle(getMockTape().request);
+
+            expect(response.status).toEqual(200);
+            expect(response.body).toEqual(Buffer.from('ABC'));
+            expect(getMockTape().response.body).toEqual(Buffer.from(helloBase64));
           });
         });
       });
@@ -139,20 +157,23 @@ describe('RequestHandler', () => {
     describe("when request opt is 'OVERWRITE'", () => {
       beforeEach(() => {
         opts.record = 'OVERWRITE';
-
-        prepareForExternalRequest();
       });
 
       describe('when the request matches a tape', () => {
-        beforeEach(() => {
-          tapeStoreManager.tapes = [savedTape];
-        });
-
         it('makes the real request and returns the response, saving the tape', async () => {
-          const resObj = await reqHandler.handle(savedTape.req);
+          const tapeStoreManager = getMockTapeStoreManager();
+          const requestHandler = getMockRequestHandler(opts, {
+            tapeStoreManager,
+            makeRealRequest: () => ({
+              ...getMockTape().response,
+              body: Buffer.from('Foobar'),
+            }),
+          });
 
-          expect(resObj.status).toEqual(200);
-          expect(resObj.body).toEqual(Buffer.from('Foobar'));
+          const response = await requestHandler.handle(getMockTape().request);
+
+          expect(response.status).toEqual(200);
+          expect(response.body).toEqual(Buffer.from('Foobar'));
 
           expect(tapeStoreManager.getTapeStore().save).toHaveBeenCalled();
         });
@@ -160,10 +181,19 @@ describe('RequestHandler', () => {
 
       describe("when the request doesn't match a tape", () => {
         it('makes the real request and returns the response, saving the tape', async () => {
-          const resObj = await reqHandler.handle(savedTape.req);
+          const tapeStoreManager = getMockTapeStoreManager();
+          const requestHandler = getMockRequestHandler(opts, {
+            tapeStoreManager,
+            makeRealRequest: () => ({
+              ...getMockTape().response,
+              body: Buffer.from('Foobar'),
+            }),
+          });
 
-          expect(resObj.status).toEqual(200);
-          expect(resObj.body).toEqual(Buffer.from('Foobar'));
+          const response = await requestHandler.handle(getMockTape().request);
+
+          expect(response.status).toEqual(200);
+          expect(response.body).toEqual(Buffer.from('Foobar'));
 
           expect(tapeStoreManager.getTapeStore().save).toHaveBeenCalled();
         });
@@ -176,15 +206,14 @@ describe('RequestHandler', () => {
       });
 
       describe('when the request matches a tape', () => {
-        beforeEach(() => {
-          tapeStoreManager.getTapeStore().tapes = [savedTape];
-        });
-
         it('returns the matched tape response', async () => {
-          const resObj = await reqHandler.handle(savedTape.req);
+          const tapeStoreManager = getMockTapeStoreManager([getMockTape()]);
+          const response = await getMockRequestHandler(opts, { tapeStoreManager }).handle(
+            getMockTape().request,
+          );
 
-          expect(resObj.status).toEqual(200);
-          expect(resObj.body).toEqual(Buffer.from('Hello'));
+          expect(response.status).toEqual(200);
+          expect(response.body).toEqual(Buffer.from(helloBase64));
         });
       });
 
@@ -195,7 +224,16 @@ describe('RequestHandler', () => {
           });
 
           it('returns a 404', async () => {
-            const resObj = await reqHandler.handle(savedTape.req);
+            const tapeStoreManager = getMockTapeStoreManager();
+            const requestHandler = getMockRequestHandler(opts, {
+              tapeStoreManager,
+              makeRealRequest: () => ({
+                ...getMockTape().response,
+                body: Buffer.from('Foobar'),
+              }),
+            });
+
+            const resObj = await requestHandler.handle(getMockTape().request);
 
             expect(resObj.status).toEqual(404);
           });
@@ -204,11 +242,19 @@ describe('RequestHandler', () => {
         describe("when fallbackMode is 'PROXY'", () => {
           beforeEach(() => {
             opts.fallbackMode = 'PROXY';
-            prepareForExternalRequest();
           });
 
           it("makes real request and returns the response but doesn't save it", async () => {
-            const resObj = await reqHandler.handle(savedTape.req);
+            const tapeStoreManager = getMockTapeStoreManager();
+            const requestHandler = getMockRequestHandler(opts, {
+              tapeStoreManager,
+              makeRealRequest: () => ({
+                ...getMockTape().response,
+                body: Buffer.from('Foobar'),
+              }),
+            });
+
+            const resObj = await requestHandler.handle(getMockTape().request);
 
             expect(resObj.status).toEqual(200);
             expect(resObj.body).toEqual(Buffer.from('Foobar'));
@@ -222,7 +268,7 @@ describe('RequestHandler', () => {
 
           beforeEach(() => {
             opts.fallbackMode = (req) => {
-              expect(req).toEqual(savedTape.req);
+              expect(req).toEqual(getMockTape().request);
 
               return fallbackModeToReturn;
             };
@@ -230,26 +276,43 @@ describe('RequestHandler', () => {
 
           it('raises an error if the returned mode is not valid', async () => {
             fallbackModeToReturn = 'INVALID';
+            const tapeStoreManager = getMockTapeStoreManager();
+            const requestHandler = getMockRequestHandler(opts, {
+              tapeStoreManager,
+              makeRealRequest: () => ({
+                ...getMockTape().response,
+                body: Buffer.from('Foobar'),
+              }),
+            });
 
             try {
-              await reqHandler.handle(savedTape.req);
+              await requestHandler.handle(getMockTape().request);
               throw new Error('Exception expected to be thrown');
             } catch (ex) {
-              expect(ex).toEqual("INVALID OPTION: fallbackMode has an invalid value of 'INVALID'");
+              expect(ex).toEqual(
+                new Error("INVALID OPTION: fallbackMode has an invalid value of 'INVALID'"),
+              );
             }
           });
 
           it('does what the function returns', async () => {
             fallbackModeToReturn = 'NOT_FOUND';
+            const tapeStoreManager = getMockTapeStoreManager();
+            const requestHandler = getMockRequestHandler(opts, {
+              tapeStoreManager,
+              makeRealRequest: () => ({
+                ...getMockTape().response,
+                body: Buffer.from('Foobar'),
+              }),
+            });
 
-            let resObj = await reqHandler.handle(savedTape.req);
+            let resObj = await requestHandler.handle(getMockTape().request);
 
             expect(resObj.status).toEqual(404);
 
             fallbackModeToReturn = 'PROXY';
-            prepareForExternalRequest();
 
-            resObj = await reqHandler.handle(savedTape.req);
+            resObj = await requestHandler.handle(getMockTape().request);
             expect(resObj.status).toEqual(200);
           });
         });
@@ -261,7 +324,7 @@ describe('RequestHandler', () => {
 
       beforeEach(() => {
         opts.record = (req) => {
-          expect(req).toEqual(savedTape.req);
+          expect(req).toEqual(getMockTape().request);
 
           return modeToReturn;
         };
@@ -271,26 +334,40 @@ describe('RequestHandler', () => {
         modeToReturn = 'INVALID';
 
         try {
-          await reqHandler.handle(savedTape.req);
+          await getMockRequestHandler(opts).handle(getMockTape().request);
           throw new Error('Exception expected to be thrown');
         } catch (ex) {
-          expect(ex).toEqual("INVALID OPTION: record has an invalid value of 'INVALID'");
+          expect(ex).toEqual(new Error("INVALID OPTION: record has an invalid value of 'INVALID'"));
         }
       });
 
       it('does what the function returns', async () => {
         modeToReturn = 'DISABLED';
 
-        let resObj = await reqHandler.handle(savedTape.req);
+        const tapeStoreManager = getMockTapeStoreManager();
 
-        expect(resObj.status).toEqual(404);
+        let response = await getMockRequestHandler(opts, {
+          tapeStoreManager,
+          makeRealRequest: () => ({
+            ...getMockTape().response,
+            body: Buffer.from('Foobar'),
+          }),
+        }).handle(getMockTape().request);
+
+        expect(response.status).toEqual(404);
 
         modeToReturn = 'NEW';
-        prepareForExternalRequest();
 
-        resObj = await reqHandler.handle(savedTape.req);
-        expect(resObj.status).toEqual(200);
-        expect(resObj.body).toEqual(Buffer.from('Foobar'));
+        response = await getMockRequestHandler(opts, {
+          tapeStoreManager,
+          makeRealRequest: () => ({
+            ...getMockTape().response,
+            body: Buffer.from('Foobar'),
+          }),
+        }).handle(getMockTape().request);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toEqual(Buffer.from('Foobar'));
 
         expect(tapeStoreManager.getTapeStore().save).toHaveBeenCalled();
       });

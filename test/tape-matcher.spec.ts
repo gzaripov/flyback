@@ -1,24 +1,24 @@
 import TapeMatcher from '../src/tape-matcher';
-import Tape from '../src/tape';
-import Logger from '../src/logger';
-import Options from '../src/options';
+import { createTapeFromJSON, SerializedTape } from '../src/tape';
+import { prepareOptions, UserOptions } from '../src/options';
+import { Request } from '../src/types/http';
 
-const raw = {
+const raw: SerializedTape = {
   meta: {
+    endpoint: 'test.proxy.com',
     createdAt: new Date(),
-    reqHumanReadable: true,
-    resHumanReadable: false,
   },
-  req: {
+  request: {
     url: '/foo/bar/1?real=3',
     method: 'GET',
     headers: {
-      accept: 'application/json',
-      'x-ignored': '1',
+      accept: ['application/json'],
+      'x-ignored': ['1'],
     },
     body: 'ABC',
   },
-  res: {
+  response: {
+    status: 200,
     headers: {
       accept: ['application/json'],
       'x-ignored': ['2'],
@@ -27,21 +27,21 @@ const raw = {
   },
 };
 
-const opts = Options.prepare({
+const opts = prepareOptions({
   ignoreHeaders: ['x-ignored'],
   ignoreQueryParams: ['ignored1', 'ignored2'],
-});
+} as UserOptions);
 
-const tape = Tape.fromStore(raw, opts);
+const tape = createTapeFromJSON(raw);
 
 describe('TapeMatcher', () => {
   describe('#sameAs', () => {
-    const req = {
+    const req: Request = {
       url: '/foo/bar/1?ignored1=foo&ignored2=bar&real=3',
       method: 'GET',
       headers: {
-        accept: 'application/json',
-        'x-ignored': '1',
+        accept: ['application/json'],
+        'x-ignored': ['1'],
       },
       body: Buffer.from('QUJD', 'base64'),
     };
@@ -52,22 +52,19 @@ describe('TapeMatcher', () => {
         ignoreBody: true,
       };
 
-      const newTape = Tape.fromStore(raw, newOpts);
-      const tape2 = new Tape({ ...req, body: Buffer.from('XYZ') }, newOpts);
+      const newTape = createTapeFromJSON(raw);
 
-      expect(new TapeMatcher(newTape, newOpts).sameAs(tape2)).toBe(true);
+      expect(new TapeMatcher(newTape, newOpts).matches(req)).toBe(true);
     });
 
     it('returns true when everything is the same', () => {
-      const tape2 = new Tape(req, opts);
-
-      expect(new TapeMatcher(tape, opts).sameAs(tape2)).toBe(true);
+      expect(new TapeMatcher(tape, opts).matches(req)).toBe(true);
     });
 
     it('returns true when only ignored query params change', () => {
-      const tape2 = new Tape({ ...req, url: '/foo/bar/1?ignored1=diff&real=3' }, opts);
-
-      expect(new TapeMatcher(tape, opts).sameAs(tape2)).toBe(true);
+      expect(
+        new TapeMatcher(tape, opts).matches({ ...req, url: '/foo/bar/1?ignored1=diff&real=3' }),
+      ).toBe(true);
     });
 
     it('returns true when all query params are ignored', () => {
@@ -75,67 +72,69 @@ describe('TapeMatcher', () => {
         ...opts,
         ignoreQueryParams: [...opts.ignoreQueryParams, 'real'],
       };
-      const newTape = Tape.fromStore(raw, newOpts);
-      const tape2 = new Tape({ ...req, url: '/foo/bar/1?ignored1=diff&real=diff' }, newOpts);
 
-      expect(new TapeMatcher(newTape, newOpts).sameAs(tape2)).toBe(true);
+      const newTape = createTapeFromJSON(raw);
+      const reqToMatch = {
+        ...req,
+        url: '/foo/bar/1?ignored1=diff&real=diff',
+      };
+
+      expect(new TapeMatcher(newTape, newOpts).matches(reqToMatch)).toBe(true);
     });
 
     it('returns true when only ignored headers change', () => {
       const headers = {
         ...req.headers,
-        'x-ignored': 'diff',
+        'x-ignored': ['diff'],
       };
-      const tape2 = new Tape(
-        {
-          ...req,
-          headers,
-        },
-        opts,
-      );
 
-      expect(new TapeMatcher(tape, opts).sameAs(tape2)).toBe(true);
+      const reqToMatch = {
+        ...req,
+        headers,
+      };
+
+      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(true);
     });
 
     it('returns false when the urls are different', () => {
-      const tape2 = new Tape({ ...req, url: '/bar' }, opts);
+      const reqToMatch = { ...req, url: '/bar' };
 
-      expect(new TapeMatcher(tape, opts).sameAs(tape2)).toBe(false);
+      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
     });
 
     it('returns false when the query params have different values', () => {
-      const tape2 = new Tape({ ...req, url: '/foo/bar/1?real=different' }, opts);
+      const reqToMatch = { ...req, url: '/foo/bar/1?real=different' };
 
-      expect(new TapeMatcher(tape, opts).sameAs(tape2)).toBe(false);
+      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
     });
 
     it('returns false when the query params are different', () => {
-      const tape2 = new Tape({ ...req, url: '/foo/bar/1?real=3&newParam=1' }, opts);
+      const reqToMatch = { ...req, url: '/foo/bar/1?real=3&newParam=1' };
 
-      expect(new TapeMatcher(tape, opts).sameAs(tape2)).toBe(false);
+      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
     });
 
     it('returns false when the methods are different', () => {
-      const tape2 = new Tape({ ...req, method: 'POST' }, opts);
+      const reqToMatch = { ...req, method: 'POST' };
 
-      expect(new TapeMatcher(tape, opts).sameAs(tape2)).toBe(false);
+      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
     });
 
     it('returns false when the bodies are different', () => {
-      const tape2 = new Tape({ ...req, body: Buffer.from('') }, opts);
+      const reqToMatch = { ...req, body: Buffer.from('') };
 
-      expect(new TapeMatcher(tape, opts).sameAs(tape2)).toBe(false);
+      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
     });
 
     it('returns true when both bodies are empty', () => {
-      const rawDup = {
+      const rawDup: SerializedTape = {
         ...raw,
-        req: {
-          ...raw.req,
+        request: {
+          ...raw.request,
           method: 'HEAD',
           headers: {
-            ...raw.req.headers,
-            'content-type': 'application/json',
+            ...raw.request.headers,
+            'content-type': ['application/json'],
           },
           body: '',
         },
@@ -146,108 +145,97 @@ describe('TapeMatcher', () => {
         method: 'HEAD',
         headers: {
           ...req.headers,
-          'content-type': 'application/json',
+          'content-type': ['application/json'],
         },
         body: Buffer.from(''),
       };
 
-      const newTape = Tape.fromStore(rawDup, opts);
-      const tape2 = new Tape(reqDup, opts);
+      const newTape = createTapeFromJSON(rawDup);
 
-      expect(new TapeMatcher(newTape, opts).sameAs(tape2)).toBe(true);
+      expect(new TapeMatcher(newTape, opts).matches(reqDup)).toBe(true);
     });
 
     it('returns false when there are more headers', () => {
-      const tape2 = new Tape(
-        {
-          ...req,
-          headers: {
-            ...req.headers,
-            foo: 'bar',
-          },
+      const reqToMatch = {
+        ...req,
+        headers: {
+          ...req.headers,
+          foo: ['bar'],
         },
-        opts,
-      );
+      };
 
-      expect(new TapeMatcher(tape, opts).sameAs(tape2)).toBe(false);
+      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
     });
 
     it('returns false when there are less headers', () => {
       const headers = { ...req.headers };
 
       delete headers['accept'];
-      const tape2 = new Tape(
-        {
-          ...req,
-          headers,
-        },
-        opts,
-      );
+      const reqToMatch = {
+        ...req,
+        headers,
+      };
 
-      expect(new TapeMatcher(tape, opts).sameAs(tape2)).toBe(false);
+      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
     });
 
     it('returns false when a header has a different value', () => {
       const headers = {
         ...req.headers,
-        accept: 'x-form',
+        accept: ['x-form'],
       };
-      const tape2 = new Tape(
-        {
-          ...req,
-          headers,
-        },
-        opts,
-      );
 
-      expect(new TapeMatcher(tape, opts).sameAs(tape2)).toBe(false);
+      const reqToMatch = {
+        ...req,
+        headers,
+      };
+
+      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
     });
 
-    describe('bodyMatcher', () => {
-      it('returns true when just the bodies are different but the bodyMatcher says they match', () => {
+    describe('tapeMatcher', () => {
+      it('returns true when just the bodies are different but the tapeMatcher says they match', () => {
         const newOpts = {
           ...opts,
-          bodyMatcher: (_tape, _otherReq) => true,
+          tapeMatcher: () => true,
         };
 
-        const tape2 = new Tape({ ...req, body: Buffer.from('XYZ') }, newOpts);
+        const reqToMatch = { ...req, body: Buffer.from('XYZ') };
 
-        expect(new TapeMatcher(tape, newOpts).sameAs(tape2)).toBe(true);
+        expect(new TapeMatcher(tape, newOpts).matches(reqToMatch)).toBe(true);
       });
 
       it("returns false when just the bodies are different and the bodyMatcher says they don't match", () => {
         const newOpts = {
           ...opts,
-          bodyMatcher: (_tape, otherReq) => false,
+          tapeMatcher: () => false,
         };
 
-        const tape2 = new Tape({ ...req, body: Buffer.from('XYZ') }, newOpts);
+        const reqToMatch = { ...req, body: Buffer.from('XYZ') };
 
-        expect(new TapeMatcher(tape, newOpts).sameAs(tape2)).toBe(false);
+        expect(new TapeMatcher(tape, newOpts).matches(reqToMatch)).toBe(false);
       });
-    });
 
-    describe('urlMatcher', () => {
       it('returns true when urls are different but the urlMatcher says they match', () => {
         const newOpts = {
           ...opts,
-          urlMatcher: (_tape, _otherReq) => true,
+          tapeMatcher: () => true,
         };
 
-        const tape2 = new Tape({ ...req, url: '/not-same' }, newOpts);
+        const reqToMatch = { ...req, url: '/not-same' };
 
-        expect(new TapeMatcher(tape, newOpts).sameAs(tape2)).toBe(true);
+        expect(new TapeMatcher(tape, newOpts).matches(reqToMatch)).toBe(true);
       });
 
       it("returns false when just the urls are different and the urlMatcher says they don't match", () => {
         const newOpts = {
           ...opts,
-          urlMatcher: (_tape, otherReq) => false,
+          tapeMatcher: () => false,
         };
 
-        const tape2 = new Tape({ ...req, url: '/not-same' }, newOpts);
+        const reqToMatch = { ...req, url: '/not-same' };
 
-        expect(new TapeMatcher(tape, newOpts).sameAs(tape2)).toBe(false);
+        expect(new TapeMatcher(tape, newOpts).matches(reqToMatch)).toBe(false);
       });
     });
   });
