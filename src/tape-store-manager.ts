@@ -1,6 +1,6 @@
 import TapeStore from './tape-store';
 import { Options } from './options';
-import { Request } from './types/http';
+import { Request } from './http';
 import { Tape } from './tape';
 
 export default class TapeStoreManager {

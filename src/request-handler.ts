@@ -1,9 +1,10 @@
 import fetch, { Headers as FetchHeaders } from 'node-fetch';
 import { createTape, cloneTape } from './tape';
-import { validateRecord, validateFallbackMode, Options } from './options';
+import { validateRecord, validateFallbackMode, Options, RecordMode } from './options';
 import TapeStoreManager from './tape-store-manager';
-import { Request, Response } from './types/http';
-
+import { Request, Response } from './http';
+import { Tape } from './tape';
+import { assertBoolean } from './utils/asserts';
 export default class RequestHandler {
   private tapeStoreManager: TapeStoreManager;
   private options: Options;
@@ -13,63 +14,62 @@ export default class RequestHandler {
     this.options = options;
   }
 
-  async handle(req: Request): Promise<Response> {
-    const recordMode =
-      typeof this.options.record !== 'function' ? this.options.record : this.options.record(req);
-
-    validateRecord(recordMode);
-
+  async findTape(req: Request, recordMode: RecordMode): Promise<Tape> {
     const tapeStore = this.tapeStoreManager.getTapeStore(req);
     const matchingTape = tapeStore.find(req);
-
-    let resObj;
-
-    let resultTape;
 
     if (recordMode === 'OVERWRITE') {
       const res = await this.makeRealRequest(req);
 
-      resultTape = createTape(req, res, this.options);
-      tapeStore.save(resultTape);
-    } else if (recordMode === 'NEW') {
-      if (matchingTape) {
-        resultTape = matchingTape;
-      } else {
-        const res = await this.makeRealRequest(req);
+      const tape = createTape(req, res, this.options);
 
-        resultTape = createTape(req, res, this.options);
-        tapeStore.save(resultTape);
-      }
-    } else if (recordMode === 'DISABLED') {
-      if (matchingTape) {
-        resultTape = matchingTape;
-      } else {
-        const res = await this.onNoRecord(req);
+      tapeStore.save(tape);
 
-        resultTape = createTape(req, res, this.options);
-      }
-    } else {
-      throw new Error(`Unkown record mode is passed ${recordMode}`);
+      return tape;
     }
 
-    resObj = resultTape.response;
+    if (matchingTape) {
+      return matchingTape;
+    }
+
+    if (recordMode === 'NEW') {
+      const res = await this.makeRealRequest(req);
+
+      const tape = createTape(req, res, this.options);
+
+      tapeStore.save(tape);
+
+      return tape;
+    }
+
+    assertBoolean(recordMode === 'DISABLED', `Invalid recordMode ${recordMode}`);
+
+    const res = await this.onNoRecord(req);
+
+    return createTape(req, res, this.options);
+  }
+
+  async handle(req: Request): Promise<Response> {
+    const recordMode =
+      typeof this.options.recordMode !== 'function'
+        ? this.options.recordMode
+        : this.options.recordMode(req);
+
+    validateRecord(recordMode);
+
+    const tape = await this.findTape(req, recordMode);
 
     if (this.options.tapeDecorator) {
-      const resTape = this.options.tapeDecorator(cloneTape(resultTape));
+      const resTape = this.options.tapeDecorator(cloneTape(tape));
 
       if (resTape.response && resTape.response.headers['content-length']) {
-        resTape.response.headers['content-length'] = [resTape.response.body.length.toString()];
+        resTape.response.headers['content-length'] = [resTape.response.body.byteLength.toString()];
       }
 
-      resObj = resTape.response;
+      return resTape.response;
     }
 
-    if (!resObj) {
-      // TODO remove this check
-      throw new Error('Unable to make response');
-    }
-
-    return resObj;
+    return tape.response;
   }
 
   async onNoRecord(req: Request): Promise<Response> {
@@ -103,8 +103,6 @@ export default class RequestHandler {
     let { body } = req;
     const { method, url } = req;
     const headers = ({ ...req.headers } as any) as FetchHeaders;
-
-    // delete headers.host;
 
     const endpoint = this.options.proxyUrl;
 

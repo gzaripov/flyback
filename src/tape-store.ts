@@ -5,7 +5,7 @@ import { Tape, createTapeFromJSON } from './tape';
 import TapeFinder from './tape-matcher';
 import TapeRenderer from './tape-renderer';
 import { Options } from './options';
-import { Request } from './types/http';
+import { Request } from './http';
 
 export default class TapeStore {
   public tapes: Tape[];

@@ -7,15 +7,45 @@ import Summary from './summary';
 import TapeStoreManager from './tape-store-manager';
 import { parseUrl } from './utils/url';
 import { Options } from './options';
-import { Request } from './types/http';
+import { Request } from './http';
 
 type Server = HttpServer | HttpsServer;
+
+export function createRequest(im: IncomingMessage, body: Buffer): Request {
+  const { url, method, headers } = im;
+
+  if (!url || !method) {
+    throw new Error(`Invalid incoming message ${im}`);
+  }
+
+  const requestHeaders = Object.keys(headers).reduce((acc, header) => {
+    const headerValue = headers[header];
+
+    if (Array.isArray(headerValue)) {
+      return {
+        ...acc,
+        [header]: headerValue,
+      };
+    }
+
+    return {
+      ...acc,
+      [header]: [headerValue],
+    };
+  }, {});
+
+  return {
+    url,
+    method,
+    headers: requestHeaders,
+    body,
+  };
+}
 
 export default class TalkbackServer {
   private options: Options;
   private server: Server;
   public tapeStoreManager: TapeStoreManager;
-  // private closeHandler:
 
   constructor(options: Options) {
     this.options = options;
@@ -46,9 +76,8 @@ export default class TalkbackServer {
       })
       .on('end', async () => {
         try {
-          const request = req as Request;
+          const request = createRequest(req, Buffer.concat(reqBodyChunks));
 
-          request.body = Buffer.concat(reqBodyChunks);
           const requestHandler = new RequestHandler(this.tapeStoreManager, this.options);
           const fRes = await requestHandler.handle(request);
 
@@ -73,6 +102,7 @@ export default class TalkbackServer {
       });
     });
 
+    /* istanbul ignore next line */
     onExit(() => this.close());
 
     return promise;

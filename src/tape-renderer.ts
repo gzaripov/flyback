@@ -1,7 +1,7 @@
 import { HeadersUtil } from './utils/headers';
 import MediaType from './utils/media-type';
 import { Tape } from './tape';
-import { RequestOrResponse } from './types/http';
+import { RequestOrResponse } from './http';
 
 export default class TapeRenderer {
   private tape: Tape;

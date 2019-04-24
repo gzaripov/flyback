@@ -2,20 +2,18 @@
   "meta": {
     "createdAt": "2018-08-10T23:19:27.010Z",
     "host": "http://localhost:8898",
-    "reqHumanReadable": true,
-    "resHumanReadable": true,
     "tag": "echo"
   },
   "request": {
     "url": "/test/echo",
     "method": "POST",
     "headers": {
-      "user-agent": "node-fetch/1.0 (+https://github.com/bitinn/node-fetch)",
-      "connection": "close",
-      "accept": "*/*",
-      "content-type": "application/json"
+      "user-agent": ["node-fetch/1.0 (+https://github.com/bitinn/node-fetch)"],
+      "connection": ["close"],
+      "accept": ["*/*"],
+      "content-type": ["application/json"]
     },
-    "body": "{\"text\":\"foobar\"}"
+    "body": "{\"text\":\"request-test-text\"}"
   },
   "response": {
     "status": 200,
@@ -25,6 +23,6 @@
       "connection": ["close"],
       "transfer-encoding": ["chunked"]
     },
-    "body": "{\"text\":\"foobar\"}"
+    "body": "{\"text\":\"response-test-text\"}"
   }
 }
