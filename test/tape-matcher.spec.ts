@@ -96,6 +96,45 @@ describe('TapeMatcher', () => {
       expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(true);
     });
 
+    it('returns true when only headers change and ignoreAllHeaders is true', () => {
+      const newOpts = {
+        ...opts,
+        ignoreAllHeaders: true,
+      };
+
+      const headers = {
+        ...req.headers,
+        'x-not-ignored': ['diff'],
+        'any-header': ['anything'],
+      };
+
+      const reqToMatch = {
+        ...req,
+        headers,
+      };
+
+      expect(new TapeMatcher(tape, newOpts).matches(reqToMatch)).toBe(true);
+    });
+
+    it('returns false when only headers change and ignoreHeaders is undefined', () => {
+      const newOpts = {
+        ...opts,
+        ignoreHeaders: undefined,
+      };
+
+      const headers = {
+        ...req.headers,
+        'x--ignored': ['diff'],
+      };
+
+      const reqToMatch = {
+        ...req,
+        headers,
+      };
+
+      expect(new TapeMatcher(tape, newOpts).matches(reqToMatch)).toBe(false);
+    });
+
     it('returns false when the urls are different', () => {
       const reqToMatch = { ...req, url: '/bar' };
 
@@ -205,7 +244,7 @@ describe('TapeMatcher', () => {
         expect(new TapeMatcher(tape, newOpts).matches(reqToMatch)).toBe(true);
       });
 
-      it("returns false when just the bodies are different and the bodyMatcher says they don't match", () => {
+      it("returns false when just the bodies are different and the tapeMatcher says they don't match", () => {
         const newOpts = {
           ...opts,
           tapeMatcher: () => false,
@@ -216,7 +255,7 @@ describe('TapeMatcher', () => {
         expect(new TapeMatcher(tape, newOpts).matches(reqToMatch)).toBe(false);
       });
 
-      it('returns true when urls are different but the urlMatcher says they match', () => {
+      it('returns true when urls are different but the tapeMatcher says they match', () => {
         const newOpts = {
           ...opts,
           tapeMatcher: () => true,
@@ -227,7 +266,7 @@ describe('TapeMatcher', () => {
         expect(new TapeMatcher(tape, newOpts).matches(reqToMatch)).toBe(true);
       });
 
-      it("returns false when just the urls are different and the urlMatcher says they don't match", () => {
+      it("returns false when just the urls are different and the tapeMatcher says they don't match", () => {
         const newOpts = {
           ...opts,
           tapeMatcher: () => false,
@@ -236,6 +275,33 @@ describe('TapeMatcher', () => {
         const reqToMatch = { ...req, url: '/not-same' };
 
         expect(new TapeMatcher(tape, newOpts).matches(reqToMatch)).toBe(false);
+      });
+
+      it('returns true when both bodies are undefined', () => {
+        const tape = createTapeFromJSON(raw);
+        const reqToMatch = { ...tape.request, body: undefined };
+
+        tape.request.body = undefined;
+
+        expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(true);
+      });
+
+      it('returns false when one body is truthy and other is falsy', () => {
+        const tape = createTapeFromJSON(raw);
+        const reqToMatch = { ...tape.request, body: undefined };
+
+        expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
+      });
+
+      it('returns true when url bases are the same and ignoreAllQueryParams is true', () => {
+        const newOpts = {
+          ...opts,
+          ignoreAllQueryParams: true,
+        };
+
+        const reqToMatch = { ...req, url: '/foo/bar/1?some?other?args' };
+
+        expect(new TapeMatcher(tape, newOpts).matches(reqToMatch)).toBe(true);
       });
     });
   });

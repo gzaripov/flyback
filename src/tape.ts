@@ -1,6 +1,6 @@
 import MediaType from './utils/media-type';
 import TapeRenderer from './tape-renderer';
-import { Request, Response, Headers } from './types/http';
+import { Request, Response, Headers } from './http';
 import { Options } from './options';
 
 type Meta = {

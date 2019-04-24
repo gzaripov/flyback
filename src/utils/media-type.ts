@@ -1,6 +1,6 @@
 import contentTypeParser from 'content-type';
 import { HeadersUtil } from './headers';
-import { RequestOrResponse, Headers } from '../types/http';
+import { RequestOrResponse, Headers } from '../http';
 
 export const jsonTypes = ['application/json'];
 

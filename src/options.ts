@@ -1,7 +1,7 @@
 import Logger from './logger';
 import { Tape } from './tape';
 import { Agent } from 'https';
-import { Request } from './types/http';
+import { Request } from './http';
 
 export type RecordMode =
   | 'NEW' // If no tape matches the request, proxy it and save the response to a tape
@@ -17,7 +17,7 @@ export type UserOptions = {
   proxyUrl: string;
   talkbackUrl?: string;
   tapesPath?: string;
-  record?: RecordMode | ((request: Request) => RecordMode);
+  recordMode?: RecordMode | ((request: Request) => RecordMode);
   fallbackMode?: FallbackMode | ((request: Request) => FallbackMode);
   name?: string;
   tapeNameGenerator?: (tape: Tape, tapeId: number) => string;
@@ -42,7 +42,7 @@ export type UserOptions = {
 
 const defaultOptions = {
   talkbackUrl: 'localhost:8080',
-  record: 'NEW' as RecordMode | ((request: Request) => RecordMode),
+  recordMode: 'NEW' as RecordMode | ((request: Request) => RecordMode),
   fallbackMode: 'NOT_FOUND' as FallbackMode | ((request: Request) => FallbackMode),
   name: 'unnamed',
   ignoreHeaders: ['content-length', 'host'],
@@ -69,7 +69,7 @@ export function validateFallbackMode(
 }
 
 function validateOptions(opts: UserOptions) {
-  validateRecord(opts.record);
+  validateRecord(opts.recordMode);
   validateFallbackMode(opts.fallbackMode);
 }
 

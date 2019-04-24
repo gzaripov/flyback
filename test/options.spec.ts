@@ -21,7 +21,7 @@ describe('Options', () => {
   describe('options validation', () => {
     describe('#record', () => {
       it('throws an error when record is not a valid value', () => {
-        expect(() => prepareOptions({ record: 'invalid' } as any)).toThrow(
+        expect(() => prepareOptions({ recordMode: 'invalid' } as any)).toThrow(
           "INVALID OPTION: record has an invalid value of 'invalid'",
         );
       });

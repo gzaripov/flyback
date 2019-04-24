@@ -60,13 +60,14 @@ describe('RequestHandler', () => {
   beforeEach(() => {
     opts = prepareOptions({
       debug: false,
-      record: 'NEW',
+      recordMode: 'NEW',
       tapesPath: `${__dirname}/tapes`,
+      silent: true,
     } as Options);
   });
 
   describe('#handle', () => {
-    describe("when request opt is 'NEW'", () => {
+    describe("when recordMode is 'NEW'", () => {
       describe('when the request matches a tape', () => {
         it('returns the matched tape response', async () => {
           const tapeStoreManager = getMockTapeStoreManager([getMockTape()]);
@@ -78,30 +79,38 @@ describe('RequestHandler', () => {
           expect(response.body).toEqual(Buffer.from(helloBase64));
         });
 
-        describe("when there's a responseDecorator", () => {
-          beforeEach(() => {
-            opts.tapeDecorator = (tape) => {
-              tape.response.body = tape.request.body;
+        describe("when there's a tapeDecorator", () => {
+          const tapeDecorator = (tape) => {
+            tape.response.body = tape.request.body;
 
-              return tape;
-            };
-          });
+            return tape;
+          };
 
           it('returns the decorated response', async () => {
-            const response = await getMockRequestHandler(opts).handle(getMockTape().request);
+            const tapeStoreManager = getMockTapeStoreManager([getMockTape()]);
+
+            const response = await getMockRequestHandler(
+              { ...opts, tapeDecorator },
+              { tapeStoreManager },
+            ).handle(getMockTape().request);
 
             expect(response.status).toEqual(200);
             expect(response.body).toEqual(Buffer.from('ABC'));
             expect(getMockTape().response.body).toEqual(Buffer.from(helloBase64));
           });
 
-          it("doesn't add a content-length header if it isn't present in the original response", async () => {
-            const tapeStoreManager = getMockTapeStoreManager([getMockTape()]);
-            const response = await getMockRequestHandler(opts, { tapeStoreManager }).handle(
-              getMockTape().request,
-            );
+          it("Adds a content-length header if it isn't present in the original response", async () => {
+            const mockTape = getMockTape();
 
-            expect(response.headers['content-length']).toBe(undefined);
+            mockTape.response.headers['content-length'] = ['3'];
+
+            const tapeStoreManager = getMockTapeStoreManager([mockTape]);
+            const response = await getMockRequestHandler(
+              { ...opts, tapeDecorator },
+              { tapeStoreManager },
+            ).handle(mockTape.request);
+
+            expect(response.headers['content-length']).toEqual(['3']);
           });
         });
       });
@@ -119,15 +128,13 @@ describe('RequestHandler', () => {
 
           const response = await requestHandler.handle(getMockTape().request);
 
-          console.log(response.body.toString());
-
           expect(response.status).toEqual(200);
           expect(response.body).toEqual(Buffer.from('Foobar'));
 
           expect(tapeStoreManager.getTapeStore().save).toHaveBeenCalled();
         });
 
-        describe("when there's a responseDecorator", () => {
+        describe("when there's a tapeDecorator", () => {
           beforeEach(() => {
             opts.tapeDecorator = (tape) => {
               tape.response.body = tape.request.body;
@@ -154,9 +161,9 @@ describe('RequestHandler', () => {
       });
     });
 
-    describe("when request opt is 'OVERWRITE'", () => {
+    describe("when recordMode is 'OVERWRITE'", () => {
       beforeEach(() => {
-        opts.record = 'OVERWRITE';
+        opts.recordMode = 'OVERWRITE';
       });
 
       describe('when the request matches a tape', () => {
@@ -200,9 +207,9 @@ describe('RequestHandler', () => {
       });
     });
 
-    describe("when request opt is 'DISABLED'", () => {
+    describe("when recordMode is 'DISABLED'", () => {
       beforeEach(() => {
-        opts.record = 'DISABLED';
+        opts.recordMode = 'DISABLED';
       });
 
       describe('when the request matches a tape', () => {
@@ -319,11 +326,11 @@ describe('RequestHandler', () => {
       });
     });
 
-    describe('when record is a function', () => {
+    describe('when recordMode is a function', () => {
       let modeToReturn;
 
       beforeEach(() => {
-        opts.record = (req) => {
+        opts.recordMode = (req) => {
           expect(req).toEqual(getMockTape().request);
 
           return modeToReturn;
