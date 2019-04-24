@@ -12,6 +12,7 @@ export default {
     commonjs(),
     babel({
       extensions,
+      runtimeHelpers: true,
       include: ['src/**/*'],
       exclude: 'node_modules/**',
     }),

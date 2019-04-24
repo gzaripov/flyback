@@ -2,7 +2,12 @@
   "presets": [["@babel/preset-env", { "modules": false }], "@babel/preset-typescript"],
   "plugins": [
     "@babel/proposal-object-rest-spread",
-    "@babel/plugin-proposal-class-properties"
-    // "@babel/plugin-transform-runtime"
-  ]
+    "@babel/plugin-proposal-class-properties",
+    "@babel/transform-runtime"
+  ],
+  "env": {
+    "test": {
+      "presets": [["@babel/preset-env", { "modules": "commonjs" }], "@babel/preset-typescript"]
+    }
+  }
 }
