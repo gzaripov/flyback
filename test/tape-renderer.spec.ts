@@ -191,5 +191,38 @@ describe('TapeRenderer', () => {
 
       expect(new TapeRenderer(newTape).render()).toEqual(newRaw);
     });
+
+    it('renders tapes without bodies', () => {
+      const raw: SerializedTape = {
+        ...serializedTape,
+        request: {
+          ...serializedTape.request,
+          method: 'HEAD',
+          headers: {
+            ...serializedTape.request.headers,
+            'content-type': ['application/json'],
+          },
+        },
+        response: {
+          ...serializedTape.response,
+          headers: {
+            ...serializedTape.response.headers,
+            'content-type': ['application/json'],
+          },
+        },
+      };
+
+      delete raw.request.body;
+      delete raw.response.body;
+
+      const tape = createTapeFromJSON(raw);
+
+      const expected: SerializedTape = JSON.parse(JSON.stringify(raw));
+
+      const renderedTape = new TapeRenderer(tape).render();
+
+      expect(renderedTape.request.body).toEqual(expected.request.body);
+      expect(renderedTape.response.body).toEqual(expected.response.body);
+    });
   });
 });

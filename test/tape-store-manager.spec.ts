@@ -31,6 +31,7 @@ const serializedTape: SerializedTape = {
 describe('TapeStoreManager', () => {
   it('returns store with path from tapePathGenerator', () => {
     const opts = prepareOptions({
+      silent: true,
       proxyUrl: 'localhost:8080',
       tapePathGenerator: (request) => {
         return request.headers.testpath[0];
@@ -43,5 +44,98 @@ describe('TapeStoreManager', () => {
     const tapeStore = tapeStoreManager.getTapeStore(tape.request);
 
     expect(tapeStore.hasPath(serializedTape.request.headers.testpath[0])).toBe(true);
+  });
+
+  it('returns the same store second on same path', () => {
+    const opts = prepareOptions({
+      silent: true,
+      proxyUrl: 'localhost:8080',
+      tapePathGenerator: (request) => {
+        return request.headers.testpath[0];
+      },
+    });
+
+    const tape = createTapeFromJSON(serializedTape);
+    const tapeStoreManager = new TapeStoreManager(opts);
+
+    const tapeStoreFirst = tapeStoreManager.getTapeStore(tape.request);
+    const tapeStoreSecond = tapeStoreManager.getTapeStore(tape.request);
+
+    expect(tapeStoreFirst).toBe(tapeStoreSecond);
+  });
+
+  it('throws error when there is no tapesPath and tapePathGenerator', () => {
+    const opts = prepareOptions({
+      silent: true,
+      proxyUrl: 'localhost:8080',
+    });
+
+    const tape = createTapeFromJSON(serializedTape);
+    const tapeStoreManager = new TapeStoreManager(opts);
+
+    expect(() => tapeStoreManager.getTapeStore(tape.request)).toThrow(
+      new Error(
+        'Cant find path for tape store, use options.tapesPath or options.tapePathGenerator',
+      ),
+    );
+  });
+
+  it('returns default tape store when there is tapePathGenerator but it return empty value', () => {
+    const opts = prepareOptions({
+      silent: true,
+      proxyUrl: 'localhost:8080',
+      tapePathGenerator: () => '',
+    });
+
+    const tape = createTapeFromJSON(serializedTape);
+    const tapeStoreManager = new TapeStoreManager(opts);
+
+    expect(() => tapeStoreManager.getTapeStore(tape.request)).toThrow(
+      new Error(
+        'Cant find path for tape store, use options.tapesPath or options.tapePathGenerator',
+      ),
+    );
+  });
+
+  it('resets tape store usage when path is provided', () => {
+    const opts = prepareOptions({
+      silent: true,
+      proxyUrl: 'localhost:8080',
+      tapesPath: '/tmp/test-tape-1/',
+    });
+
+    const tape = createTapeFromJSON(serializedTape);
+    const tapeStoreManager = new TapeStoreManager(opts);
+
+    const tapeStore = tapeStoreManager.getTapeStore(tape.request);
+
+    jest.spyOn(tapeStore, 'resetTapeUsage');
+    jest.spyOn(tapeStoreManager, 'resetTapeUsage');
+
+    tapeStoreManager.resetTapeUsage('/tmp/test-tape-1/');
+
+    expect(tapeStore.resetTapeUsage).toHaveBeenCalled();
+    expect(tapeStoreManager.resetTapeUsage).toReturnWith(true);
+  });
+
+  it('return false when resets tape store usage, path is provided and no store found', () => {
+    const opts = prepareOptions({
+      silent: true,
+      proxyUrl: 'localhost:8080',
+      tapesPath: '/tmp/test-tape-2/',
+    });
+
+    const tape = createTapeFromJSON(serializedTape);
+    const tapeStoreManager = new TapeStoreManager(opts);
+
+    const tapeStore = tapeStoreManager.getTapeStore(tape.request);
+
+    jest.spyOn(tapeStore, 'resetTapeUsage');
+    jest.spyOn(tapeStoreManager, 'resetTapeUsage');
+
+    tapeStoreManager.resetTapeUsage('/tmp/test-tape-4/');
+
+    expect(tapeStore.resetTapeUsage).not.toHaveBeenCalled();
+    expect(tapeStoreManager.resetTapeUsage).toReturnWith(false);
   });
 });

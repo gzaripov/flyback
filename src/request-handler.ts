@@ -62,7 +62,7 @@ export default class RequestHandler {
     if (this.options.tapeDecorator) {
       const resTape = this.options.tapeDecorator(cloneTape(tape));
 
-      if (resTape.response && resTape.response.headers['content-length']) {
+      if (resTape.response.body && resTape.response.headers['content-length']) {
         resTape.response.headers['content-length'] = [resTape.response.body.byteLength.toString()];
       }
 
