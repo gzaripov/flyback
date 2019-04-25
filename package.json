@@ -1,5 +1,5 @@
 {
-  "name": "vcrjs",
+  "name": "@gzaripov/talkback",
   "version": "1.11.0",
   "main": "dist/index.cjs.js",
   "module": "dist/index.esm.js",
