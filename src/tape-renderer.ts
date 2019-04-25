@@ -1,4 +1,3 @@
-import { HeadersUtil } from './utils/headers';
 import MediaType from './utils/media-type';
 import { Tape } from './tape';
 import { RequestOrResponse } from './http';
@@ -10,49 +9,28 @@ export default class TapeRenderer {
     this.tape = tape;
   }
 
-  static prepareBody(tape: Tape, reqOrRes: RequestOrResponse, metaPrefix: string) {
-    if (tape.meta[`${metaPrefix}HumanReadable`]) {
-      const mediaType = new MediaType(reqOrRes);
-      const isResAnObject = typeof reqOrRes.body === 'object';
-
-      if (isResAnObject && mediaType.isJSON()) {
-        const json = JSON.stringify(reqOrRes.body, null, 2);
-
-        if (HeadersUtil.read(reqOrRes.headers, 'content-length')) {
-          HeadersUtil.write(reqOrRes.headers, 'content-length', Buffer.byteLength(json).toString());
-        }
-
-        return Buffer.from(json);
-      } else {
-        return Buffer.from(reqOrRes.body ? reqOrRes.body.toString() : '');
-      }
-    } else {
-      return Buffer.from(reqOrRes.body ? reqOrRes.body.toString() : '', 'base64');
-    }
-  }
-
   render() {
     const reqBody = this.bodyFor(this.tape.request);
-    const resBody = this.tape.response ? this.bodyFor(this.tape.response) : '<Response is empty>';
+    const resBody = this.bodyFor(this.tape.response);
 
     return {
       meta: this.tape.meta,
       request: {
         ...this.tape.request,
-        body: reqBody.toString(),
+        body: reqBody,
       },
       response: {
         ...this.tape.response,
-        body: resBody.toString(),
+        body: resBody,
       },
     };
   }
 
-  bodyFor(reqResObj: RequestOrResponse) {
+  bodyFor(reqResObj: RequestOrResponse): string | undefined {
     const mediaType = new MediaType(reqResObj);
 
     if (!reqResObj.body) {
-      return '';
+      return undefined;
     }
 
     const bodyLength = reqResObj.body.length;
@@ -63,10 +41,10 @@ export default class TapeRenderer {
       if (mediaType.isJSON()) {
         return reqResObj.body.toString();
       } else {
-        return rawBody;
+        return rawBody.toString();
       }
     } else {
-      return reqResObj.body;
+      return reqResObj.body.toString();
     }
   }
 }

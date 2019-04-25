@@ -38,13 +38,21 @@ export default class TapeStoreManager {
 
         return tapeStore;
       }
+
+      this.options.logger.log(
+        `tapePathGenerator returned invalid path for ${
+          request.url
+        }, fallback to default tape store`,
+      );
     }
 
     if (this.defaultTapeStore) {
       return this.defaultTapeStore;
     }
 
-    throw new Error('Cant find path for tape store, use options.path or options.tapePathGenerator');
+    throw new Error(
+      'Cant find path for tape store, use options.tapesPath or options.tapePathGenerator',
+    );
   }
 
   findTapeStore(path: string) {
@@ -57,13 +65,17 @@ export default class TapeStoreManager {
 
   resetTapeUsage(path?: string) {
     if (!path) {
-      return this.tapeStores.forEach((tapeStore) => tapeStore.resetTapeUsage());
+      this.tapeStores.forEach((tapeStore) => tapeStore.resetTapeUsage());
+
+      return true;
     }
 
     const store = this.findTapeStore(path);
 
     if (store) {
-      return store.resetTapeUsage();
+      store.resetTapeUsage();
+
+      return true;
     }
 
     return false;

@@ -10,19 +10,20 @@ import { Request } from './http';
 export default class TapeStore {
   public tapes: Tape[];
   private options: Options;
-  private path: string;
+  private path?: string;
 
   constructor(options: Options) {
-    this.path = path.normalize(`${options.tapesPath}/`);
+    this.path = options.tapesPath && path.normalize(`${options.tapesPath}/`);
     this.options = options;
     this.tapes = [];
     this.load();
   }
 
   load() {
-    mkdirp.sync(this.path);
-
-    this.loadTapesAtDir(this.path);
+    if (this.path) {
+      mkdirp.sync(this.path);
+      this.loadTapesAtDir(this.path);
+    }
     this.options.logger.log(`Loaded ${this.tapes.length} tapes`);
   }
 
@@ -76,14 +77,14 @@ export default class TapeStore {
 
     let fullFilename;
 
-    if (tapePath) {
+    if (this.path && tapePath) {
       fullFilename = path.join(this.path, tapePath);
     } else {
       // If the tape doesn't have a path then it's new
       this.tapes.push(tape);
 
       fullFilename = this.createTapePath(tape);
-      tape.meta.path = path.relative(this.path, fullFilename);
+      tape.meta.path = this.path ? path.relative(this.path, fullFilename) : fullFilename;
     }
     this.options.logger.log(`Saving request ${tape.request.url} at ${tape.meta.path}`);
 
@@ -101,16 +102,16 @@ export default class TapeStore {
   }
 
   resetTapeUsage() {
-    return this.tapes.forEach((t) => (t.meta.used = false));
+    this.tapes.forEach((t) => (t.meta.used = false));
   }
 
   createTapePath(tape: Tape) {
     const currentTapeId = this.currentTapeId();
 
-    let tapePath = `unnamed-${currentTapeId}.json`;
+    let tapeName = `unnamed-${currentTapeId}.json`;
 
     if (this.options.tapeNameGenerator) {
-      tapePath = this.options.tapeNameGenerator(tape, currentTapeId);
+      tapeName = this.options.tapeNameGenerator(tape, currentTapeId);
     }
 
     let result;
@@ -120,12 +121,14 @@ export default class TapeStore {
     }
 
     if (!result && this.options.tapesPath) {
-      result = path.normalize(path.join(this.options.tapesPath, tapePath));
+      result = this.options.tapesPath;
     }
 
     if (!result) {
       throw new Error(`Cant create path for tape ${tape.request.url}`);
     }
+
+    result = path.normalize(path.join(result, tapeName));
 
     if (!result.endsWith('.json')) {
       result = `${result}.json`;

@@ -12,7 +12,7 @@ export interface Request {
 export interface Response {
   status: number;
   headers: Headers;
-  body: Buffer;
+  body?: Buffer;
 }
 
 export type RequestOrResponse = Request | Response;

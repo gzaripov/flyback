@@ -55,7 +55,7 @@ export function createTapeFromJSON(serializedTape: SerializedTape): Tape {
   const { meta, request, response } = serializedTape;
 
   const requestBody = request.body !== undefined ? Buffer.from(request.body) : undefined;
-  const responseBody = Buffer.from(response.body !== undefined ? response.body : '');
+  const responseBody = response.body !== undefined ? Buffer.from(response.body) : undefined;
 
   const tape = {
     meta,
@@ -68,10 +68,6 @@ export function createTapeFromJSON(serializedTape: SerializedTape): Tape {
       body: responseBody,
     },
   };
-
-  // if (tape.response) {
-  //   tape.response.body = TapeRenderer.prepareBody(tape, tape.response, 'res');
-  // }
 
   return tape;
 }
