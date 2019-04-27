@@ -1,6 +1,6 @@
 import MediaType from './utils/media-type';
-import { Tape } from './tape';
-import { RequestOrResponse } from './http';
+import { Tape, SerializedHeaders, SerializedTape } from './tape';
+import { RequestOrResponse, Headers } from './http';
 
 export default class TapeRenderer {
   private tape: Tape;
@@ -9,24 +9,37 @@ export default class TapeRenderer {
     this.tape = tape;
   }
 
-  render() {
-    const reqBody = this.bodyFor(this.tape.request);
-    const resBody = this.bodyFor(this.tape.response);
+  renderHeaders(headers: Headers) {
+    const renderedHeaders: SerializedHeaders = {};
+
+    Object.keys(headers).forEach((header) => {
+      const headerValue = headers[header];
+
+      renderedHeaders[header] = headerValue.length > 1 ? headerValue : headerValue[0];
+    });
+
+    return renderedHeaders;
+  }
+
+  render(): SerializedTape {
+    const { meta, request, response } = this.tape;
 
     return {
-      meta: this.tape.meta,
+      meta,
       request: {
         ...this.tape.request,
-        body: reqBody,
+        body: this.renderBody(request),
+        headers: this.renderHeaders(request.headers),
       },
       response: {
         ...this.tape.response,
-        body: resBody,
+        body: this.renderBody(response),
+        headers: this.renderHeaders(response.headers),
       },
     };
   }
 
-  bodyFor(reqResObj: RequestOrResponse): string | undefined {
+  renderBody(reqResObj: RequestOrResponse): string | undefined {
     const mediaType = new MediaType(reqResObj);
 
     if (!reqResObj.body) {

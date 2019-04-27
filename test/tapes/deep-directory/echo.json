@@ -8,20 +8,20 @@
     "url": "/test/echo",
     "method": "POST",
     "headers": {
-      "user-agent": ["node-fetch/1.0 (+https://github.com/bitinn/node-fetch)"],
-      "connection": ["close"],
-      "accept": ["*/*"],
-      "content-type": ["application/json"]
+      "user-agent": "node-fetch/1.0 (+https://github.com/bitinn/node-fetch)",
+      "connection": "close",
+      "accept": "*/*",
+      "content-type": "application/json"
     },
     "body": "{\"text\":\"request-test-text\"}"
   },
   "response": {
     "status": 200,
     "headers": {
-      "content-type": ["application/json"],
-      "date": ["Sun, 10 Sep 2017 23:19:27 GMT"],
-      "connection": ["close"],
-      "transfer-encoding": ["chunked"]
+      "content-type": "application/json",
+      "date": "Sun, 10 Sep 2017 23:19:27 GMT",
+      "connection": "close",
+      "transfer-encoding": "chunked"
     },
     "body": "{\"text\":\"response-test-text\"}"
   }

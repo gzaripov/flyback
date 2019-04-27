@@ -10,17 +10,18 @@ const serializedTape: SerializedTape = {
     url: '/foo/bar/1?real=3',
     method: 'GET',
     headers: {
-      accept: ['text/unknown'],
-      'content-type': ['text/plain'],
-      'x-ignored': ['1'],
+      accept: 'text/unknown',
+      'content-type': 'text/plain',
+      'multi-value-header': ['value-a', 'value-b'],
+      'x-ignored': '1',
     },
     body: 'ABC',
   },
   response: {
     status: 200,
     headers: {
-      'content-type': ['text/unknown'],
-      'x-ignored': ['2'],
+      'content-type': 'text/unknown',
+      'x-ignored': '2',
     },
     body: Buffer.from('Hello').toString('base64'),
   },
@@ -34,6 +35,7 @@ describe('TapeRenderer', () => {
       expect(tape.request.url).toEqual('/foo/bar/1?real=3');
       expect(tape.request.headers['accept'][0]).toEqual('text/unknown');
       expect(tape.request.headers['x-ignored'][0]).toBe('1');
+      expect(tape.request.headers['multi-value-header']).toEqual(['value-a', 'value-b']);
       expect(tape.request.body).toEqual(Buffer.from('ABC'));
 
       expect(tape.response.headers['content-type']).toEqual(['text/unknown']);
@@ -150,8 +152,8 @@ describe('TapeRenderer', () => {
           ...serializedTape.response,
           headers: {
             ...serializedTape.response.headers,
-            'content-type': ['application/json'],
-            'content-length': ['20'],
+            'content-type': 'application/json',
+            'content-length': '20',
           },
           body: JSON.stringify({
             foo: 'bar',
@@ -175,14 +177,14 @@ describe('TapeRenderer', () => {
           method: 'HEAD',
           headers: {
             ...serializedTape.request.headers,
-            'content-type': ['application/json'],
+            'content-type': 'application/json',
           },
         },
         response: {
           ...serializedTape.response,
           headers: {
             ...serializedTape.response.headers,
-            'content-type': ['application/json'],
+            'content-type': 'application/json',
           },
           body: '',
         },

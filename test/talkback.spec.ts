@@ -250,7 +250,10 @@ describe('talkback', () => {
     });
 
     it('matches and returns pretty printed tapes', async () => {
-      talkbackServer = await startTalkback({ recordMode: 'DISABLED' });
+      talkbackServer = await startTalkback({
+        recordMode: 'DISABLED',
+        ignoreAllHeaders: true,
+      });
 
       const headers = { 'content-type': 'application/json' };
       const body = JSON.stringify({ param1: 3, param2: { subParam: 1 } });

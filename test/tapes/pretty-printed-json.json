@@ -7,20 +7,21 @@
     "url": "/test/pretty",
     "method": "POST",
     "headers": {
-      "user-agent": ["node-fetch/1.0 (+https://github.com/bitinn/node-fetch)"],
-      "connection": ["close"],
-      "content-type": ["application/json"],
-      "accept": ["*/*"]
+      "user-agent": "node-fetch/1.0 (+https://github.com/bitinn/node-fetch)",
+      "connection": "close",
+      "content-type": "application/json",
+      "accept": "*/*",
+      "multi-header": ["headerOne", "headerTwo"]
     },
     "body": "{\"param1\":3,\"param2\":{\"subParam\":1}}"
   },
   "response": {
     "status": 200,
     "headers": {
-      "content-type": ["application/json"],
-      "date": ["Sun, 10 Sep 2017 23:19:27 GMT"],
-      "connection": ["close"],
-      "transfer-encoding": ["chunked"]
+      "content-type": "application/json",
+      "date": "Sun, 10 Sep 2017 23:19:27 GMT",
+      "connection": "close",
+      "transfer-encoding": "chunked"
     },
     "body": "{\"ok\":true,\"foo\":{\"bar\":3}}"
   }

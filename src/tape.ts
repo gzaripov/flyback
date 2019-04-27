@@ -9,17 +9,21 @@ type Meta = {
   [key: string]: any;
 };
 
+export interface SerializedHeaders {
+  [header: string]: string | string[];
+}
+
 export type SerializedTape = {
   meta: Meta;
   request: {
     url: string;
     method: string;
-    headers: Headers;
+    headers: SerializedHeaders;
     body?: string;
   };
   response: {
     status: number;
-    headers: Headers;
+    headers: SerializedHeaders;
     body?: string;
   };
 };
@@ -51,21 +55,38 @@ export function createTape(request: Request, response: Response, options: Option
   };
 }
 
+function createHeadersFromJSON(hds: SerializedHeaders) {
+  const headers: Headers = {};
+
+  Object.keys(hds).forEach((header) => {
+    const reqHeader = hds[header];
+
+    headers[header] = Array.isArray(reqHeader) ? reqHeader : [reqHeader];
+  });
+
+  return headers;
+}
+
 export function createTapeFromJSON(serializedTape: SerializedTape): Tape {
   const { meta, request, response } = serializedTape;
 
   const requestBody = request.body !== undefined ? Buffer.from(request.body) : undefined;
   const responseBody = response.body !== undefined ? Buffer.from(response.body) : undefined;
 
+  const requestHeaders = createHeadersFromJSON(request.headers);
+  const responseHeaders = createHeadersFromJSON(response.headers);
+
   const tape = {
     meta,
     request: {
       ...request,
       body: requestBody,
+      headers: requestHeaders,
     },
     response: {
       ...response,
       body: responseBody,
+      headers: responseHeaders,
     },
   };
 
