@@ -1,3 +1,4 @@
+const path = require('path');
 const commonjs = require('rollup-plugin-commonjs');
 const resolve = require('rollup-plugin-node-resolve');
 const babel = require('rollup-plugin-babel');
@@ -24,11 +25,11 @@ export default {
   external: ['fs', 'http', 'https', 'path', 'url', 'stream', 'zlib'],
   output: [
     {
-      file: pkg.main,
+      file: path.join('dist', pkg.main),
       format: 'cjs',
     },
     {
-      file: pkg.module,
+      file: path.join('dist', pkg.module),
       format: 'es',
     },
   ],
