@@ -107,8 +107,9 @@ export default class TapeStore {
 
   createTapePath(tape: Tape) {
     const currentTapeId = this.currentTapeId();
+    const ext = this.options.tapeExtension;
 
-    let tapeName = `unnamed-${currentTapeId}.json`;
+    let tapeName = `unnamed-${currentTapeId}.${ext}`;
 
     if (this.options.tapeNameGenerator) {
       tapeName = this.options.tapeNameGenerator(tape, currentTapeId);
@@ -130,8 +131,8 @@ export default class TapeStore {
 
     result = path.normalize(path.join(result, tapeName));
 
-    if (!result.endsWith('.json')) {
-      result = `${result}.json`;
+    if (!result.endsWith(`.${ext}`)) {
+      result = `${result}.${ext}`;
     }
 
     const dir = path.dirname(result);
