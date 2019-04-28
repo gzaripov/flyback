@@ -22,6 +22,7 @@ export type UserOptions = {
   name?: string;
   tapeNameGenerator?: (tape: Tape, tapeId: number) => string;
   tapePathGenerator?: (tape: Request) => string;
+  tapeExtension?: string;
   https?: {
     keyPath: string;
     certPath: string;
@@ -50,6 +51,7 @@ const defaultOptions = {
   summary: true,
   debug: false,
   logger: new Logger(),
+  tapeExtension: 'json',
 };
 
 export type Options = UserOptions & typeof defaultOptions;
