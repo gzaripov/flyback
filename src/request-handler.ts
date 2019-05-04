@@ -7,11 +7,11 @@ import { Tape } from './tape';
 import { assertBoolean } from './utils/asserts';
 export default class RequestHandler {
   private tapeStoreManager: TapeStoreManager;
-  private options: Context;
+  private context: Context;
 
-  constructor(options: Context, tapeStoreManager?: TapeStoreManager) {
-    this.tapeStoreManager = tapeStoreManager || new TapeStoreManager(options);
-    this.options = options;
+  constructor(context: Context, tapeStoreManager?: TapeStoreManager) {
+    this.tapeStoreManager = tapeStoreManager || new TapeStoreManager(context);
+    this.context = context;
   }
 
   async findTape(req: Request, recordMode: RecordMode): Promise<Tape> {
@@ -21,7 +21,7 @@ export default class RequestHandler {
     if (recordMode === 'OVERWRITE') {
       const res = await this.makeRealRequest(req);
 
-      const tape = createTape(req, res, this.options);
+      const tape = createTape(req, res, this.context);
 
       tapeStore.save(tape);
 
@@ -35,7 +35,7 @@ export default class RequestHandler {
     if (recordMode === 'NEW') {
       const res = await this.makeRealRequest(req);
 
-      const tape = createTape(req, res, this.options);
+      const tape = createTape(req, res, this.context);
 
       tapeStore.save(tape);
 
@@ -46,21 +46,21 @@ export default class RequestHandler {
 
     const res = await this.onNoRecord(req);
 
-    return createTape(req, res, this.options);
+    return createTape(req, res, this.context);
   }
 
   async handle(req: Request): Promise<Response> {
     const recordMode =
-      typeof this.options.recordMode !== 'function'
-        ? this.options.recordMode
-        : this.options.recordMode(req);
+      typeof this.context.recordMode !== 'function'
+        ? this.context.recordMode
+        : this.context.recordMode(req);
 
     validateRecord(recordMode);
 
     const tape = await this.findTape(req, recordMode);
 
-    if (this.options.tapeDecorator) {
-      const resTape = this.options.tapeDecorator(cloneTape(tape));
+    if (this.context.tapeDecorator) {
+      const resTape = this.context.tapeDecorator(cloneTape(tape));
 
       if (resTape.response.body && resTape.response.headers['content-length']) {
         resTape.response.headers['content-length'] = [resTape.response.body.byteLength.toString()];
@@ -74,16 +74,16 @@ export default class RequestHandler {
 
   async onNoRecord(req: Request): Promise<Response> {
     const fallbackMode =
-      typeof this.options.fallbackMode !== 'function'
-        ? this.options.fallbackMode
-        : this.options.fallbackMode(req);
+      typeof this.context.fallbackMode !== 'function'
+        ? this.context.fallbackMode
+        : this.context.fallbackMode(req);
 
     validateFallbackMode(fallbackMode);
 
-    this.options.logger.log(
+    this.context.logger.log(
       `Tape for ${req.url} not found and recording is disabled (fallbackMode: ${fallbackMode})`,
     );
-    this.options.logger.log({
+    this.context.logger.log({
       url: req.url,
       headers: req.headers,
     });
@@ -108,15 +108,15 @@ export default class RequestHandler {
 
     const headers = ({ ...req.headers } as any) as FetchHeaders;
 
-    const endpoint = this.options.proxyUrl;
+    const endpoint = this.context.proxyUrl;
 
-    this.options.logger.log(`Making real request to ${endpoint}${url}`);
+    this.context.logger.log(`Making real request to ${endpoint}${url}`);
 
     if (method === 'GET' || method === 'HEAD') {
       body = undefined;
     }
 
-    const agent = this.options.agent || undefined;
+    const agent = this.context.agent || undefined;
     const fRes = await fetch(endpoint + url, {
       method,
       headers,
