@@ -49,7 +49,7 @@ describe('Tape Store', () => {
 
   it('saves tape to path from tapePathGenerator', () => {
     const testDir = '/tmp/tapes';
-    const testName = 'test-tape';
+    const testName = 'test-tape.json';
 
     const opts = createContext({
       proxyUrl: 'localhost:8080',
@@ -65,7 +65,7 @@ describe('Tape Store', () => {
 
     tapeStore.save(tape);
 
-    expect(fs.existsSync(path.join(testDir, `${testName}.json`))).toBe(true);
+    expect(fs.existsSync(path.join(testDir, testName))).toBe(true);
   });
 
   it('throws error when there is no tapesPath and tapePathGenerator', () => {

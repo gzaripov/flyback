@@ -381,4 +381,8 @@ describe('RequestHandler', () => {
       });
     });
   });
+
+  it('create requestHandler instance without second parameter', () => {
+    expect(() => new RequestHandler(createContext(opts))).not.toThrowError();
+  });
 });
