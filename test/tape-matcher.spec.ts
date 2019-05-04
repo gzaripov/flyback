@@ -1,6 +1,6 @@
 import TapeMatcher from '../src/tape-matcher';
 import { createTapeFromJSON, SerializedTape } from '../src/tape';
-import { prepareOptions, UserOptions } from '../src/options';
+import { createContext, Options } from '../src/options';
 import { Request } from '../src/http';
 
 const raw: SerializedTape = {
@@ -12,25 +12,26 @@ const raw: SerializedTape = {
     url: '/foo/bar/1?real=3',
     method: 'GET',
     headers: {
-      accept: ['application/json'],
-      'x-ignored': ['1'],
+      accept: 'application/json',
+      'content-type': 'text/plain',
+      'x-ignored': '1',
     },
     body: 'ABC',
   },
   response: {
     status: 200,
     headers: {
-      accept: ['application/json'],
-      'x-ignored': ['2'],
+      accept: 'application/json',
+      'x-ignored': '2',
     },
     body: 'SGVsbG8=',
   },
 };
 
-const opts = prepareOptions({
+const context = createContext({
   ignoreHeaders: ['x-ignored'],
   ignoreQueryParams: ['ignored1', 'ignored2'],
-} as UserOptions);
+} as Options);
 
 const tape = createTapeFromJSON(raw);
 
@@ -41,36 +42,37 @@ describe('TapeMatcher', () => {
       method: 'GET',
       headers: {
         accept: ['application/json'],
+        'content-type': ['text/plain'],
         'x-ignored': ['1'],
       },
       body: Buffer.from('QUJD', 'base64'),
     };
 
     it('returns true when the request body is ignored', () => {
-      const newOpts = {
-        ...opts,
+      const newContext = {
+        ...context,
         ignoreBody: true,
       };
 
       const newTape = createTapeFromJSON(raw);
 
-      expect(new TapeMatcher(newTape, newOpts).matches(req)).toBe(true);
+      expect(new TapeMatcher(newTape, newContext).matches(req)).toBe(true);
     });
 
     it('returns true when everything is the same', () => {
-      expect(new TapeMatcher(tape, opts).matches(req)).toBe(true);
+      expect(new TapeMatcher(tape, context).matches(req)).toBe(true);
     });
 
     it('returns true when only ignored query params change', () => {
       expect(
-        new TapeMatcher(tape, opts).matches({ ...req, url: '/foo/bar/1?ignored1=diff&real=3' }),
+        new TapeMatcher(tape, context).matches({ ...req, url: '/foo/bar/1?ignored1=diff&real=3' }),
       ).toBe(true);
     });
 
     it('returns true when all query params are ignored', () => {
       const newOpts = {
-        ...opts,
-        ignoreQueryParams: [...opts.ignoreQueryParams, 'real'],
+        ...context,
+        ignoreQueryParams: [...context.ignoreQueryParams, 'real'],
       };
 
       const newTape = createTapeFromJSON(raw);
@@ -93,12 +95,12 @@ describe('TapeMatcher', () => {
         headers,
       };
 
-      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(true);
+      expect(new TapeMatcher(tape, context).matches(reqToMatch)).toBe(true);
     });
 
     it('returns true when only headers change and ignoreAllHeaders is true', () => {
       const newOpts = {
-        ...opts,
+        ...context,
         ignoreAllHeaders: true,
       };
 
@@ -118,7 +120,7 @@ describe('TapeMatcher', () => {
 
     it('returns false when only headers change and ignoreHeaders is undefined', () => {
       const newOpts = {
-        ...opts,
+        ...context,
         ignoreHeaders: undefined,
       };
 
@@ -138,31 +140,31 @@ describe('TapeMatcher', () => {
     it('returns false when the urls are different', () => {
       const reqToMatch = { ...req, url: '/bar' };
 
-      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
+      expect(new TapeMatcher(tape, context).matches(reqToMatch)).toBe(false);
     });
 
     it('returns false when the query params have different values', () => {
       const reqToMatch = { ...req, url: '/foo/bar/1?real=different' };
 
-      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
+      expect(new TapeMatcher(tape, context).matches(reqToMatch)).toBe(false);
     });
 
     it('returns false when the query params are different', () => {
       const reqToMatch = { ...req, url: '/foo/bar/1?real=3&newParam=1' };
 
-      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
+      expect(new TapeMatcher(tape, context).matches(reqToMatch)).toBe(false);
     });
 
     it('returns false when the methods are different', () => {
       const reqToMatch = { ...req, method: 'POST' };
 
-      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
+      expect(new TapeMatcher(tape, context).matches(reqToMatch)).toBe(false);
     });
 
     it('returns false when the bodies are different', () => {
       const reqToMatch = { ...req, body: Buffer.from('') };
 
-      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
+      expect(new TapeMatcher(tape, context).matches(reqToMatch)).toBe(false);
     });
 
     it('returns true when both bodies are empty', () => {
@@ -191,7 +193,7 @@ describe('TapeMatcher', () => {
 
       const newTape = createTapeFromJSON(rawDup);
 
-      expect(new TapeMatcher(newTape, opts).matches(reqDup)).toBe(true);
+      expect(new TapeMatcher(newTape, context).matches(reqDup)).toBe(true);
     });
 
     it('returns false when there are more headers', () => {
@@ -203,7 +205,7 @@ describe('TapeMatcher', () => {
         },
       };
 
-      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
+      expect(new TapeMatcher(tape, context).matches(reqToMatch)).toBe(false);
     });
 
     it('returns false when there are less headers', () => {
@@ -215,7 +217,7 @@ describe('TapeMatcher', () => {
         headers,
       };
 
-      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
+      expect(new TapeMatcher(tape, context).matches(reqToMatch)).toBe(false);
     });
 
     it('returns false when a header has a different value', () => {
@@ -229,13 +231,13 @@ describe('TapeMatcher', () => {
         headers,
       };
 
-      expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
+      expect(new TapeMatcher(tape, context).matches(reqToMatch)).toBe(false);
     });
 
     describe('tapeMatcher', () => {
       it('returns true when just the bodies are different but the tapeMatcher says they match', () => {
         const newOpts = {
-          ...opts,
+          ...context,
           tapeMatcher: () => true,
         };
 
@@ -246,7 +248,7 @@ describe('TapeMatcher', () => {
 
       it("returns false when just the bodies are different and the tapeMatcher says they don't match", () => {
         const newOpts = {
-          ...opts,
+          ...context,
           tapeMatcher: () => false,
         };
 
@@ -257,7 +259,7 @@ describe('TapeMatcher', () => {
 
       it('returns true when urls are different but the tapeMatcher says they match', () => {
         const newOpts = {
-          ...opts,
+          ...context,
           tapeMatcher: () => true,
         };
 
@@ -268,7 +270,7 @@ describe('TapeMatcher', () => {
 
       it("returns false when just the urls are different and the tapeMatcher says they don't match", () => {
         const newOpts = {
-          ...opts,
+          ...context,
           tapeMatcher: () => false,
         };
 
@@ -283,19 +285,19 @@ describe('TapeMatcher', () => {
 
         tape.request.body = undefined;
 
-        expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(true);
+        expect(new TapeMatcher(tape, context).matches(reqToMatch)).toBe(true);
       });
 
       it('returns false when one body is truthy and other is falsy', () => {
         const tape = createTapeFromJSON(raw);
         const reqToMatch = { ...tape.request, body: undefined };
 
-        expect(new TapeMatcher(tape, opts).matches(reqToMatch)).toBe(false);
+        expect(new TapeMatcher(tape, context).matches(reqToMatch)).toBe(false);
       });
 
       it('returns true when url bases are the same and ignoreAllQueryParams is true', () => {
         const newOpts = {
-          ...opts,
+          ...context,
           ignoreAllQueryParams: true,
         };
 

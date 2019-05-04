@@ -1,16 +1,16 @@
 import fetch, { Headers as FetchHeaders } from 'node-fetch';
 import { createTape, cloneTape } from './tape';
-import { validateRecord, validateFallbackMode, Options, RecordMode } from './options';
+import { validateRecord, validateFallbackMode, Context, RecordMode } from './options';
 import TapeStoreManager from './tape-store-manager';
 import { Request, Response } from './http';
 import { Tape } from './tape';
 import { assertBoolean } from './utils/asserts';
 export default class RequestHandler {
   private tapeStoreManager: TapeStoreManager;
-  private options: Options;
+  private options: Context;
 
-  constructor(tapeStoreManager: TapeStoreManager, options: Options) {
-    this.tapeStoreManager = tapeStoreManager;
+  constructor(options: Context, tapeStoreManager?: TapeStoreManager) {
+    this.tapeStoreManager = tapeStoreManager || new TapeStoreManager(options);
     this.options = options;
   }
 
@@ -102,6 +102,10 @@ export default class RequestHandler {
   async makeRealRequest(req: Request): Promise<Response> {
     let { body } = req;
     const { method, url } = req;
+
+    // delete host header to avoid errors i.e. Domain not found: localhost:9001
+    delete req.headers.host;
+
     const headers = ({ ...req.headers } as any) as FetchHeaders;
 
     const endpoint = this.options.proxyUrl;

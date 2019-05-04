@@ -3,13 +3,12 @@ import path from 'path';
 import https from 'https';
 import fetch, { RequestInit } from 'node-fetch';
 import del from 'del';
-import talkback from '../src/index';
 import testServer from './support/test-server';
 import TalkbackServer from '../src/server';
 import { parseUrl } from '../src/utils/url';
 import Logger from '../src/logger';
 import { Tape } from '../src/tape';
-import { UserOptions, Options } from '../src/options';
+import { Context, Options } from '../src/options';
 
 let talkbackServer: TalkbackServer;
 let proxiedServer;
@@ -41,8 +40,8 @@ function readJSONFromFile(tapesPath: string, url: string) {
   return JSON.parse(fs.readFileSync(`${tapesPath}/${fileName}.json`).toString());
 }
 
-const startTalkback = async (opts?: Partial<UserOptions>, callback?) => {
-  const talkbackServer = talkback({
+const startTalkback = async (opts?: Partial<Options>, callback?) => {
+  const talkbackServer = new TalkbackServer({
     proxyUrl,
     talkbackUrl,
     tapesPath,
@@ -422,7 +421,7 @@ describe('talkback', () => {
 
   describe('error handling', () => {
     it('returns a 500 if anything goes wrong', async () => {
-      const logger = new Logger({ silent: true } as Options);
+      const logger = new Logger({ silent: true } as Context);
 
       const loggerSpy = jest.spyOn(logger, 'error').mockImplementation(() => undefined);
 
@@ -443,7 +442,7 @@ describe('talkback', () => {
 
   describe('summary printing', () => {
     it('prints the summary when enabled', async () => {
-      const logger = new Logger({ silent: true } as Options);
+      const logger = new Logger({ silent: true } as Context);
       const spy = jest.spyOn(logger, 'log');
 
       talkbackServer = await startTalkback({ summary: true, logger });
@@ -453,7 +452,7 @@ describe('talkback', () => {
     });
 
     it("doesn't print the summary when disabled", async () => {
-      const logger = new Logger({ silent: true } as Options);
+      const logger = new Logger({ silent: true } as Context);
       const spy = jest.spyOn(logger, 'log');
 
       talkbackServer = await startTalkback({ summary: false, logger });

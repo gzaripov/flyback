@@ -13,7 +13,7 @@ export type FallbackMode = 'NOT_FOUND' | 'PROXY';
 export const RecordModes: RecordMode[] = ['NEW', 'OVERWRITE', 'DISABLED'];
 export const FallbackModes: FallbackMode[] = ['NOT_FOUND', 'PROXY'];
 
-export type UserOptions = {
+export type Options = {
   proxyUrl: string;
   talkbackUrl?: string;
   tapesPath?: string;
@@ -54,7 +54,7 @@ const defaultOptions = {
   tapeExtension: 'json',
 };
 
-export type Options = UserOptions & typeof defaultOptions;
+export type Context = Options & typeof defaultOptions;
 
 export function validateRecord(record?: RecordMode | ((request: Request) => RecordMode)) {
   if (typeof record === 'string' && !RecordModes.includes(record)) {
@@ -70,20 +70,18 @@ export function validateFallbackMode(
   }
 }
 
-function validateOptions(opts: UserOptions) {
+function validateOptions(opts: Options) {
   validateRecord(opts.recordMode);
   validateFallbackMode(opts.fallbackMode);
 }
 
-export function prepareOptions(userOpts: UserOptions) {
+export function createContext(userOpts: Options) {
   validateOptions(userOpts);
 
-  const opts = {
+  return {
     ...defaultOptions,
     name: userOpts.proxyUrl,
     logger: new Logger({ ...defaultOptions, ...userOpts }),
     ...userOpts,
   };
-
-  return opts;
 }

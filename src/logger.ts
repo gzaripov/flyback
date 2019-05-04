@@ -1,10 +1,10 @@
-import { Options } from './options';
+import { Context } from './options';
 
 export default class Logger {
-  private options: Options;
+  private options: Context;
 
-  constructor(options?: Options) {
-    this.options = options || ({} as Options);
+  constructor(options?: Context) {
+    this.options = options || ({} as Context);
     if (this.options.debug) {
       console.debug('DEBUG mode active');
     }

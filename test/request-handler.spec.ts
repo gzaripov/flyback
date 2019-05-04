@@ -1,6 +1,6 @@
 import RequestHandler from '../src/request-handler';
 import { createTapeFromJSON, SerializedTape } from '../src/tape';
-import { Options, prepareOptions } from '../src/options';
+import { Options, createContext } from '../src/options';
 import TapeStoreManager from '../src/tape-store-manager';
 
 let opts: Options;
@@ -17,16 +17,17 @@ function getMockTape() {
       url: '/foo/bar/1?real=3',
       method: 'GET',
       headers: {
-        accept: ['application/json'],
-        'x-ignored': ['1'],
+        accept: 'application/json',
+        'content-type': 'text/plain',
+        'x-ignored': '1',
       },
       body: 'ABC',
     },
     response: {
       status: 200,
       headers: {
-        accept: ['application/json'],
-        'x-ignored': ['2'],
+        accept: 'application/json',
+        'x-ignored': '2',
       },
       body: helloBase64,
     },
@@ -49,7 +50,7 @@ function getMockRequestHandler(
   opts: Options,
   { tapeStoreManager = getMockTapeStoreManager(), makeRealRequest = () => null } = {},
 ) {
-  const requestHandler = new RequestHandler(tapeStoreManager, opts);
+  const requestHandler = new RequestHandler(createContext(opts), tapeStoreManager);
 
   jest.spyOn(requestHandler, 'makeRealRequest').mockImplementation(jest.fn(makeRealRequest));
 
@@ -58,7 +59,7 @@ function getMockRequestHandler(
 
 describe('RequestHandler', () => {
   beforeEach(() => {
-    opts = prepareOptions({
+    opts = createContext({
       debug: false,
       recordMode: 'NEW',
       tapesPath: `${__dirname}/tapes`,
@@ -76,7 +77,7 @@ describe('RequestHandler', () => {
           );
 
           expect(response.status).toEqual(200);
-          expect(response.body).toEqual(Buffer.from(helloBase64));
+          expect(response.body).toEqual(Buffer.from(helloBase64, 'base64'));
         });
 
         describe("when there's a tapeDecorator", () => {
@@ -96,7 +97,7 @@ describe('RequestHandler', () => {
 
             expect(response.status).toEqual(200);
             expect(response.body).toEqual(Buffer.from('ABC'));
-            expect(getMockTape().response.body).toEqual(Buffer.from(helloBase64));
+            expect(getMockTape().response.body).toEqual(Buffer.from(helloBase64, 'base64'));
           });
 
           it("Adds a content-length header if it isn't present in the original response", async () => {
@@ -155,7 +156,7 @@ describe('RequestHandler', () => {
 
             expect(response.status).toEqual(200);
             expect(response.body).toEqual(Buffer.from('ABC'));
-            expect(getMockTape().response.body).toEqual(Buffer.from(helloBase64));
+            expect(getMockTape().response.body).toEqual(Buffer.from(helloBase64, 'base64'));
           });
         });
       });
@@ -220,7 +221,7 @@ describe('RequestHandler', () => {
           );
 
           expect(response.status).toEqual(200);
-          expect(response.body).toEqual(Buffer.from(helloBase64));
+          expect(response.body).toEqual(Buffer.from(helloBase64, 'base64'));
         });
       });
 

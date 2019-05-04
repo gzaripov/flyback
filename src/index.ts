@@ -1,10 +1,4 @@
-import Server from './server';
-import { prepareOptions, UserOptions } from './options';
+import { createTalkbackMiddleware } from './middleware';
+import TalkbackServer from './server';
 
-const talkback = (usrOpts: UserOptions) => {
-  const opts = prepareOptions(usrOpts);
-
-  return new Server(opts);
-};
-
-export default talkback;
+export { createTalkbackMiddleware, TalkbackServer };

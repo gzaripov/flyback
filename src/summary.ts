@@ -1,11 +1,11 @@
-import { Options } from './options';
+import { Context } from './options';
 import { Tape } from './tape';
 
 export default class Sumary {
   private tapes: Tape[];
-  private options: Options;
+  private options: Context;
 
-  constructor(tapes: Tape[], options: Options) {
+  constructor(tapes: Tape[], options: Context) {
     this.tapes = tapes;
     this.options = options;
   }

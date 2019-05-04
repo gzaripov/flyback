@@ -1,6 +1,6 @@
 import contentTypeParser from 'content-type';
 import { HeadersUtil } from './headers';
-import { RequestOrResponse, Headers } from '../http';
+import { Headers } from '../http';
 
 export const jsonTypes = ['application/json'];
 
@@ -14,14 +14,14 @@ const humanReadableContentTypes = [
 ];
 
 export default class MediaType {
-  private htmlReqRes: RequestOrResponse;
+  private headers: Headers;
 
-  constructor(htmlReqRes: RequestOrResponse) {
-    this.htmlReqRes = htmlReqRes;
+  constructor(headers: Headers) {
+    this.headers = headers;
   }
 
   isHumanReadable() {
-    const contentEncoding = HeadersUtil.read(this.headers(), 'content-encoding');
+    const contentEncoding = HeadersUtil.read(this.headers, 'content-encoding');
     const notCompressed = !contentEncoding || contentEncoding === 'identity';
 
     const contentType = this.contentType();
@@ -44,16 +44,12 @@ export default class MediaType {
   }
 
   contentType() {
-    const contentType = HeadersUtil.read(this.headers(), 'content-type');
+    const contentType = HeadersUtil.read(this.headers, 'content-type');
 
     if (!contentType) {
       return null;
     }
 
     return contentTypeParser.parse(contentType);
-  }
-
-  headers(): Headers {
-    return this.htmlReqRes.headers;
   }
 }

@@ -1,13 +1,13 @@
 import MediaType from './utils/media-type';
-import { Options } from './options';
+import { Context } from './options';
 import { Tape } from './tape';
 import { Request, Headers } from './http';
 
 export default class TapeMatcher {
   private tape: Tape;
-  private options: Options;
+  private options: Context;
 
-  constructor(tape: Tape, options: Options) {
+  constructor(tape: Tape, options: Context) {
     this.tape = tape;
     this.options = options;
   }
@@ -56,7 +56,7 @@ export default class TapeMatcher {
     }
 
     if (!this.options.ignoreBody && req.body && otherReq.body) {
-      const mediaType = new MediaType(req);
+      const mediaType = new MediaType(req.headers);
 
       let sameBody = false;
 
