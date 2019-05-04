@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { SerializedTape, createTapeFromJSON } from '../src/tape';
 import TapeStore from '../src/tape-store';
-import { prepareOptions } from '../src/options';
+import { createContext } from '../src/options';
 
 const serializedTape: SerializedTape = {
   meta: {
@@ -31,7 +31,7 @@ const serializedTape: SerializedTape = {
 
 describe('Tape Store', () => {
   it('saves tape to path from meta info', () => {
-    const opts = prepareOptions({
+    const opts = createContext({
       proxyUrl: 'localhost:8080',
       tapesPath: '/tmp/tapes',
       silent: true,
@@ -51,7 +51,7 @@ describe('Tape Store', () => {
     const testDir = '/tmp/tapes';
     const testName = 'test-tape';
 
-    const opts = prepareOptions({
+    const opts = createContext({
       proxyUrl: 'localhost:8080',
       silent: true,
       tapePathGenerator: (tape) => tape.headers['x-tape-path'][0],
@@ -72,7 +72,7 @@ describe('Tape Store', () => {
     const testDir = '/tmp/tapes';
     const testName = 'test-tape';
 
-    const opts = prepareOptions({
+    const opts = createContext({
       proxyUrl: 'localhost:8080',
       silent: true,
       tapeNameGenerator: () => testName,

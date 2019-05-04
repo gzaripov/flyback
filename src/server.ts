@@ -1,60 +1,27 @@
-import http, { Server as HttpServer, IncomingMessage, ServerResponse, RequestListener } from 'http';
+import http, { Server as HttpServer } from 'http';
 import https, { Server as HttpsServer } from 'https';
 import fs from 'fs';
 import onExit from 'async-exit-hook';
-import RequestHandler from './request-handler';
 import Summary from './summary';
 import TapeStoreManager from './tape-store-manager';
 import { parseUrl } from './utils/url';
-import { Options } from './options';
-import { Request } from './http';
+import { Context, createContext, Options } from './options';
+import { createTalkbackMiddleware } from './middleware';
 
 type Server = HttpServer | HttpsServer;
 
-export function createRequest(im: IncomingMessage, body: Buffer): Request {
-  const { url, method, headers } = im;
-
-  if (!url || !method) {
-    throw new Error(`Invalid incoming message ${im}`);
-  }
-
-  const requestHeaders = Object.keys(headers).reduce((acc, header) => {
-    const headerValue = headers[header];
-
-    if (Array.isArray(headerValue)) {
-      return {
-        ...acc,
-        [header]: headerValue,
-      };
-    }
-
-    return {
-      ...acc,
-      [header]: [headerValue],
-    };
-  }, {});
-
-  return {
-    url,
-    method,
-    headers: requestHeaders,
-    body,
-  };
-}
-
 export default class TalkbackServer {
-  private options: Options;
+  private options: Context;
   private server: Server;
   public tapeStoreManager: TapeStoreManager;
 
   constructor(options: Options) {
-    this.options = options;
+    this.options = createContext(options);
     this.tapeStoreManager = new TapeStoreManager(this.options);
-    this.handleRequest = this.handleRequest.bind(this);
-    this.server = this.createServer(this.handleRequest);
+    this.server = this.createServer(createTalkbackMiddleware(this.options, this.tapeStoreManager));
   }
 
-  createServer(requestListener: RequestListener): HttpServer | HttpsServer {
+  createServer(requestListener: http.RequestListener): HttpServer | HttpsServer {
     if (this.options.https) {
       const httpsOpts = {
         key: fs.readFileSync(this.options.https.keyPath),
@@ -65,31 +32,6 @@ export default class TalkbackServer {
     }
 
     return http.createServer(requestListener);
-  }
-
-  handleRequest(req: IncomingMessage, res: ServerResponse) {
-    const reqBodyChunks: Buffer[] = [];
-
-    req
-      .on('data', (chunk) => {
-        reqBodyChunks.push(chunk);
-      })
-      .on('end', async () => {
-        try {
-          const request = createRequest(req, Buffer.concat(reqBodyChunks));
-
-          const requestHandler = new RequestHandler(this.tapeStoreManager, this.options);
-          const fRes = await requestHandler.handle(request);
-
-          res.writeHead(fRes.status, fRes.headers);
-          res.end(fRes.body);
-        } catch (error) {
-          this.options.logger.error('Error handling request');
-          this.options.logger.error(error);
-          res.statusCode = 500;
-          res.end();
-        }
-      });
   }
 
   start(callback: () => void) {

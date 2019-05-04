@@ -1,13 +1,21 @@
 {
-  "presets": [["@babel/preset-env", { "modules": false }], "@babel/preset-typescript"],
-  "plugins": [
-    "@babel/proposal-object-rest-spread",
-    "@babel/plugin-proposal-class-properties",
-    "@babel/transform-runtime"
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "modules": false,
+        "targets": {
+          "node": "8.12.0"
+        }
+      }
+    ],
+    "@babel/preset-typescript"
   ],
+  "plugins": ["@babel/proposal-object-rest-spread", "@babel/plugin-proposal-class-properties"],
   "env": {
     "test": {
-      "presets": [["@babel/preset-env", { "modules": "commonjs" }], "@babel/preset-typescript"]
+      "presets": [["@babel/preset-env", { "modules": "commonjs" }], "@babel/preset-typescript"],
+      "plugins": ["@babel/transform-runtime"]
     }
   }
 }

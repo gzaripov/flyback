@@ -25,7 +25,10 @@ export default class TapeRenderer {
     const { meta, request, response } = this.tape;
 
     return {
-      meta,
+      meta: {
+        createdAt: meta.createdAt,
+        endpoint: meta.endpoint,
+      },
       request: {
         ...this.tape.request,
         body: this.renderBody(request),
@@ -40,24 +43,19 @@ export default class TapeRenderer {
   }
 
   renderBody(reqResObj: RequestOrResponse): string | undefined {
-    const mediaType = new MediaType(reqResObj);
+    const mediaType = new MediaType(reqResObj.headers);
+    const body = reqResObj.body;
 
-    if (!reqResObj.body) {
+    if (!body) {
       return undefined;
     }
 
-    const bodyLength = reqResObj.body.length;
+    const bodyLength = body.length;
 
     if (mediaType.isHumanReadable() && bodyLength > 0) {
-      const rawBody = reqResObj.body;
-
-      if (mediaType.isJSON()) {
-        return reqResObj.body.toString();
-      } else {
-        return rawBody.toString();
-      }
+      return body.toString('utf8');
     } else {
-      return reqResObj.body.toString();
+      return body.toString('base64');
     }
   }
 }

@@ -1,7 +1,7 @@
 import path from 'path';
 import TapeStoreManager from '../src/tape-store-manager';
 import { SerializedTape, createTapeFromJSON } from '../src/tape';
-import { prepareOptions } from '../src/options';
+import { createContext } from '../src/options';
 
 const serializedTape: SerializedTape = {
   meta: {
@@ -30,7 +30,7 @@ const serializedTape: SerializedTape = {
 
 describe('TapeStoreManager', () => {
   it('returns store with path from tapePathGenerator', () => {
-    const opts = prepareOptions({
+    const opts = createContext({
       silent: true,
       proxyUrl: 'localhost:8080',
       tapePathGenerator: (request) => {
@@ -47,7 +47,7 @@ describe('TapeStoreManager', () => {
   });
 
   it('returns the same store second on same path', () => {
-    const opts = prepareOptions({
+    const opts = createContext({
       silent: true,
       proxyUrl: 'localhost:8080',
       tapePathGenerator: (request) => {
@@ -65,7 +65,7 @@ describe('TapeStoreManager', () => {
   });
 
   it('throws error when there is no tapesPath and tapePathGenerator', () => {
-    const opts = prepareOptions({
+    const opts = createContext({
       silent: true,
       proxyUrl: 'localhost:8080',
     });
@@ -81,7 +81,7 @@ describe('TapeStoreManager', () => {
   });
 
   it('returns default tape store when there is tapePathGenerator but it return empty value', () => {
-    const opts = prepareOptions({
+    const opts = createContext({
       silent: true,
       proxyUrl: 'localhost:8080',
       tapePathGenerator: () => '',
@@ -98,7 +98,7 @@ describe('TapeStoreManager', () => {
   });
 
   it('resets tape store usage when path is provided', () => {
-    const opts = prepareOptions({
+    const opts = createContext({
       silent: true,
       proxyUrl: 'localhost:8080',
       tapesPath: '/tmp/test-tape-1/',
@@ -119,7 +119,7 @@ describe('TapeStoreManager', () => {
   });
 
   it('return false when resets tape store usage, path is provided and no store found', () => {
-    const opts = prepareOptions({
+    const opts = createContext({
       silent: true,
       proxyUrl: 'localhost:8080',
       tapesPath: '/tmp/test-tape-2/',

@@ -4,17 +4,17 @@ import mkdirp from 'mkdirp';
 import { Tape, createTapeFromJSON } from './tape';
 import TapeFinder from './tape-matcher';
 import TapeRenderer from './tape-renderer';
-import { Options } from './options';
+import { Context } from './options';
 import { Request } from './http';
 
 export default class TapeStore {
   public tapes: Tape[];
-  private options: Options;
+  private context: Context;
   private path?: string;
 
-  constructor(options: Options) {
+  constructor(options: Context) {
     this.path = options.tapesPath && path.normalize(`${options.tapesPath}/`);
-    this.options = options;
+    this.context = options;
     this.tapes = [];
     this.load();
   }
@@ -24,7 +24,7 @@ export default class TapeStore {
       mkdirp.sync(this.path);
       this.loadTapesAtDir(this.path);
     }
-    this.options.logger.log(`Loaded ${this.tapes.length} tapes`);
+    this.context.logger.log(`Loaded ${this.tapes.length} tapes`);
   }
 
   loadTapesAtDir(directory: string) {
@@ -44,7 +44,7 @@ export default class TapeStore {
           tape.meta.path = filename;
           this.tapes.push(tape);
         } catch (e) {
-          this.options.logger.error(`Error reading tape ${fullPath}\n${e.toString()}`);
+          this.context.logger.error(`Error reading tape ${fullPath}\n${e.toString()}`);
         }
       } else {
         this.loadTapesAtDir(`${fullPath}/`);
@@ -54,14 +54,14 @@ export default class TapeStore {
 
   find(request: Request) {
     const foundTape = this.tapes.find((t) => {
-      this.options.logger.debug(`Comparing against tape ${t.meta.path}`);
+      this.context.logger.debug(`Comparing against tape ${t.meta.path}`);
 
-      return new TapeFinder(t, this.options).matches(request);
+      return new TapeFinder(t, this.context).matches(request);
     });
 
     if (foundTape) {
       foundTape.meta.used = true;
-      this.options.logger.log(`Found matching tape for ${request.url} at ${foundTape.meta.path}`);
+      this.context.logger.log(`Found matching tape for ${request.url} at ${foundTape.meta.path}`);
 
       return foundTape;
     }
@@ -86,7 +86,7 @@ export default class TapeStore {
       fullFilename = this.createTapePath(tape);
       tape.meta.path = this.path ? path.relative(this.path, fullFilename) : fullFilename;
     }
-    this.options.logger.log(`Saving request ${tape.request.url} at ${tape.meta.path}`);
+    this.context.logger.log(`Saving request ${tape.request.url} at ${tape.meta.path}`);
 
     const toSave = new TapeRenderer(tape).render();
 
@@ -105,24 +105,42 @@ export default class TapeStore {
     this.tapes.forEach((t) => (t.meta.used = false));
   }
 
-  createTapePath(tape: Tape) {
+  createTapeName(tape: Tape) {
     const currentTapeId = this.currentTapeId();
-    const ext = this.options.tapeExtension;
+    const ext = this.context.tapeExtension;
 
-    let tapeName = `unnamed-${currentTapeId}.${ext}`;
+    if (this.context.tapeNameGenerator) {
+      const tapeName = this.context.tapeNameGenerator(tape, currentTapeId);
 
-    if (this.options.tapeNameGenerator) {
-      tapeName = this.options.tapeNameGenerator(tape, currentTapeId);
+      if (!tapeName.endsWith(`.${ext}`)) {
+        return `${tapeName}.${ext}`;
+      }
+
+      return tapeName;
     }
+
+    const url = tape.request.url;
+
+    const tapeName = url
+      .split('?')[0]
+      .split('/')
+      .splice(1)
+      .join('.');
+
+    return `${tapeName}-${currentTapeId}.${ext}`;
+  }
+
+  createTapePath(tape: Tape) {
+    const tapeName = this.createTapeName(tape);
 
     let result;
 
-    if (this.options.tapePathGenerator) {
-      result = this.options.tapePathGenerator(tape.request);
+    if (this.context.tapePathGenerator) {
+      result = this.context.tapePathGenerator(tape.request);
     }
 
-    if (!result && this.options.tapesPath) {
-      result = this.options.tapesPath;
+    if (!result && this.context.tapesPath) {
+      result = this.context.tapesPath;
     }
 
     if (!result) {
@@ -130,10 +148,6 @@ export default class TapeStore {
     }
 
     result = path.normalize(path.join(result, tapeName));
-
-    if (!result.endsWith(`.${ext}`)) {
-      result = `${result}.${ext}`;
-    }
 
     const dir = path.dirname(result);
 

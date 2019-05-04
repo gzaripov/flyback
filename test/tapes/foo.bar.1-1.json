@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "createdAt": "2019-05-04T12:32:53.594Z"
+  },
+  "request": {
+    "url": "/foo/bar/1?real=3",
+    "method": "GET",
+    "headers": {
+      "accept": "application/json",
+      "content-type": "text/plain",
+      "x-ignored": "1"
+    },
+    "body": "ABC"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "accept": "application/json",
+      "x-ignored": "2"
+    },
+    "body": "Rm9vYmFy"
+  }
+}

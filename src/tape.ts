@@ -1,7 +1,7 @@
 import MediaType from './utils/media-type';
 import TapeRenderer from './tape-renderer';
 import { Request, Response, Headers } from './http';
-import { Options } from './options';
+import { Context } from './options';
 
 type Meta = {
   createdAt: Date;
@@ -38,8 +38,8 @@ function prettifyJSON(json: string): string {
   return JSON.stringify(JSON.parse(json), null, 2);
 }
 
-export function createTape(request: Request, response: Response, options: Options): Tape {
-  const mediaType = new MediaType(request);
+export function createTape(request: Request, response: Response, options: Context): Tape {
+  const mediaType = new MediaType(request.headers);
 
   if (mediaType.isJSON() && request.body && request.body.length > 0) {
     request.body = Buffer.from(prettifyJSON(request.body.toString()));
@@ -70,11 +70,16 @@ function createHeadersFromJSON(hds: SerializedHeaders) {
 export function createTapeFromJSON(serializedTape: SerializedTape): Tape {
   const { meta, request, response } = serializedTape;
 
-  const requestBody = request.body !== undefined ? Buffer.from(request.body) : undefined;
-  const responseBody = response.body !== undefined ? Buffer.from(response.body) : undefined;
-
   const requestHeaders = createHeadersFromJSON(request.headers);
   const responseHeaders = createHeadersFromJSON(response.headers);
+
+  const requestEncoding = new MediaType(requestHeaders).isHumanReadable() ? 'utf8' : 'base64';
+  const responseEncoded = new MediaType(responseHeaders).isHumanReadable() ? 'utf8' : 'base64';
+
+  const requestBody =
+    request.body !== undefined ? Buffer.from(request.body, requestEncoding) : undefined;
+  const responseBody =
+    response.body !== undefined ? Buffer.from(response.body, responseEncoded) : undefined;
 
   const tape = {
     meta,

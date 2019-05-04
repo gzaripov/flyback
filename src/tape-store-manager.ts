@@ -1,26 +1,26 @@
 import TapeStore from './tape-store';
-import { Options } from './options';
+import { Context, Options, createContext } from './options';
 import { Request } from './http';
 import { Tape } from './tape';
 
 export default class TapeStoreManager {
-  private options: Options;
+  private context: Context;
   private tapeStores: TapeStore[];
   private defaultTapeStore?: TapeStore;
 
   constructor(options: Options) {
-    this.options = options;
+    this.context = createContext(options);
     this.tapeStores = [];
 
-    if (this.options.tapesPath) {
-      this.defaultTapeStore = new TapeStore(options);
+    if (this.context.tapesPath) {
+      this.defaultTapeStore = new TapeStore(this.context);
       this.tapeStores.push(this.defaultTapeStore);
     }
   }
 
   getTapeStore(request?: Request) {
-    if (request && this.options.tapePathGenerator) {
-      const path = this.options.tapePathGenerator(request);
+    if (request && this.context.tapePathGenerator) {
+      const path = this.context.tapePathGenerator(request);
 
       if (path) {
         let tapeStore = this.findTapeStore(path);
@@ -30,7 +30,7 @@ export default class TapeStoreManager {
         }
 
         tapeStore = new TapeStore({
-          ...this.options,
+          ...this.context,
           tapesPath: path,
         });
 
@@ -39,7 +39,7 @@ export default class TapeStoreManager {
         return tapeStore;
       }
 
-      this.options.logger.log(
+      this.context.logger.log(
         `tapePathGenerator returned invalid path for ${
           request.url
         }, fallback to default tape store`,

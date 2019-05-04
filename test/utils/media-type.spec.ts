@@ -1,5 +1,5 @@
 import MediaType from '../../src/utils/media-type';
-import { Response, Headers } from '../../src/types/http';
+import { Response, Headers } from '../../src/http';
 
 function createResponse(headers: Headers = {}) {
   return ({ headers } as any) as Response;
@@ -12,7 +12,7 @@ describe('MediaType', () => {
         'content-type': ['application/json'],
       });
 
-      const mediaType = new MediaType(res);
+      const mediaType = new MediaType(res.headers);
 
       expect(mediaType.isHumanReadable()).toBe(true);
     });
@@ -20,7 +20,7 @@ describe('MediaType', () => {
     it('returns false when content-type is not present', () => {
       const res = createResponse();
 
-      const mediaType = new MediaType(res);
+      const mediaType = new MediaType(res.headers);
 
       expect(mediaType.isHumanReadable()).toBe(false);
     });
@@ -30,7 +30,7 @@ describe('MediaType', () => {
         'content-type': ['img/png'],
       });
 
-      const mediaType = new MediaType(res);
+      const mediaType = new MediaType(res.headers);
 
       expect(mediaType.isHumanReadable()).toBe(false);
     });
@@ -41,7 +41,7 @@ describe('MediaType', () => {
         'content-type': ['application/json'],
       });
 
-      const mediaType = new MediaType(res);
+      const mediaType = new MediaType(res.headers);
 
       expect(mediaType.isHumanReadable()).toBe(true);
     });
@@ -52,7 +52,7 @@ describe('MediaType', () => {
         'content-type': ['application/json'],
       });
 
-      const mediaType = new MediaType(res);
+      const mediaType = new MediaType(res.headers);
 
       expect(mediaType.isHumanReadable()).toBe(false);
     });
@@ -64,7 +64,7 @@ describe('MediaType', () => {
         'content-type': ['application/json'],
       });
 
-      const mediaType = new MediaType(res);
+      const mediaType = new MediaType(res.headers);
 
       expect(mediaType.isJSON()).toBe(true);
     });
@@ -74,7 +74,7 @@ describe('MediaType', () => {
         'content-type': ['text/html'],
       });
 
-      const mediaType = new MediaType(res);
+      const mediaType = new MediaType(res.headers);
 
       expect(mediaType.isJSON()).toBe(false);
     });
@@ -82,7 +82,7 @@ describe('MediaType', () => {
     it('returns false when content-type is not set', () => {
       const res = createResponse();
 
-      const mediaType = new MediaType(res);
+      const mediaType = new MediaType(res.headers);
 
       expect(mediaType.isJSON()).toBe(false);
     });

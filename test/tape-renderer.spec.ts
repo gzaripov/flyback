@@ -40,7 +40,9 @@ describe('TapeRenderer', () => {
 
       expect(tape.response.headers['content-type']).toEqual(['text/unknown']);
       expect(tape.response.headers['x-ignored']).toEqual(['2']);
-      expect(tape.response.body).toEqual(Buffer.from(Buffer.from('Hello').toString('base64')));
+      expect(tape.response.body).toEqual(
+        Buffer.from(Buffer.from('Hello').toString('base64'), 'base64'),
+      );
     });
 
     it('creates a tape from the raw file data with req and res not human readable', () => {
@@ -55,7 +57,7 @@ describe('TapeRenderer', () => {
         },
         response: {
           ...serializedTape.response,
-          body: 'ABC',
+          body: Buffer.from('ABC').toString('base64'),
         },
       };
 
