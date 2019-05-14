@@ -327,6 +327,30 @@ describe('RequestHandler', () => {
       });
     });
 
+    describe("when recordMode is 'PROXY'", () => {
+      beforeEach(() => {
+        opts.recordMode = 'PROXY';
+      });
+
+      it('proxies request', async () => {
+        const tapeStoreManager = getMockTapeStoreManager();
+        const requestHandler = getMockRequestHandler(opts, {
+          tapeStoreManager,
+          makeRealRequest: () => ({
+            ...getMockTape().response,
+            body: Buffer.from('Foobar'),
+          }),
+        });
+
+        const response = await requestHandler.handle(getMockTape().request);
+
+        expect(response.status).toEqual(200);
+        expect(response.body).toEqual(Buffer.from('Foobar'));
+
+        expect(tapeStoreManager.getTapeStore().save).not.toHaveBeenCalled();
+      });
+    });
+
     describe('when recordMode is a function', () => {
       let modeToReturn;
 
