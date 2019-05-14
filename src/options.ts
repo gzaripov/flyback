@@ -6,11 +6,12 @@ import { Request } from './http';
 export type RecordMode =
   | 'NEW' // If no tape matches the request, proxy it and save the response to a tape
   | 'OVERWRITE' // Always proxy the request and save the response to a tape, overwriting any existing one
-  | 'DISABLED'; // If a matching tape exists, return it. Otherwise, don't proxy the request and use `fallbackMode` for the response
+  | 'DISABLED' // If a matching tape exists, return it. Otherwise, don't proxy the request and use `fallbackMode` for the response
+  | 'PROXY'; // Just proxy request, don't save tape
 
 export type FallbackMode = 'NOT_FOUND' | 'PROXY';
 
-export const RecordModes: RecordMode[] = ['NEW', 'OVERWRITE', 'DISABLED'];
+export const RecordModes: RecordMode[] = ['NEW', 'OVERWRITE', 'DISABLED', 'PROXY'];
 export const FallbackModes: FallbackMode[] = ['NOT_FOUND', 'PROXY'];
 
 export type Options = {

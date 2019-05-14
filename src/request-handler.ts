@@ -57,6 +57,10 @@ export default class RequestHandler {
 
     validateRecord(recordMode);
 
+    if (recordMode === 'PROXY') {
+      return await this.makeRealRequest(req);
+    }
+
     const tape = await this.findTape(req, recordMode);
 
     if (this.context.tapeDecorator) {
