@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+# [2.1.0](https://github.com/ijpiantanida/talkback/compare/v2.0.0...v2.1.0) (2019-05-14)
+
+
+### Features
+
+* add 'proxy' record mode, it just proxies request ([aaefcbb](https://github.com/ijpiantanida/talkback/commit/aaefcbb))
+
+
+
 # 2.0.0 (2019-05-04)
 
 
