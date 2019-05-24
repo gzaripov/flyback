@@ -50,14 +50,6 @@ export default class TalkbackServer {
     return promise;
   }
 
-  hasTapeBeenUsed(tapeName: string) {
-    return this.tapeStoreManager.hasTapeBeenUsed(tapeName);
-  }
-
-  resetTapeUsage() {
-    this.tapeStoreManager.resetTapeUsage();
-  }
-
   close(callback?: () => void) {
     this.server.close(callback);
 

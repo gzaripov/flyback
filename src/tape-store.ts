@@ -90,14 +90,6 @@ export default class TapeStore {
     return this.tapeFiles.length;
   }
 
-  hasTapeBeenUsed(tapeName: string) {
-    return this.tapeFiles.some((t) => t.meta.used && t.meta.path === tapeName);
-  }
-
-  resetTapeUsage() {
-    this.tapeFiles.forEach((t) => (t.meta.used = false));
-  }
-
   createTapeName(tape: Tape) {
     const currentTapeId = this.currentTapeId();
     const ext = this.context.tapeExtension;

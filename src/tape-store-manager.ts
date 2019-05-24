@@ -59,32 +59,10 @@ export default class TapeStoreManager {
     return this.tapeStores.find((tapeStore) => tapeStore.hasPath(path));
   }
 
-  hasTapeBeenUsed(tapeName: string) {
-    return this.tapeStores.some((tapeStore) => tapeStore.hasTapeBeenUsed(tapeName));
-  }
-
-  resetTapeUsage(path?: string) {
-    if (!path) {
-      this.tapeStores.forEach((tapeStore) => tapeStore.resetTapeUsage());
-
-      return true;
-    }
-
-    const store = this.findTapeStore(path);
-
-    if (store) {
-      store.resetTapeUsage();
-
-      return true;
-    }
-
-    return false;
-  }
-
   getAllTapes(): Tape[] {
     return this.tapeStores.reduce(
       (tapes, tapeStore) => {
-        return [...tapes, ...tapeStore.tapeFiles];
+        return [...tapes, ...tapeStore.getAllTapes()];
       },
       [] as Tape[],
     );
