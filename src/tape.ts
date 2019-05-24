@@ -99,7 +99,7 @@ export function createTapeFromJSON(serializedTape: SerializedTape): Tape {
 }
 
 export function cloneTape(tape: Tape) {
-  const json = new TapeRenderer(tape).render();
+  const json = new TapeRenderer().renderTape(tape);
 
   return createTapeFromJSON(json);
 }

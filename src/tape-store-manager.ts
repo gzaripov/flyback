@@ -84,7 +84,7 @@ export default class TapeStoreManager {
   getAllTapes(): Tape[] {
     return this.tapeStores.reduce(
       (tapes, tapeStore) => {
-        return [...tapes, ...tapeStore.tapes];
+        return [...tapes, ...tapeStore.tapeFiles];
       },
       [] as Tape[],
     );

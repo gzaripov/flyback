@@ -3,10 +3,10 @@ import { Tape, SerializedHeaders, SerializedTape } from './tape';
 import { RequestOrResponse, Headers } from './http';
 
 export default class TapeRenderer {
-  private tape: Tape;
+  private tapes: Tape[];
 
-  constructor(tape: Tape) {
-    this.tape = tape;
+  constructor(tapes: Tape[] = []) {
+    this.tapes = tapes;
   }
 
   renderHeaders(headers: Headers) {
@@ -21,8 +21,8 @@ export default class TapeRenderer {
     return renderedHeaders;
   }
 
-  render(): SerializedTape {
-    const { meta, request, response } = this.tape;
+  renderTape(tape: Tape): SerializedTape {
+    const { meta, request, response } = tape;
 
     return {
       meta: {
@@ -30,16 +30,20 @@ export default class TapeRenderer {
         endpoint: meta.endpoint,
       },
       request: {
-        ...this.tape.request,
+        ...tape.request,
         body: this.renderBody(request),
         headers: this.renderHeaders(request.headers),
       },
       response: {
-        ...this.tape.response,
+        ...tape.response,
         body: this.renderBody(response),
         headers: this.renderHeaders(response.headers),
       },
     };
+  }
+
+  render(): SerializedTape[] {
+    return this.tapes.map((tape) => this.renderTape(tape));
   }
 
   renderBody(reqResObj: RequestOrResponse): string | undefined {

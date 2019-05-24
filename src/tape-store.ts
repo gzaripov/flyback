@@ -1,21 +1,20 @@
 import fs from 'fs';
 import path from 'path';
 import mkdirp from 'mkdirp';
-import { Tape, createTapeFromJSON } from './tape';
-import TapeFinder from './tape-matcher';
-import TapeRenderer from './tape-renderer';
+import { Tape } from './tape';
 import { Context } from './options';
 import { Request } from './http';
+import TapeFile from './tape-file';
 
 export default class TapeStore {
-  public tapes: Tape[];
+  public tapeFiles: TapeFile[];
   private context: Context;
   private path?: string;
 
   constructor(options: Context) {
     this.path = options.tapesPath && path.normalize(`${options.tapesPath}/`);
     this.context = options;
-    this.tapes = [];
+    this.tapeFiles = [];
     this.load();
   }
 
@@ -24,25 +23,22 @@ export default class TapeStore {
       mkdirp.sync(this.path);
       this.loadTapesAtDir(this.path);
     }
-    this.context.logger.log(`Loaded ${this.tapes.length} tapes`);
+    this.context.logger.log(`Loaded ${this.tapeFiles.length} tapes`);
   }
 
   loadTapesAtDir(directory: string) {
     const items = fs.readdirSync(directory);
 
-    for (let i = 0; i < items.length; i++) {
-      const filename = items[i];
+    for (const filename of items) {
       const fullPath = `${directory}${filename}`;
       const stat = fs.statSync(fullPath);
 
       if (!stat.isDirectory()) {
         try {
-          const data = fs.readFileSync(fullPath, 'utf8');
-          const raw = JSON.parse(data);
-          const tape = createTapeFromJSON(raw);
+          const tapeFile = new TapeFile(fullPath, this.context);
 
-          tape.meta.path = filename;
-          this.tapes.push(tape);
+          tapeFile.load();
+          this.tapeFiles.push(tapeFile);
         } catch (e) {
           this.context.logger.error(`Error reading tape ${fullPath}\n${e.toString()}`);
         }
@@ -52,57 +48,54 @@ export default class TapeStore {
     }
   }
 
-  find(request: Request) {
-    const foundTape = this.tapes.find((t) => {
-      this.context.logger.debug(`Comparing against tape ${t.meta.path}`);
+  getAllTapes(): Tape[] {
+    return this.tapeFiles.reduce(
+      (tapes, tapeFile) => [...tapes, ...tapeFile.getAllTapes()],
+      [] as Tape[],
+    );
+  }
 
-      return new TapeFinder(t, this.context).matches(request);
-    });
-
-    if (foundTape) {
-      foundTape.meta.used = true;
-      this.context.logger.log(`Found matching tape for ${request.url} at ${foundTape.meta.path}`);
-
-      return foundTape;
+  find(request: Request, tapeFile?: TapeFile) {
+    if (tapeFile) {
+      return tapeFile.find(request);
     }
 
-    return null;
+    return this.tapeFiles.find((tapeFile) => !!tapeFile.find(request));
+  }
+
+  findTapeFile(tape: Tape): TapeFile | undefined {
+    return this.tapeFiles.find((tapeFile) => Boolean(this.find(tape.request, tapeFile)));
   }
 
   save(tape: Tape) {
     tape.meta.new = true;
     tape.meta.used = true;
 
-    const tapePath = tape.meta.path;
+    const tapePath = tape.meta.path || this.createTapePath(tape);
 
-    let fullFilename;
+    let tapeFile = this.findTapeFile(tape);
 
-    if (this.path && tapePath) {
-      fullFilename = path.join(this.path, tapePath);
+    if (tapeFile) {
+      tapeFile.add(tape);
     } else {
-      // If the tape doesn't have a path then it's new
-      this.tapes.push(tape);
-
-      fullFilename = this.createTapePath(tape);
-      tape.meta.path = this.path ? path.relative(this.path, fullFilename) : fullFilename;
+      tapeFile = new TapeFile(tapePath, this.context);
+      tapeFile.add(tape);
+      this.tapeFiles.push(tapeFile);
     }
+
     this.context.logger.log(`Saving request ${tape.request.url} at ${tape.meta.path}`);
-
-    const toSave = new TapeRenderer(tape).render();
-
-    fs.writeFileSync(fullFilename, JSON.stringify(toSave, null, 2));
   }
 
   currentTapeId() {
-    return this.tapes.length;
+    return this.tapeFiles.length;
   }
 
   hasTapeBeenUsed(tapeName: string) {
-    return this.tapes.some((t) => t.meta.used && t.meta.path === tapeName);
+    return this.tapeFiles.some((t) => t.meta.used && t.meta.path === tapeName);
   }
 
   resetTapeUsage() {
-    this.tapes.forEach((t) => (t.meta.used = false));
+    this.tapeFiles.forEach((t) => (t.meta.used = false));
   }
 
   createTapeName(tape: Tape) {
