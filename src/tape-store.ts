@@ -3,18 +3,18 @@ import path from 'path';
 import mkdirp from 'mkdirp';
 import { Tape } from './tape';
 import { Context } from './options';
-import { Request } from './http';
+import { Request } from './http/http';
 import TapeFile from './tape-file';
 
 export default class TapeStore {
-  public tapeFiles: TapeFile[];
+  public tapeFiles: { [pathname: string]: TapeFile };
   private context: Context;
   private path?: string;
 
   constructor(options: Context) {
     this.path = options.tapesPath && path.normalize(`${options.tapesPath}/`);
     this.context = options;
-    this.tapeFiles = [];
+    this.tapeFiles = {};
     this.load();
   }
 
@@ -37,8 +37,7 @@ export default class TapeStore {
         try {
           const tapeFile = new TapeFile(fullPath, this.context);
 
-          tapeFile.load();
-          this.tapeFiles.push(tapeFile);
+          this.tapeFiles[tapeFile.name] = tapeFile;
         } catch (e) {
           this.context.logger.error(`Error reading tape ${fullPath}\n${e.toString()}`);
         }
@@ -49,22 +48,20 @@ export default class TapeStore {
   }
 
   getAllTapes(): Tape[] {
-    return this.tapeFiles.reduce(
+    return Object.values(this.tapeFiles).reduce(
       (tapes, tapeFile) => [...tapes, ...tapeFile.getAllTapes()],
       [] as Tape[],
     );
   }
 
-  find(request: Request, tapeFile?: TapeFile) {
-    if (tapeFile) {
-      return tapeFile.find(request);
-    }
+  find(request: Request): Tape | null {
+    const tapeFile = this.tapeFiles[request.url.pathname];
 
-    return this.tapeFiles.find((tapeFile) => !!tapeFile.find(request));
+    return tapeFile ? tapeFile.find(request) : null;
   }
 
-  findTapeFile(tape: Tape): TapeFile | undefined {
-    return this.tapeFiles.find((tapeFile) => Boolean(this.find(tape.request, tapeFile)));
+  private findTapeFile(tape: Tape): TapeFile | null {
+    return this.tapeFiles[tape.request.url.pathname];
   }
 
   save(tape: Tape) {
@@ -80,22 +77,17 @@ export default class TapeStore {
     } else {
       tapeFile = new TapeFile(tapePath, this.context);
       tapeFile.add(tape);
-      this.tapeFiles.push(tapeFile);
+      this.tapeFiles[tape.request.url.pathname] = tapeFile;
     }
 
     this.context.logger.log(`Saving request ${tape.request.url} at ${tape.meta.path}`);
   }
 
-  currentTapeId() {
-    return this.tapeFiles.length;
-  }
-
   createTapeName(tape: Tape) {
-    const currentTapeId = this.currentTapeId();
     const ext = this.context.tapeExtension;
 
     if (this.context.tapeNameGenerator) {
-      const tapeName = this.context.tapeNameGenerator(tape, currentTapeId);
+      const tapeName = this.context.tapeNameGenerator(tape);
 
       if (!tapeName.endsWith(`.${ext}`)) {
         return `${tapeName}.${ext}`;
@@ -106,13 +98,9 @@ export default class TapeStore {
 
     const url = tape.request.url;
 
-    const tapeName = url
-      .split('?')[0]
-      .split('/')
-      .splice(1)
-      .join('.');
+    const tapeName = url.pathname.replace(/\//g, '.');
 
-    return `${tapeName}-${currentTapeId}.${ext}`;
+    return `${tapeName}.${ext}`;
   }
 
   createTapePath(tape: Tape) {

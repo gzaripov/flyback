@@ -39,7 +39,7 @@ function getMockTape() {
 function getMockTapeStoreManager(tapes = []) {
   const tapeStoreManager = new TapeStoreManager(opts);
 
-  tapeStoreManager.getTapeStore().tapeFiles = tapes;
+  tapeStoreManager.getTapeStore().tapeFilesMap = tapes;
 
   jest.spyOn(tapeStoreManager.getTapeStore(), 'save');
 

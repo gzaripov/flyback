@@ -2,7 +2,7 @@ import fetch, { Headers as FetchHeaders } from 'node-fetch';
 import { createTape, cloneTape } from './tape';
 import { validateRecord, validateFallbackMode, Context, RecordMode } from './options';
 import TapeStoreManager from './tape-store-manager';
-import { Request, Response } from './http';
+import { Request, Response } from './http/http';
 import { Tape } from './tape';
 import { assertBoolean } from './utils/asserts';
 export default class RequestHandler {

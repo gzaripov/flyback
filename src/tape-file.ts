@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { Tape, createTapeFromJSON, SerializedTape } from './tape';
 import TapeRenderer from './tape-renderer';
-import { Request } from './http';
+import { Request } from './http/http';
 import { Context } from './options';
 import TapeMatcher from './tape-matcher';
 
@@ -21,11 +21,15 @@ export default class TapeFile {
     }
   }
 
+  get name(): string {
+    return '';
+  }
+
   getAllTapes() {
     return this.tapes;
   }
 
-  load() {
+  private load() {
     try {
       const fileText = fs.readFileSync(this.path, 'utf8');
       const jsonTapes: SerializedTape[] = JSON.parse(fileText);
@@ -44,6 +48,7 @@ export default class TapeFile {
 
   add(tape: Tape) {
     this.tapes.push(tape);
+    this.save();
   }
 
   find(request: Request) {

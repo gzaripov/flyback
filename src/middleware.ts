@@ -1,6 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import RequestHandler from './request-handler';
-import { Request } from './http';
+import { Request } from './http/http';
 import { Options, createContext } from './options';
 import TapeStoreManager from './tape-store-manager';
 

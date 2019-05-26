@@ -1,6 +1,6 @@
 import MediaType from './utils/media-type';
 import { Tape, SerializedHeaders, SerializedTape } from './tape';
-import { RequestOrResponse, Headers } from './http';
+import { RequestOrResponse, Headers } from './http/http';
 
 export default class TapeRenderer {
   private tapes: Tape[];

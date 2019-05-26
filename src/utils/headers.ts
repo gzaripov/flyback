@@ -1,4 +1,4 @@
-import { Headers } from '../http';
+import { Headers } from '../http/http';
 
 const HeadersUtil = {
   read(headers: Headers, headerName: string) {
