@@ -1,5 +1,5 @@
 import RequestHandler from '../src/request-handler';
-import { createTapeFromJSON, SerializedTape } from '../src/tape';
+import { createTapeFromJSON, TapeJson } from '../src/tape';
 import { Options, createContext } from '../src/options';
 import TapeStoreManager from '../src/tape-store-manager';
 
@@ -8,7 +8,7 @@ let opts: Options;
 const helloBase64 = Buffer.from('Hello').toString('base64');
 
 function getMockTape() {
-  const rawTape: SerializedTape = {
+  const rawTape: TapeJson = {
     meta: {
       endpoint: 'test-proxy.com',
       createdAt: new Date(),

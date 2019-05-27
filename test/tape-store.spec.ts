@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import { SerializedTape, createTapeFromJSON } from '../src/tape';
+import { TapeJson, createTapeFromJSON } from '../src/tape';
 import TapeStore from '../src/tape-store';
 import { createContext } from '../src/options';
 
-const serializedTape: SerializedTape = {
+const serializedTape: TapeJson = {
   meta: {
     endpoint: 'test.localhost.proxy',
     createdAt: new Date(),

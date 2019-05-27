@@ -1,7 +1,7 @@
-import MediaType from './utils/media-type';
+import MediaType from './http/media-type';
 import { Context } from './options';
 import { Tape } from './tape';
-import { Request, Headers } from './http/http';
+import { Request, Headers } from './http';
 
 export default class TapeMatcher {
   private tape: Tape;

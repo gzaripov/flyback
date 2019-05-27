@@ -1,11 +1,7 @@
 import TapeRenderer from '../src/tape-renderer';
-import { createTapeFromJSON, SerializedTape } from '../src/tape';
+import { createTapeFromJSON, TapeJson } from '../src/tape';
 
-const serializedTape: SerializedTape = {
-  meta: {
-    endpoint: 'proxy.test.com',
-    createdAt: new Date(),
-  },
+const serializedTape: TapeJson = {
   request: {
     url: '/foo/bar/1?real=3',
     method: 'GET',
@@ -29,9 +25,9 @@ const serializedTape: SerializedTape = {
 
 const tape = createTapeFromJSON(serializedTape);
 
-describe('TapeRenderer', () => {
-  describe('.fromStore', () => {
-    it('creates a tape from the raw file data with req and res human readable', () => {
+describe('Tape', () => {
+  describe('.fromJSON', () => {
+    it('creates a tape from the json', () => {
       expect(tape.request.url).toEqual('/foo/bar/1?real=3');
       expect(tape.request.headers['accept'][0]).toEqual('text/unknown');
       expect(tape.request.headers['x-ignored'][0]).toBe('1');
@@ -45,7 +41,7 @@ describe('TapeRenderer', () => {
       );
     });
 
-    it('creates a tape from the raw file data with req and res not human readable', () => {
+    it('creates a tape from the json with req and res not human readable', () => {
       const newRaw: SerializedTape = {
         ...serializedTape,
         meta: {

@@ -3,7 +3,7 @@ import path from 'path';
 import mkdirp from 'mkdirp';
 import { Tape } from './tape';
 import { Context } from './options';
-import { Request } from './http/http';
+import { Request, Response } from './http';
 import TapeFile from './tape-file';
 
 export default class TapeStore {
@@ -54,21 +54,22 @@ export default class TapeStore {
     );
   }
 
-  find(request: Request): Tape | null {
-    const tapeFile = this.tapeFiles[request.url.pathname];
+  find(request: Request): Response | null {
+    const tapeFile = this.tapeFiles[request.pathname];
 
     return tapeFile ? tapeFile.find(request) : null;
   }
 
   private findTapeFile(tape: Tape): TapeFile | null {
-    return this.tapeFiles[tape.request.url.pathname];
+    return this.tapeFiles[tape.pathname];
   }
 
   save(tape: Tape) {
-    tape.meta.new = true;
-    tape.meta.used = true;
+    // TODO:
+    // tape.meta.new = true;
+    // tape.meta.used = true;
 
-    const tapePath = tape.meta.path || this.createTapePath(tape);
+    const tapePath = this.createTapePath(tape);
 
     let tapeFile = this.findTapeFile(tape);
 
@@ -77,35 +78,14 @@ export default class TapeStore {
     } else {
       tapeFile = new TapeFile(tapePath, this.context);
       tapeFile.add(tape);
-      this.tapeFiles[tape.request.url.pathname] = tapeFile;
+      this.tapeFiles[tape.pathname] = tapeFile;
     }
 
-    this.context.logger.log(`Saving request ${tape.request.url} at ${tape.meta.path}`);
-  }
-
-  createTapeName(tape: Tape) {
-    const ext = this.context.tapeExtension;
-
-    if (this.context.tapeNameGenerator) {
-      const tapeName = this.context.tapeNameGenerator(tape);
-
-      if (!tapeName.endsWith(`.${ext}`)) {
-        return `${tapeName}.${ext}`;
-      }
-
-      return tapeName;
-    }
-
-    const url = tape.request.url;
-
-    const tapeName = url.pathname.replace(/\//g, '.');
-
-    return `${tapeName}.${ext}`;
+    // TODO:
+    // this.context.logger.log(`Saving request ${tape.request.url} at ${tape.meta.path}`);
   }
 
   createTapePath(tape: Tape) {
-    const tapeName = this.createTapeName(tape);
-
     let result;
 
     if (this.context.tapePathGenerator) {
@@ -117,10 +97,10 @@ export default class TapeStore {
     }
 
     if (!result) {
-      throw new Error(`Cant create path for tape ${tape.request.url}`);
+      throw new Error(`Cant create path for tape ${tape.pathname}`);
     }
 
-    result = path.normalize(path.join(result, tapeName));
+    result = path.normalize(path.join(result, tape.name));
 
     const dir = path.dirname(result);
 

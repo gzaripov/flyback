@@ -1,10 +1,8 @@
-import fetch, { Headers as FetchHeaders } from 'node-fetch';
-import { createTape, cloneTape } from './tape';
 import { validateRecord, validateFallbackMode, Context, RecordMode } from './options';
 import TapeStoreManager from './tape-store-manager';
-import { Request, Response } from './http/http';
-import { Tape } from './tape';
+import { Request, Response, Headers } from './http';
 import { assertBoolean } from './utils/asserts';
+import { Tape } from './tape';
 export default class RequestHandler {
   private tapeStoreManager: TapeStoreManager;
   private context: Context;
@@ -14,18 +12,18 @@ export default class RequestHandler {
     this.context = context;
   }
 
-  async findTape(req: Request, recordMode: RecordMode): Promise<Tape> {
-    const tapeStore = this.tapeStoreManager.getTapeStore(req);
-    const matchingTape = tapeStore.find(req);
+  async findResponse(request: Request, recordMode: RecordMode): Promise<Response> {
+    const tapeStore = this.tapeStoreManager.getTapeStore(request);
+    const matchingTape = tapeStore.find(request);
 
     if (recordMode === 'OVERWRITE') {
-      const res = await this.makeRealRequest(req);
+      const response = await this.makeRealRequest(request);
 
-      const tape = createTape(req, res, this.context);
+      const tape = new Tape(request, response, this.context);
 
       tapeStore.save(tape);
 
-      return tape;
+      return response;
     }
 
     if (matchingTape) {
@@ -33,20 +31,18 @@ export default class RequestHandler {
     }
 
     if (recordMode === 'NEW') {
-      const res = await this.makeRealRequest(req);
+      const response = await this.makeRealRequest(request);
 
-      const tape = createTape(req, res, this.context);
+      const tape = new Tape(request, response, this.context);
 
       tapeStore.save(tape);
 
-      return tape;
+      return response;
     }
 
     assertBoolean(recordMode === 'DISABLED', `Invalid recordMode ${recordMode}`);
 
-    const res = await this.onNoRecord(req);
-
-    return createTape(req, res, this.context);
+    return this.onNoRecord(request);
   }
 
   async handle(req: Request): Promise<Response> {
@@ -61,19 +57,9 @@ export default class RequestHandler {
       return await this.makeRealRequest(req);
     }
 
-    const tape = await this.findTape(req, recordMode);
+    const response = await this.findResponse(req, recordMode);
 
-    if (this.context.tapeDecorator) {
-      const resTape = this.context.tapeDecorator(cloneTape(tape));
-
-      if (resTape.response.body && resTape.response.headers['content-length']) {
-        resTape.response.headers['content-length'] = [resTape.response.body.byteLength.toString()];
-      }
-
-      return resTape.response;
-    }
-
-    return tape.response;
+    return response;
   }
 
   async onNoRecord(req: Request): Promise<Response> {
@@ -85,56 +71,32 @@ export default class RequestHandler {
     validateFallbackMode(fallbackMode);
 
     this.context.logger.log(
-      `Tape for ${req.url} not found and recording is disabled (fallbackMode: ${fallbackMode})`,
+      `Tape for ${
+        req.pathname
+      } not found and recording is disabled (fallbackMode: ${fallbackMode})`,
     );
-    this.context.logger.log({
-      url: req.url,
-      headers: req.headers,
+
+    this.context.logger.debug({
+      url: req.pathname,
+      request: req.toJSON(),
     });
 
     if (fallbackMode === 'PROXY') {
       return await this.makeRealRequest(req);
     }
 
-    return {
+    return new Response({
       status: 404,
-      headers: { 'content-type': ['text/plain'] },
+      headers: new Headers({ 'content-type': ['text/plain'] }),
       body: Buffer.from('talkback - tape not found'),
-    };
+    });
   }
 
-  async makeRealRequest(req: Request): Promise<Response> {
-    let { body } = req;
-    const { method, url } = req;
-
-    // delete host header to avoid errors i.e. Domain not found: localhost:9001
-    delete req.headers.host;
-
-    const headers = ({ ...req.headers } as any) as FetchHeaders;
-
+  async makeRealRequest(request: Request): Promise<Response> {
     const endpoint = this.context.proxyUrl;
 
-    this.context.logger.log(`Making real request to ${endpoint}${url}`);
-
-    if (method === 'GET' || method === 'HEAD') {
-      body = undefined;
-    }
-
     const agent = this.context.agent || undefined;
-    const fRes = await fetch(endpoint + url, {
-      method,
-      headers,
-      body,
-      compress: false,
-      redirect: 'manual',
-      agent,
-    });
-    const buff = await fRes.buffer();
 
-    return {
-      status: fRes.status,
-      headers: fRes.headers.raw(),
-      body: buff,
-    };
+    return request.send(endpoint, { agent });
   }
 }

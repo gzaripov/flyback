@@ -1,7 +1,7 @@
 import Logger from './logger';
-import { Tape } from './tape';
+import { Tape, TapeJson } from './tape';
 import { Agent } from 'https';
-import { Request } from './http/http';
+import { Request } from './http';
 
 export type RecordMode =
   | 'NEW' // If no tape matches the request, proxy it and save the response to a tape
@@ -21,7 +21,7 @@ export type Options = {
   recordMode?: RecordMode | ((request: Request) => RecordMode);
   fallbackMode?: FallbackMode | ((request: Request) => FallbackMode);
   name?: string;
-  tapeNameGenerator?: (tape: Tape) => string;
+  tapeNameGenerator?: (tape: TapeJson) => string;
   tapePathGenerator?: (tape: Request) => string;
   tapeExtension?: string;
   https?: {
@@ -35,7 +35,7 @@ export type Options = {
   ignoreAllHeaders?: boolean;
   ignoreBody?: boolean;
   tapeMatcher?: (tape: Tape, request: Request) => boolean;
-  tapeDecorator?: (tape: Tape) => Tape;
+  tapeDecorator?: (tape: TapeJson) => TapeJson;
   silent?: boolean;
   summary?: boolean;
   debug?: boolean;

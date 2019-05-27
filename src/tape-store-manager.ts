@@ -1,6 +1,6 @@
 import TapeStore from './tape-store';
 import { Context, Options, createContext } from './options';
-import { Request } from './http/http';
+import { Request } from './http';
 import { Tape } from './tape';
 
 export default class TapeStoreManager {
@@ -41,7 +41,7 @@ export default class TapeStoreManager {
 
       this.context.logger.log(
         `tapePathGenerator returned invalid path for ${
-          request.url
+          request.pathname
         }, fallback to default tape store`,
       );
     }

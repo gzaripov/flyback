@@ -1,6 +1,5 @@
 import contentTypeParser from 'content-type';
-import { HeadersUtil } from './headers';
-import { Headers } from '../http/http';
+import Headers from './headers';
 
 export const jsonTypes = ['application/json'];
 
@@ -21,7 +20,7 @@ export default class MediaType {
   }
 
   isHumanReadable() {
-    const contentEncoding = HeadersUtil.read(this.headers, 'content-encoding');
+    const contentEncoding = this.headers.read('content-encoding');
     const notCompressed = !contentEncoding || contentEncoding === 'identity';
 
     const contentType = this.contentType();
@@ -44,11 +43,7 @@ export default class MediaType {
   }
 
   contentType() {
-    const contentType = HeadersUtil.read(this.headers, 'content-type');
-
-    if (!contentType) {
-      return null;
-    }
+    const contentType = this.headers.contentType();
 
     return contentTypeParser.parse(contentType);
   }

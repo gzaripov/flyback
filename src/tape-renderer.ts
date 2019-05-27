@@ -1,6 +1,6 @@
-import MediaType from './utils/media-type';
-import { Tape, SerializedHeaders, SerializedTape } from './tape';
-import { RequestOrResponse, Headers } from './http/http';
+import MediaType from './http/media-type';
+import { Tape, SerializedHeaders, TapeJson } from './tape';
+import { RequestOrResponse, Headers } from './http';
 
 export default class TapeRenderer {
   private tapes: Tape[];
@@ -21,28 +21,7 @@ export default class TapeRenderer {
     return renderedHeaders;
   }
 
-  renderTape(tape: Tape): SerializedTape {
-    const { meta, request, response } = tape;
-
-    return {
-      meta: {
-        createdAt: meta.createdAt,
-        endpoint: meta.endpoint,
-      },
-      request: {
-        ...tape.request,
-        body: this.renderBody(request),
-        headers: this.renderHeaders(request.headers),
-      },
-      response: {
-        ...tape.response,
-        body: this.renderBody(response),
-        headers: this.renderHeaders(response.headers),
-      },
-    };
-  }
-
-  render(): SerializedTape[] {
+  render(): TapeJson[] {
     return this.tapes.map((tape) => this.renderTape(tape));
   }
 
