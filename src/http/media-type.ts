@@ -45,6 +45,10 @@ export default class MediaType {
   contentType() {
     const contentType = this.headers.contentType();
 
+    if (!contentType) {
+      return null;
+    }
+
     return contentTypeParser.parse(contentType);
   }
 }

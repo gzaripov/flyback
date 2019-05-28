@@ -1,11 +1,12 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import RequestHandler from './request-handler';
 import { Request, Headers } from './http';
-import { Options, createContext } from './options';
+import { Options, createContext, Context } from './options';
 import TapeStoreManager from './tape-store-manager';
 import { URL } from 'url';
+import { HeadersJson } from './http/headers';
 
-export async function createRequest(im: IncomingMessage): Promise<Request> {
+export async function createRequest(im: IncomingMessage, context: Context): Promise<Request> {
   const { url, method, headers } = im;
 
   if (!url || !method) {
@@ -26,11 +27,18 @@ export async function createRequest(im: IncomingMessage): Promise<Request> {
 
   const reqUrl = new URL(url);
 
+  Object.keys(headers).forEach((header) => {
+    if (headers[header] === undefined) {
+      headers[header] = '';
+    }
+  });
+
   return new Request({
     path: reqUrl.pathname + reqUrl.search,
     method,
-    headers: new Headers(headers),
+    headers: new Headers(headers as HeadersJson),
     body,
+    context,
   });
 }
 
@@ -42,7 +50,7 @@ export const createTalkbackMiddleware = (
 
   return async (req: IncomingMessage, res: ServerResponse) => {
     try {
-      const request = await createRequest(req);
+      const request = await createRequest(req, context);
       const requestHandler = new RequestHandler(context, tapeStoreManager);
       const response = await requestHandler.handle(request);
 

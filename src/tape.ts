@@ -14,6 +14,7 @@ export class Tape {
   public readonly name: string;
   private context: Context;
 
+  // TODO:
   // if (context.tapeDecorator) {
   //   const decoratedTapeJson = context.tapeDecorator(this.toJSON());
 
@@ -64,10 +65,10 @@ export class Tape {
     return Tape.fromJSON(this.toJSON(), this.context);
   }
 
-  static fromJSON(tapeJson: TapeJson, options: Context) {
+  static fromJSON(tapeJson: TapeJson, context: Context) {
     const { request, response } = tapeJson;
 
-    return new Tape(Request.fromJSON(request), Response.fromJSON(response), options);
+    return new Tape(Request.fromJSON(request, context), Response.fromJSON(response), context);
   }
 }
 

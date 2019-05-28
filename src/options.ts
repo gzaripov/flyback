@@ -1,7 +1,8 @@
 import Logger from './logger';
-import { Tape, TapeJson } from './tape';
+import { TapeJson } from './tape';
 import { Agent } from 'https';
 import { Request } from './http';
+import { RequestJson } from './http/request';
 
 export type RecordMode =
   | 'NEW' // If no tape matches the request, proxy it and save the response to a tape
@@ -34,7 +35,7 @@ export type Options = {
   ignoreHeaders?: string[];
   ignoreAllHeaders?: boolean;
   ignoreBody?: boolean;
-  tapeMatcher?: (tape: Tape, request: Request) => boolean;
+  tapeMatcher?: (tape: TapeJson, request: RequestJson) => boolean;
   tapeDecorator?: (tape: TapeJson) => TapeJson;
   silent?: boolean;
   summary?: boolean;

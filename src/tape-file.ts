@@ -53,16 +53,20 @@ export default class TapeFile {
   find(request: Request): Response | null {
     const { tapes } = this;
 
-    const foundTape = tapes.find((t) => {
-      this.context.logger.debug(`Comparing against tape ${t.meta.path}`);
+    const foundTape = tapes.find((tape) => {
+      // this.context.logger.debug(`Comparing against tape ${t.meta.path}`);
 
-      return new TapeMatcher(t, this.context).matches(request);
+      if (this.context.tapeMatcher) {
+        return this.context.tapeMatcher(tape.toJSON(), request.toJSON());
+      }
+
+      return new TapeMatcher(tape, this.context).matches(request);
     });
 
     if (foundTape) {
       // TODO:
       // foundTape.meta.used = true;
-      this.context.logger.log(`Found matching tape for ${request.url} at ${foundTape.meta.path}`);
+      // this.context.logger.log(`Found matching tape for ${request.url} at ${foundTape.meta.path}`);
 
       return foundTape.response;
     }

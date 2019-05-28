@@ -1,5 +1,5 @@
 export interface HeadersJson {
-  [header: string]: string | string[] | undefined;
+  [header: string]: string | string[];
 }
 
 export default class Headers {
@@ -21,14 +21,32 @@ export default class Headers {
     delete this.headers[header];
   }
 
-  contentType(): string | undefined {
+  equals(otherHeaders: Headers, { ignoreHeaders = [] as string[] } = {}): boolean {
+    const matchHeaders = Object.keys(this.headers).filter(
+      (header) => !ignoreHeaders.includes(header),
+    );
+
+    const otherMatchHeaders = Object.keys(otherHeaders.headers).filter(
+      (header) => !ignoreHeaders.includes(header),
+    );
+
+    if (matchHeaders.length !== otherMatchHeaders.length) {
+      return false;
+    }
+
+    return matchHeaders.every((header) => {
+      return this.headers[header].toString() === otherHeaders.headers[header].toString();
+    });
+  }
+
+  contentType(): string | null {
     const contentType = this.headers['content-type'];
 
     if (Array.isArray(contentType)) {
       return contentType[0];
     }
 
-    return contentType;
+    return contentType || null;
   }
 
   toJSON(): HeadersJson {
