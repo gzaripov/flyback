@@ -3,12 +3,12 @@ import path from 'path';
 import https from 'https';
 import fetch, { RequestInit } from 'node-fetch';
 import del from 'del';
-import testServer from './support/test-server';
-import TalkbackServer from '../src/server';
-import { parseUrl } from '../src/utils/url';
-import Logger from '../src/logger';
-import { Tape } from '../src/tape';
-import { Context, Options } from '../src/options';
+import testServer from './test-server';
+import TalkbackServer from '../../src/server';
+import { urlToListenOptions } from '../../src/utils/url';
+import Logger from '../../src/logger';
+import { Tape } from '../../src/tape';
+import { Context, Options } from '../../src/options';
 
 let talkbackServer: TalkbackServer;
 let proxiedServer;
@@ -89,7 +89,7 @@ describe('talkback', () => {
 
   beforeAll(async () => {
     proxiedServer = testServer();
-    await proxiedServer.listen(parseUrl(proxyUrl));
+    await proxiedServer.listen(urlToListenOptions(proxyUrl));
   });
 
   afterAll(() => {

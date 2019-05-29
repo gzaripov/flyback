@@ -1,4 +1,4 @@
-import { createRequest } from '../src/middleware';
+import { createRequest } from '../../src/middleware';
 import { IncomingMessage } from 'http';
 
 describe('createRequest', () => {

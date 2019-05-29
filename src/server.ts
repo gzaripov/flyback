@@ -4,7 +4,7 @@ import fs from 'fs';
 import onExit from 'async-exit-hook';
 import Summary from './summary';
 import TapeStoreManager from './tape-store-manager';
-import { parseUrl } from './utils/url';
+import { urlToListenOptions } from './utils/url';
 import { Context, createContext, Options } from './options';
 import { createTalkbackMiddleware } from './middleware';
 
@@ -36,7 +36,7 @@ export default class TalkbackServer {
 
   start(callback: () => void) {
     this.options.logger.log(`Starting talkback on ${this.options.talkbackUrl}`);
-    const url = parseUrl(this.options.talkbackUrl);
+    const url = urlToListenOptions(this.options.talkbackUrl);
     const promise = new Promise((resolve) => {
       this.server.listen(url, () => {
         if (callback) callback();

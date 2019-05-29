@@ -23,7 +23,7 @@ export default class Body {
     return this.buffer.byteLength;
   }
 
-  equals(otherBody: Body) {
+  equals(otherBody: Body): boolean {
     if (
       this.mediaType.isJSON() &&
       otherBody.mediaType.isJSON() &&
@@ -33,7 +33,7 @@ export default class Body {
       return deepEqual(this.toJSON(), otherBody.toJSON());
     }
 
-    return Buffer.compare(this.buffer, otherBody.buffer);
+    return this.buffer.equals(otherBody.buffer);
   }
 
   toBuffer() {

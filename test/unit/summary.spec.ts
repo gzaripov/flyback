@@ -1,7 +1,7 @@
-import { Options } from '../src/options';
-import Summary from '../src/summary';
-import Logger from '../src/logger';
-import { Tape } from '../src/tape';
+import { Options } from '../../src/options';
+import Summary from '../../src/summary';
+import Logger from '../../src/logger';
+import { Tape } from '../../src/tape';
 
 jest.mock('../src/logger');
 

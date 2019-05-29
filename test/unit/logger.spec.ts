@@ -1,5 +1,5 @@
-import Logger from '../src/logger';
-import { Options } from '../src/options';
+import Logger from '../../src/logger';
+import { Context } from '../../src/options';
 
 describe('Logger', () => {
   beforeEach(() => {
@@ -8,11 +8,13 @@ describe('Logger', () => {
     jest.spyOn(console, 'error').mockImplementation(() => undefined);
   });
 
-  // afterEach(() => jest.resetAllMocks());
+  it('can be created without params', () => {
+    expect(() => new Logger()).not.toThrowError();
+  });
 
   describe('#log', () => {
     it('does nothing if silent option is enabled', () => {
-      const logger = new Logger({ silent: true } as Options);
+      const logger = new Logger({ silent: true } as Context);
 
       logger.log('Test');
 
@@ -22,7 +24,7 @@ describe('Logger', () => {
     });
 
     it('writes to log console if silent option is disabled', () => {
-      const logger = new Logger({ silent: false } as Options);
+      const logger = new Logger({ silent: false } as Context);
 
       logger.log('Test');
 
@@ -35,7 +37,7 @@ describe('Logger', () => {
 
   describe('#debug', () => {
     it('does nothing if debug option is disabled', () => {
-      const logger = new Logger({ debug: false } as Options);
+      const logger = new Logger({ debug: false } as Context);
 
       logger.debug('Test');
 
@@ -45,7 +47,7 @@ describe('Logger', () => {
     });
 
     it('writes to debug console if debug option is enabled', () => {
-      const logger = new Logger({ debug: true } as Options);
+      const logger = new Logger({ debug: true } as Context);
 
       logger.debug('Test');
 
@@ -57,7 +59,7 @@ describe('Logger', () => {
 
   describe('#error', () => {
     it('writes to error console if silent option is enabled', () => {
-      const logger = new Logger({ silent: true } as Options);
+      const logger = new Logger({ silent: true } as Context);
 
       logger.error('Test');
 
@@ -68,7 +70,7 @@ describe('Logger', () => {
     });
 
     it('writes to error console if silent option is disabled', () => {
-      const logger = new Logger({ silent: false } as Options);
+      const logger = new Logger({ silent: false } as Context);
 
       logger.error('Test');
 

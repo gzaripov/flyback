@@ -8,7 +8,7 @@ export type TapeJson = {
   response: ResponseJson;
 };
 
-export class Tape {
+export default class Tape {
   public readonly request: Request;
   public readonly response: Response;
   public readonly name: string;

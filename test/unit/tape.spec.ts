@@ -1,5 +1,5 @@
 import TapeRenderer from '../src/tape-renderer';
-import { createTapeFromJSON, TapeJson } from '../src/tape';
+import { createTapeFromJSON, TapeJson } from '../../src/tape';
 
 const serializedTape: TapeJson = {
   request: {

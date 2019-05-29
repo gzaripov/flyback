@@ -78,7 +78,7 @@ export default class Request {
     });
   }
 
-  equals(otherRequest: Request) {
+  equals(otherRequest: Request): boolean {
     const { logger, ignoreAllHeaders, ignoreHeaders, ignoreBody } = this.context;
 
     if (!this.path.equals(otherRequest.path)) {

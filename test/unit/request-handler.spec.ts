@@ -1,7 +1,7 @@
-import RequestHandler from '../src/request-handler';
-import { createTapeFromJSON, TapeJson } from '../src/tape';
-import { Options, createContext } from '../src/options';
-import TapeStoreManager from '../src/tape-store-manager';
+import RequestHandler from '../../src/request-handler';
+import { createTapeFromJSON, TapeJson } from '../../src/tape';
+import { Options, createContext } from '../../src/options';
+import TapeStoreManager from '../../src/tape-store-manager';
 
 let opts: Options;
 

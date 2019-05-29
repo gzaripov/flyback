@@ -1,5 +1,5 @@
 import { Context } from './options';
-import { Tape } from './tape';
+import Tape from './tape';
 
 export default class Sumary {
   private tapes: Tape[];

@@ -1,9 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { Tape, TapeJson } from './tape';
+import Tape, { TapeJson } from './tape';
 import { Request, Response } from './http';
 import { Context } from './options';
-import TapeMatcher from './tape-matcher';
 
 export default class TapeFile {
   private path: string;
@@ -60,7 +59,7 @@ export default class TapeFile {
         return this.context.tapeMatcher(tape.toJSON(), request.toJSON());
       }
 
-      return new TapeMatcher(tape, this.context).matches(request);
+      return tape.request.equals(request);
     });
 
     if (foundTape) {

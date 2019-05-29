@@ -1,6 +1,7 @@
 import url from 'url';
+import { ListenOptions } from 'net';
 
-export function parseUrl(siteUrl: string) {
+export function urlToListenOptions(siteUrl: string): ListenOptions {
   const { hostname, port, protocol } = url.parse(siteUrl);
 
   if (!port) {

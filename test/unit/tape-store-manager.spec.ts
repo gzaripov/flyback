@@ -1,7 +1,7 @@
 import path from 'path';
-import TapeStoreManager from '../src/tape-store-manager';
-import { SerializedTape, createTapeFromJSON } from '../src/tape';
-import { createContext } from '../src/options';
+import TapeStoreManager from '../../src/tape-store-manager';
+import { SerializedTape, createTapeFromJSON } from '../../src/tape';
+import { createContext } from '../../src/options';
 
 const serializedTape: SerializedTape = {
   meta: {

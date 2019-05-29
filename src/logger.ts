@@ -3,8 +3,8 @@ import { Context } from './options';
 export default class Logger {
   private options: Context;
 
-  constructor(options?: Context) {
-    this.options = options || ({} as Context);
+  constructor(options: Context = {} as Context) {
+    this.options = options;
     if (this.options.debug) {
       console.debug('DEBUG mode active');
     }

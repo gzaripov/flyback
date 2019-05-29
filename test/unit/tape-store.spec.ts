@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import { TapeJson, createTapeFromJSON } from '../src/tape';
-import TapeStore from '../src/tape-store';
-import { createContext } from '../src/options';
+import { TapeJson, createTapeFromJSON } from '../../src/tape';
+import TapeStore from '../../src/tape-store';
+import { createContext } from '../../src/options';
 
 const serializedTape: TapeJson = {
   meta: {

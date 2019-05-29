@@ -1,4 +1,4 @@
-import { Options, createContext } from '../src/options';
+import { Options, createContext } from '../../src/options';
 
 describe('Options', () => {
   it('merges user options and default options', () => {

@@ -1,7 +1,7 @@
 import TapeMatcher from '../src/tape-matcher';
-import { createTapeFromJSON, SerializedTape } from '../src/tape';
-import { createContext, Options } from '../src/options';
-import { Request } from '../src/http';
+import { createTapeFromJSON, SerializedTape } from '../../src/tape';
+import { createContext, Options } from '../../src/options';
+import { Request } from '../../src/http';
 
 const raw: SerializedTape = {
   meta: {
