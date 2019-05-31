@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import mkdirp from 'mkdirp';
-import { Tape } from './tape';
+import Tape from './tape';
 import { Context } from './options';
 import { Request, Response } from './http';
 import TapeFile from './tape-file';
@@ -89,7 +89,7 @@ export default class TapeStore {
     let result;
 
     if (this.context.tapePathGenerator) {
-      result = this.context.tapePathGenerator(tape.request);
+      result = this.context.tapePathGenerator(tape.toJSON());
     }
 
     if (!result && this.context.tapesPath) {

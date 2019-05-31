@@ -36,10 +36,6 @@ export default class Request {
     this.body = body && new Body(body, new MediaType(this.headers));
     this.context = context;
 
-    if ((this.method === 'GET' || this.method === 'HEAD') && body) {
-      throw new Error('GET or HEAD request cannot contain body');
-    }
-
     this.deleteHostHeader();
   }
 
@@ -119,7 +115,7 @@ export default class Request {
       path: path.toString(),
       method,
       headers: headers.toJSON(),
-      body: body ? body.toString() : undefined,
+      body: body ? body.toJSON() : undefined,
     };
   }
 

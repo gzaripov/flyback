@@ -12,40 +12,27 @@ export default class Tape {
   public readonly request: Request;
   public readonly response: Response;
   public readonly name: string;
-  private context: Context;
-
-  // TODO:
-  // if (context.tapeDecorator) {
-  //   const decoratedTapeJson = context.tapeDecorator(this.toJSON());
-
-  //   return Tape.fromJSON(decoratedTapeJson, context);
-  // }
+  private readonly context: Context;
 
   constructor(request: Request, response: Response, context: Context) {
     this.request = request;
     this.response = response;
     this.context = context;
     this.name = this.createTapeName();
+
+    if (context.tapeDecorator) {
+      const decoratedTapeJson = context.tapeDecorator(this.toJSON());
+
+      return Tape.fromJSON(decoratedTapeJson, { ...context, tapeDecorator: undefined });
+    }
   }
 
   private createTapeName() {
-    const ext = this.context.tapeExtension;
-
     if (this.context.tapeNameGenerator) {
-      const tapeName = this.context.tapeNameGenerator(this.toJSON());
-
-      if (!tapeName.endsWith(`.${ext}`)) {
-        return `${tapeName}.${ext}`;
-      }
-
-      return tapeName;
+      return this.context.tapeNameGenerator(this.toJSON());
     }
 
-    const pathname = this.request.pathname;
-
-    const tapeName = pathname.replace(/\//g, '.');
-
-    return `${tapeName}.${ext}`;
+    return this.request.pathname.substring(1).replace(/\//g, '.');
   }
 
   get pathname() {
@@ -61,41 +48,9 @@ export default class Tape {
     };
   }
 
-  clone() {
-    return Tape.fromJSON(this.toJSON(), this.context);
-  }
-
   static fromJSON(tapeJson: TapeJson, context: Context) {
     const { request, response } = tapeJson;
 
     return new Tape(Request.fromJSON(request, context), Response.fromJSON(response), context);
   }
 }
-
-// function createHeadersFromJSON(hds: SerializedHeaders) {
-//   const headers: Headers = {};
-
-//   Object.keys(hds).forEach((header) => {
-//     const reqHeader = hds[header];
-
-//     headers[header] = Array.isArray(reqHeader) ? reqHeader : [reqHeader];
-//   });
-
-//   return headers;
-// }
-
-// export function createTapeFromJSON(serializedTape: TapeJson) {
-//   const { request, response } = serializedTape;
-
-//   const requestHeaders = createHeadersFromJSON(request.headers);
-//   const responseHeaders = createHeadersFromJSON(response.headers);
-
-//   const requestEncoding = new MediaType(requestHeaders).isHumanReadable() ? 'utf8' : 'base64';
-//   const responseEncoded = new MediaType(responseHeaders).isHumanReadable() ? 'utf8' : 'base64';
-
-//   const requestBody =
-//     request.body !== undefined ? Buffer.from(request.body, requestEncoding) : undefined;
-//   const responseBody =
-//     response.body !== undefined ? Buffer.from(response.body, responseEncoded) : undefined;
-
-// }

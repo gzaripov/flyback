@@ -3,6 +3,7 @@ import path from 'path';
 import Tape, { TapeJson } from './tape';
 import { Request, Response } from './http';
 import { Context } from './options';
+import formatJson from './utils/format-json';
 
 export default class TapeFile {
   private path: string;
@@ -39,9 +40,24 @@ export default class TapeFile {
   }
 
   save() {
-    const json = this.tapes.map((tape) => tape.toJSON());
+    const tapeGroups = this.tapes.reduce(
+      (groups, tape) => {
+        const ext = this.context.tapeExtension;
+        const tapeFilePath = tape.name.endsWith(`.${ext}`) ? tape.name : `${tape.name}.${ext}`;
 
-    fs.writeFileSync(this.path, json);
+        const group = groups[tapeFilePath] || [];
+
+        return {
+          ...groups,
+          [tapeFilePath]: [...group, tape.toJSON()],
+        };
+      },
+      {} as { [tapeFilePath: string]: TapeJson[] },
+    );
+
+    Object.keys(tapeGroups).forEach((tapePath) => {
+      fs.writeFileSync(tapePath, formatJson(tapeGroups[tapePath]));
+    });
   }
 
   add(tape: Tape) {

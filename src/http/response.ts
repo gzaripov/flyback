@@ -1,11 +1,11 @@
-import Headers from './headers';
+import Headers, { HeadersJson } from './headers';
 import { ServerResponse } from 'http';
 
 type RequestParams = { status: number; headers: Headers; body?: Buffer };
 
 export type ResponseJson = {
   status: number;
-  headers: Headers;
+  headers: HeadersJson;
   body?: string;
 };
 
@@ -35,7 +35,7 @@ export default class Response {
 
     return {
       status,
-      headers,
+      headers: headers.toJSON(),
       body: body ? body.toString() : undefined,
     };
   }
@@ -52,7 +52,7 @@ export default class Response {
 
     return new Response({
       status,
-      headers,
+      headers: new Headers(headers),
       body: body ? Buffer.from(body) : undefined,
     });
   }

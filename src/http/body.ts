@@ -1,4 +1,5 @@
 import deepEqual from 'fast-deep-equal';
+// import zlib from 'zlib';
 import MediaType from './media-type';
 import formatJson from '../utils/format-json';
 
@@ -40,19 +41,14 @@ export default class Body {
     return this.buffer;
   }
 
-  toString() {
+  toJSON() {
+    if (this.mediaType.isJSON()) {
+      return JSON.parse(this.buffer.toString('utf8'));
+    }
     if (this.mediaType.isHumanReadable()) {
       return this.buffer.toString('utf8');
     } else {
       return this.buffer.toString('base64');
     }
-  }
-
-  toJSON() {
-    if (!this.mediaType.isJSON()) {
-      throw new Error('Cannot convert non-json data to json');
-    }
-
-    return JSON.parse(this.toString());
   }
 }

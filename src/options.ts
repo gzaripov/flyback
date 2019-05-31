@@ -23,8 +23,8 @@ export type Options = {
   fallbackMode?: FallbackMode | ((request: Request) => FallbackMode);
   name?: string;
   tapeNameGenerator?: (tape: TapeJson) => string;
-  tapePathGenerator?: (tape: Request) => string;
-  tapeExtension?: string;
+  tapePathGenerator?: (tape: TapeJson) => string;
+  tapeFileExtension?: string;
   https?: {
     keyPath: string;
     certPath: string;
