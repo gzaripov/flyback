@@ -48,6 +48,10 @@ export default class Request {
     return this.path.name;
   }
 
+  get fullPath(): string {
+    return this.path.toString();
+  }
+
   async send(endpoint: string, params: { agent?: Agent }) {
     const { path, method, headers, body } = this;
     const { agent } = params;

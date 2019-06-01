@@ -65,9 +65,8 @@ export default class TapeStore {
   }
 
   save(tape: Tape) {
-    // TODO:
-    // tape.meta.new = true;
-    // tape.meta.used = true;
+    this.context.tapeAnalyzer.markNew(tape);
+    this.context.tapeAnalyzer.markUsed(tape);
 
     const tapePath = this.createTapePath(tape);
 
@@ -80,9 +79,6 @@ export default class TapeStore {
       tapeFile.add(tape);
       this.tapeFiles[tape.pathname] = tapeFile;
     }
-
-    // TODO:
-    // this.context.logger.log(`Saving request ${tape.request.url} at ${tape.meta.path}`);
   }
 
   createTapePath(tape: Tape) {

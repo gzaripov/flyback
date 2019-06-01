@@ -1,8 +1,9 @@
-import { validateRecord, validateFallbackMode, Context, RecordMode } from './options';
+import { Context, validateRecord, validateFallbackMode, RecordMode } from './options';
 import TapeStoreManager from './tape-store-manager';
 import { Request, Response, Headers } from './http';
 import { assertBoolean } from './utils/asserts';
-import { Tape } from './tape';
+import Tape from './tape';
+
 export default class RequestHandler {
   private tapeStoreManager: TapeStoreManager;
   private context: Context;

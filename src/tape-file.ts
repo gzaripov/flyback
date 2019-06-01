@@ -55,8 +55,10 @@ export default class TapeFile {
       {} as { [tapeFilePath: string]: TapeJson[] },
     );
 
-    Object.keys(tapeGroups).forEach((tapePath) => {
-      fs.writeFileSync(tapePath, formatJson(tapeGroups[tapePath]));
+    Object.keys(tapeGroups).forEach((tapeFileName) => {
+      this.context.logger.log(`Saving tape file ${tapeFileName} at ${this.path}`);
+
+      fs.writeFileSync(path.join(this.path, tapeFileName), formatJson(tapeGroups[tapeFileName]));
     });
   }
 
@@ -79,9 +81,8 @@ export default class TapeFile {
     });
 
     if (foundTape) {
-      // TODO:
-      // foundTape.meta.used = true;
-      // this.context.logger.log(`Found matching tape for ${request.url} at ${foundTape.meta.path}`);
+      this.context.logger.log(`Found matching tape for ${request.fullPath} at ${this.path}`);
+      this.context.tapeAnalyzer.markUsed(foundTape);
 
       return foundTape.response;
     }

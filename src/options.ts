@@ -3,6 +3,7 @@ import { TapeJson } from './tape';
 import { Agent } from 'https';
 import { Request } from './http';
 import { RequestJson } from './http/request';
+import TapeAnalyzer from './tape-analyzer';
 
 export type RecordMode =
   | 'NEW' // If no tape matches the request, proxy it and save the response to a tape
@@ -56,7 +57,10 @@ const defaultOptions = {
   tapeExtension: 'json',
 };
 
-export type Context = Options & typeof defaultOptions;
+export type Context = Options &
+  typeof defaultOptions & {
+    tapeAnalyzer: TapeAnalyzer;
+  };
 
 export function validateRecord(record?: RecordMode | ((request: Request) => RecordMode)) {
   if (typeof record === 'string' && !RecordModes.includes(record)) {
@@ -83,7 +87,8 @@ export function createContext(userOpts: Options) {
   return {
     ...defaultOptions,
     name: userOpts.proxyUrl,
-    logger: new Logger({ ...defaultOptions, ...userOpts }),
+    logger: new Logger({ ...defaultOptions, ...userOpts } as Context),
     ...userOpts,
+    tapeAnalyzer: new TapeAnalyzer(),
   };
 }

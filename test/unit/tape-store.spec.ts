@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
-import { TapeJson, createTapeFromJSON } from '../../src/tape';
+import Tape, { TapeJson } from '../../src/tape';
 import TapeStore from '../../src/tape-store';
 import { createContext } from '../../src/options';
 
-const serializedTape: TapeJson = {
+const tapeJson: TapeJson = {
   meta: {
     endpoint: 'test.localhost.proxy',
     createdAt: new Date(),
@@ -31,35 +31,35 @@ const serializedTape: TapeJson = {
 
 describe('Tape Store', () => {
   it('saves tape to path from meta info', () => {
-    const opts = createContext({
+    const context = createContext({
       proxyUrl: 'localhost:8080',
       tapesPath: '/tmp/tapes',
       silent: true,
     });
 
-    const tape = createTapeFromJSON(serializedTape);
-    const tapeStore = new TapeStore(opts);
+    const tape = Tape.fromJSON(tapeJson, context);
+    const tapeStore = new TapeStore(context);
 
     tape.meta.path = 'example-tape.json';
 
     tapeStore.save(tape);
 
-    expect(fs.existsSync(path.join(opts.tapesPath, tape.meta.path))).toBe(true);
+    expect(fs.existsSync(path.join(context.tapesPath, tape.meta.path))).toBe(true);
   });
 
   it('saves tape to path from tapePathGenerator', () => {
     const testDir = '/tmp/tapes';
     const testName = 'test-tape.json';
 
-    const opts = createContext({
+    const context = createContext({
       proxyUrl: 'localhost:8080',
       silent: true,
       tapePathGenerator: (tape) => tape.headers['x-tape-path'][0],
       tapeNameGenerator: () => testName,
     });
 
-    const tape = createTapeFromJSON(serializedTape);
-    const tapeStore = new TapeStore(opts);
+    const tape = Tape.fromJSON(tapeJson, context);
+    const tapeStore = new TapeStore(context);
 
     tape.request.headers['x-tape-path'] = [testDir];
 
@@ -72,14 +72,14 @@ describe('Tape Store', () => {
     const testDir = '/tmp/tapes';
     const testName = 'test-tape';
 
-    const opts = createContext({
+    const context = createContext({
       proxyUrl: 'localhost:8080',
       silent: true,
       tapeNameGenerator: () => testName,
     });
 
-    const tape = createTapeFromJSON(serializedTape);
-    const tapeStore = new TapeStore(opts);
+    const tape = Tape.fromJSON(tapeJson, context);
+    const tapeStore = new TapeStore(context);
 
     tape.request.headers['x-tape-path'] = [testDir];
 
