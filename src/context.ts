@@ -27,7 +27,7 @@ export const FallbackModes = {
 
 export type Options = {
   proxyUrl: string;
-  talkbackUrl?: string;
+  flybackUrl?: string;
   tapesPath?: string;
   recordMode?: RecordMode | ((request: Request) => RecordMode);
   fallbackMode?: FallbackMode | ((request: Request) => FallbackMode);
@@ -54,7 +54,7 @@ export type Options = {
 };
 
 const defaultOptions = {
-  talkbackUrl: 'localhost:8080',
+  flybackUrl: 'localhost:8080',
   recordMode: 'NEW' as RecordMode | ((request: Request) => RecordMode),
   fallbackMode: 'NOT_FOUND' as FallbackMode | ((request: Request) => FallbackMode),
   name: 'unnamed',

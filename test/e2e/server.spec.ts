@@ -4,14 +4,14 @@ import https from 'https';
 import fetch, { RequestInit } from 'node-fetch';
 import del from 'del';
 import testServer from './test-server';
-import TalkbackServer from '../../src/server';
+import FlybackServer from '../../src/server';
 import { urlToListenOptions } from '../../src/utils/url';
 import Logger from '../../src/logger';
 import { TapeJson } from '../../src/tape';
 import { Context, Options } from '../../src/context';
 import { RequestJson } from '../../src/http/request';
 
-let talkbackServer: TalkbackServer;
+let flybackServer: FlybackServer;
 let proxiedServer;
 
 jest.setTimeout(1000000);
@@ -19,13 +19,13 @@ jest.setTimeout(1000000);
 const tapesPath = `${__dirname}/tapes`;
 
 const proxyUrl = `http://localhost:8898`;
-const talkbackUrl = `http://localhost:8899`;
+const flybackUrl = `http://localhost:8899`;
 
 function normalizePath(url) {
   return url.startsWith('/') ? url.substring(1) : url;
 }
 
-function talkbackFetch(relativeUrl: string, init?: RequestInit, origin = talkbackUrl) {
+function flybackFetch(relativeUrl: string, init?: RequestInit, origin = flybackUrl) {
   return fetch(`${origin}/${normalizePath(relativeUrl)}`, init);
 }
 
@@ -43,10 +43,10 @@ function readJSONFromFile(tapesPath: string, url: string): TapeJson {
   return JSON.parse(fs.readFileSync(`${tapesPath}/${fileName}.json`).toString());
 }
 
-const startTalkback = async (opts?: Partial<Options>, callback?) => {
-  const talkbackServer = new TalkbackServer({
+const startflyback = async (opts?: Partial<Options>, callback?) => {
+  const flybackServer = new FlybackServer({
     proxyUrl,
-    talkbackUrl,
+    flybackUrl,
     tapesPath,
     recordMode: 'NEW',
     silent: true,
@@ -56,7 +56,7 @@ const startTalkback = async (opts?: Partial<Options>, callback?) => {
       const location = tape.response.headers['location'];
 
       if (location && location[0]) {
-        tape.response.headers['location'] = [location[0].replace(proxyUrl, talkbackUrl)];
+        tape.response.headers['location'] = [location[0].replace(proxyUrl, flybackUrl)];
       }
 
       return tape;
@@ -64,9 +64,9 @@ const startTalkback = async (opts?: Partial<Options>, callback?) => {
     ...opts,
   });
 
-  await talkbackServer.start(callback);
+  await flybackServer.start(callback);
 
-  return talkbackServer;
+  return flybackServer;
 };
 
 const cleanupTapes = () => {
@@ -85,7 +85,7 @@ const cleanupTapes = () => {
   del.sync(newTapesPath);
 };
 
-describe('talkback', () => {
+describe('flyback', () => {
   beforeAll(async () => {
     proxiedServer = testServer();
     await proxiedServer.listen(urlToListenOptions(proxyUrl));
@@ -94,9 +94,9 @@ describe('talkback', () => {
   beforeEach(() => cleanupTapes());
 
   afterEach(() => {
-    if (talkbackServer) {
-      talkbackServer.close();
-      talkbackServer = null;
+    if (flybackServer) {
+      flybackServer.close();
+      flybackServer = null;
     }
   });
 
@@ -111,12 +111,12 @@ describe('talkback', () => {
 
   describe('record mode NEW', () => {
     it('proxies and creates a new tape when the POST request is unknown with human readable req and res', async () => {
-      talkbackServer = await startTalkback();
+      flybackServer = await startflyback();
 
       const reqBody = { foo: 'bar' };
       const headers = { 'content-type': 'application/json' };
       const url = '/test/1';
-      const response = await talkbackFetch(url, {
+      const response = await flybackFetch(url, {
         compress: false,
         method: 'POST',
         headers,
@@ -136,9 +136,9 @@ describe('talkback', () => {
     });
 
     it('proxies and creates a new tape when the GET request is unknown', async () => {
-      talkbackServer = await startTalkback();
+      flybackServer = await startflyback();
       const url = '/test/1';
-      const res = await talkbackFetch(url, { compress: false, method: 'GET' });
+      const res = await flybackFetch(url, { compress: false, method: 'GET' });
 
       expect(res.status).toEqual(200);
 
@@ -154,12 +154,12 @@ describe('talkback', () => {
     });
 
     it('proxies and creates a new tape when the POST request is unknown with human readable req and res', async () => {
-      talkbackServer = await startTalkback();
+      flybackServer = await startflyback();
 
       const reqBody = JSON.stringify({ foo: 'bar' });
       const headers = { 'content-type': 'application/json' };
       const url = `test/1`;
-      const res = await talkbackFetch(url, {
+      const res = await flybackFetch(url, {
         compress: false,
         method: 'POST',
         headers,
@@ -180,11 +180,11 @@ describe('talkback', () => {
     });
 
     it('proxies and creates a new tape when the HEAD request is unknown', async () => {
-      talkbackServer = await startTalkback();
+      flybackServer = await startflyback();
 
       const headers = { 'content-type': 'application/json' };
       const url = 'test/head';
-      const res = await talkbackFetch(url, { method: 'HEAD', headers });
+      const res = await flybackFetch(url, { method: 'HEAD', headers });
 
       expect(res.status).toEqual(200);
 
@@ -196,10 +196,10 @@ describe('talkback', () => {
     });
 
     it('proxies and creates a new tape with a custom tape name generator', async () => {
-      talkbackServer = await startTalkback();
+      flybackServer = await startflyback();
 
       const url = `/test/1`;
-      const res = await talkbackFetch(url, { compress: false, method: 'GET' });
+      const res = await flybackFetch(url, { compress: false, method: 'GET' });
 
       expect(res.status).toEqual(200);
 
@@ -209,9 +209,9 @@ describe('talkback', () => {
     });
 
     it('decorates proxied responses', async () => {
-      talkbackServer = await startTalkback();
+      flybackServer = await startflyback();
 
-      const res = await talkbackFetch('/test/redirect/1', {
+      const res = await flybackFetch('/test/redirect/1', {
         compress: false,
         method: 'GET',
         redirect: 'manual',
@@ -221,14 +221,14 @@ describe('talkback', () => {
 
       const location = res.headers.get('location');
 
-      expect(location).toEqual(`${talkbackUrl}/test/1`);
+      expect(location).toEqual(`${flybackUrl}/test/1`);
     });
 
     it('handles when the proxied server returns a 500', async () => {
-      talkbackServer = await startTalkback();
+      flybackServer = await startflyback();
 
       const path = 'test/3/500';
-      const res = await talkbackFetch(path);
+      const res = await flybackFetch(path);
 
       expect(res.status).toEqual(500);
 
@@ -239,9 +239,9 @@ describe('talkback', () => {
     });
 
     it('loads existing tapes and uses them if they match', async () => {
-      talkbackServer = await startTalkback({ recordMode: 'DISABLED' });
+      flybackServer = await startflyback({ recordMode: 'DISABLED' });
 
-      const res = await talkbackFetch('/test/3', { compress: false });
+      const res = await flybackFetch('/test/3', { compress: false });
 
       expect(res.status).toEqual(200);
 
@@ -251,7 +251,7 @@ describe('talkback', () => {
     });
 
     it('matches and returns pretty printed tapes', async () => {
-      talkbackServer = await startTalkback({
+      flybackServer = await startflyback({
         recordMode: 'DISABLED',
         ignoreAllHeaders: true,
       });
@@ -259,7 +259,7 @@ describe('talkback', () => {
       const headers = { 'content-type': 'application/json' };
       const body = JSON.stringify({ param1: 3, param2: { subParam: 1 } });
 
-      const res = await talkbackFetch('/test/pretty', {
+      const res = await flybackFetch('/test/pretty', {
         compress: false,
         method: 'POST',
         headers,
@@ -282,7 +282,7 @@ describe('talkback', () => {
     it('calls provided callback', async () => {
       const counter = { count: 0 };
 
-      talkbackServer = await startTalkback({ recordMode: 'DISABLED' }, () => {
+      flybackServer = await startflyback({ recordMode: 'DISABLED' }, () => {
         counter.count += 1;
       });
       expect(counter.count).toEqual(1);
@@ -292,7 +292,7 @@ describe('talkback', () => {
       const headers = { 'content-type': 'application/json' };
 
       const makeRequest = async (body) => {
-        const res = await talkbackFetch('/test/pretty', {
+        const res = await flybackFetch('/test/pretty', {
           compress: false,
           method: 'POST',
           headers,
@@ -302,7 +302,7 @@ describe('talkback', () => {
         expect(res.status).toEqual(404);
       };
 
-      talkbackServer = await startTalkback({ recordMode: 'DISABLED' });
+      flybackServer = await startflyback({ recordMode: 'DISABLED' });
 
       // Different nested object
       let body = JSON.stringify({ param1: 3, param2: { subParam: 2 } });
@@ -330,12 +330,12 @@ describe('talkback', () => {
         return tapeJson;
       };
 
-      talkbackServer = await startTalkback({ recordMode: 'DISABLED', tapeDecorator });
+      flybackServer = await startflyback({ recordMode: 'DISABLED', tapeDecorator });
 
       const headers = { 'content-type': 'application/json' };
       const body = JSON.stringify({ text: 'request-test-text' });
 
-      const res = await talkbackFetch('/test/echo', {
+      const res = await flybackFetch('/test/echo', {
         compress: false,
         method: 'POST',
         headers,
@@ -352,15 +352,15 @@ describe('talkback', () => {
 
   describe('record mode OVERWRITE', () => {
     it('overwrites an existing tape', async () => {
-      talkbackServer = await startTalkback({
+      flybackServer = await startflyback({
         recordMode: 'OVERWRITE',
-        ignoreHeaders: ['x-talkback-ping'],
+        ignoreHeaders: ['x-flyback-ping'],
       });
 
       const url = 'test/1';
-      let headers = { 'x-talkback-ping': 'test1' };
+      let headers = { 'x-flyback-ping': 'test1' };
 
-      let res = await talkbackFetch(url, { compress: false, headers });
+      let res = await flybackFetch(url, { compress: false, headers });
 
       expect(res.status).toEqual(200);
       let resBody = await res.json();
@@ -373,9 +373,9 @@ describe('talkback', () => {
       expect(tape.request.path).toEqual('/test/1');
       expect(tape.response.body).toEqual(expectedBody);
 
-      headers = { 'x-talkback-ping': 'test2' };
+      headers = { 'x-flyback-ping': 'test2' };
 
-      res = await talkbackFetch(url, { compress: false, headers });
+      res = await flybackFetch(url, { compress: false, headers });
       expect(res.status).toEqual(200);
       resBody = await res.json();
       expectedBody = { ok: true, body: 'test2' };
@@ -390,22 +390,22 @@ describe('talkback', () => {
 
   describe('record mode DISABLED', () => {
     it('returns a 404 on unkwown request with fallbackMode NOT_FOUND (default)', async () => {
-      talkbackServer = await startTalkback({ recordMode: 'DISABLED' });
+      flybackServer = await startflyback({ recordMode: 'DISABLED' });
 
-      const res = await talkbackFetch('/test/1', { compress: false });
+      const res = await flybackFetch('/test/1', { compress: false });
 
       expect(res.status).toEqual(404);
     });
 
     it('proxies request to host on unkwown request with fallbackMode PROXY', async () => {
-      talkbackServer = await startTalkback({
+      flybackServer = await startflyback({
         recordMode: 'DISABLED',
         fallbackMode: 'PROXY',
       });
 
       const reqBody = JSON.stringify({ foo: 'bar' });
       const headers = { 'content-type': 'application/json' };
-      const res = await talkbackFetch('/test/1', {
+      const res = await flybackFetch('/test/1', {
         compress: false,
         method: 'POST',
         headers,
@@ -429,15 +429,15 @@ describe('talkback', () => {
 
       const loggerSpy = jest.spyOn(logger, 'error').mockImplementation(() => undefined);
 
-      talkbackServer = await startTalkback({ recordMode: 'DISABLED', logger });
+      flybackServer = await startflyback({ recordMode: 'DISABLED', logger });
 
       const error = new Error('Test error');
 
-      jest.spyOn(talkbackServer.tapeStoreManager, 'getTapeStore').mockImplementation(() => {
+      jest.spyOn(flybackServer.tapeStoreManager, 'getTapeStore').mockImplementation(() => {
         throw error;
       });
 
-      const res = await talkbackFetch('/test/1', { compress: false });
+      const res = await flybackFetch('/test/1', { compress: false });
 
       expect(loggerSpy).toHaveBeenCalledWith(error);
       expect(res.status).toEqual(500);
@@ -449,8 +449,8 @@ describe('talkback', () => {
       const logger = new Logger({ silent: true } as Context);
       const spy = jest.spyOn(console, 'log').mockImplementation(() => 0);
 
-      talkbackServer = await startTalkback({ summary: true, logger });
-      talkbackServer.close();
+      flybackServer = await startflyback({ summary: true, logger });
+      flybackServer.close();
 
       expect(spy).toBeCalledWith(expect.stringContaining('SUMMARY'));
     });
@@ -459,8 +459,8 @@ describe('talkback', () => {
       const logger = new Logger({ silent: true } as Context);
       const spy = jest.spyOn(logger, 'log').mockImplementation(() => 0);
 
-      talkbackServer = await startTalkback({ summary: false, logger });
-      talkbackServer.close();
+      flybackServer = await startflyback({ summary: false, logger });
+      flybackServer.close();
 
       expect(spy).toBeCalledWith(expect.not.stringContaining('SUMMARY'));
     });
@@ -469,23 +469,23 @@ describe('talkback', () => {
   describe('tape usage information', () => {
     // TODO
     xit('should indicate that a tape has been used after usage', async () => {
-      talkbackServer = await startTalkback({
+      flybackServer = await startflyback({
         recordMode: 'DISABLED',
         silent: true,
         summary: true,
       });
 
-      // expect(talkbackServer.hasTapeBeenUsed('saved-request.json')).toEqual(false);
+      // expect(flybackServer.hasTapeBeenUsed('saved-request.json')).toEqual(false);
 
-      const res = await talkbackFetch('/test/3', { compress: false });
+      const res = await flybackFetch('/test/3', { compress: false });
 
       expect(res.status).toEqual(200);
 
-      // expect(talkbackServer.hasTapeBeenUsed('saved-request.json')).toEqual(true);
+      // expect(flybackServer.hasTapeBeenUsed('saved-request.json')).toEqual(true);
 
-      // talkbackServer.resetTapeUsage();
+      // flybackServer.resetTapeUsage();
 
-      // expect(talkbackServer.hasTapeBeenUsed('saved-request.json')).toEqual(false);
+      // expect(flybackServer.hasTapeBeenUsed('saved-request.json')).toEqual(false);
 
       const body = await res.json();
 
@@ -495,14 +495,14 @@ describe('talkback', () => {
 
   describe('https', () => {
     it('should be able to run a https server', async () => {
-      const talkbackUrl = 'https://localhost:8886';
+      const flybackUrl = 'https://localhost:8886';
 
-      talkbackServer = await startTalkback({
-        talkbackUrl,
+      flybackServer = await startflyback({
+        flybackUrl,
         recordMode: 'DISABLED',
         https: {
-          keyPath: './example/httpsCert/localhost.key',
-          certPath: './example/httpsCert/localhost.crt',
+          keyPath: './test/e2e/cert/localhost.key',
+          certPath: './test/e2e/cert/localhost.crt',
         },
       });
 
@@ -510,7 +510,7 @@ describe('talkback', () => {
         rejectUnauthorized: false,
       });
 
-      const res = await talkbackFetch('/test/3', { agent, compress: false }, talkbackUrl);
+      const res = await flybackFetch('/test/3', { agent, compress: false }, flybackUrl);
 
       expect(res.status).toEqual(200);
     });

@@ -38,7 +38,7 @@ export async function createRequest(im: IncomingMessage, context: Context): Prom
   });
 }
 
-export const createTalkbackMiddleware = (
+export const createFlybackMiddleware = (
   options: Options,
   tapeStoreManager = new TapeStoreManager(options),
 ) => {

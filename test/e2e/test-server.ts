@@ -28,7 +28,7 @@ const testServer = () => {
               body = JSON.parse(bodyAsString);
             }
 
-            const pingHeader = req.headers['x-talkback-ping'];
+            const pingHeader = req.headers['x-flyback-ping'];
 
             if (pingHeader) {
               body = pingHeader;

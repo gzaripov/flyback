@@ -5,11 +5,11 @@ import onExit from 'async-exit-hook';
 import TapeStoreManager from './tape-store-manager';
 import { urlToListenOptions } from './utils/url';
 import { Context, createContext, Options } from './context';
-import { createTalkbackMiddleware } from './middleware';
+import { createFlybackMiddleware } from './middleware';
 
 type Server = HttpServer | HttpsServer;
 
-export default class TalkbackServer {
+export default class FlybackServer {
   private context: Context;
   private server: Server;
   public tapeStoreManager: TapeStoreManager;
@@ -17,7 +17,7 @@ export default class TalkbackServer {
   constructor(options: Options) {
     this.context = createContext(options);
     this.tapeStoreManager = new TapeStoreManager(this.context);
-    this.server = this.createServer(createTalkbackMiddleware(this.context, this.tapeStoreManager));
+    this.server = this.createServer(createFlybackMiddleware(this.context, this.tapeStoreManager));
   }
 
   createServer(requestListener: http.RequestListener): HttpServer | HttpsServer {
@@ -34,8 +34,8 @@ export default class TalkbackServer {
   }
 
   start(callback: () => void) {
-    this.context.logger.log(`Starting talkback on ${this.context.talkbackUrl}`);
-    const url = urlToListenOptions(this.context.talkbackUrl);
+    this.context.logger.log(`Starting flyback on ${this.context.flybackUrl}`);
+    const url = urlToListenOptions(this.context.flybackUrl);
     const promise = new Promise((resolve) => {
       this.server.listen(url, () => {
         if (callback) callback();
