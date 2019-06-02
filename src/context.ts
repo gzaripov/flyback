@@ -11,10 +11,19 @@ export type RecordMode =
   | 'DISABLED' // If a matching tape exists, return it. Otherwise, don't proxy the request and use `fallbackMode` for the response
   | 'PROXY'; // Just proxy request, don't save tape
 
+export const RecordModes = {
+  NEW: 'NEW',
+  OVERWRITE: 'OVERWRITE',
+  DISABLED: 'DISABLED',
+  PROXY: 'PROXY',
+};
+
 export type FallbackMode = 'NOT_FOUND' | 'PROXY';
 
-export const RecordModes: RecordMode[] = ['NEW', 'OVERWRITE', 'DISABLED', 'PROXY'];
-export const FallbackModes: FallbackMode[] = ['NOT_FOUND', 'PROXY'];
+export const FallbackModes = {
+  NOT_FOUND: 'NOT_FOUND',
+  PROXY: 'PROXY',
+};
 
 export type Options = {
   proxyUrl: string;
@@ -63,7 +72,7 @@ export type Context = Options &
   };
 
 export function validateRecord(record?: RecordMode | ((request: Request) => RecordMode)) {
-  if (typeof record === 'string' && !RecordModes.includes(record)) {
+  if (typeof record === 'string' && !Object.keys(RecordModes).includes(record)) {
     throw new Error(`INVALID OPTION: record has an invalid value of '${record}'`);
   }
 }
@@ -71,7 +80,7 @@ export function validateRecord(record?: RecordMode | ((request: Request) => Reco
 export function validateFallbackMode(
   fallbackMode?: FallbackMode | ((request: Request) => FallbackMode),
 ) {
-  if (typeof fallbackMode === 'string' && !FallbackModes.includes(fallbackMode)) {
+  if (typeof fallbackMode === 'string' && !Object.keys(FallbackModes).includes(fallbackMode)) {
     throw new Error(`INVALID OPTION: fallbackMode has an invalid value of '${fallbackMode}'`);
   }
 }
