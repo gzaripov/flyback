@@ -4,7 +4,7 @@ import fs from 'fs';
 import onExit from 'async-exit-hook';
 import TapeStoreManager from './tape-store-manager';
 import { urlToListenOptions } from './utils/url';
-import { Context, createContext, Options } from './options';
+import { Context, createContext, Options } from './context';
 import { createTalkbackMiddleware } from './middleware';
 
 type Server = HttpServer | HttpsServer;

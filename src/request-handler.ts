@@ -1,4 +1,4 @@
-import { Context, validateRecord, validateFallbackMode, RecordMode } from './options';
+import { Context, validateRecord, validateFallbackMode, RecordMode } from './context';
 import TapeStoreManager from './tape-store-manager';
 import { Request, Response, Headers } from './http';
 import { assertBoolean } from './utils/asserts';
@@ -15,7 +15,7 @@ export default class RequestHandler {
 
   async findResponse(request: Request, recordMode: RecordMode): Promise<Response> {
     const tapeStore = this.tapeStoreManager.getTapeStore(request);
-    const matchingTape = tapeStore.find(request);
+    const matchingResponse = tapeStore.find(request);
 
     if (recordMode === 'OVERWRITE') {
       const response = await this.makeRealRequest(request);
@@ -27,8 +27,8 @@ export default class RequestHandler {
       return response;
     }
 
-    if (matchingTape) {
-      return matchingTape;
+    if (matchingResponse) {
+      return matchingResponse;
     }
 
     if (recordMode === 'NEW') {

@@ -1,4 +1,4 @@
-import { Context } from './options';
+import { Context } from './context';
 
 export default class Logger {
   private options: Context;
