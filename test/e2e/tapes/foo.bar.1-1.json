@@ -1,16 +1,12 @@
 {
-  "meta": {
-    "createdAt": "2019-05-04T13:35:49.148Z"
-  },
   "request": {
-    "url": "/foo/bar/1?real=3",
+    "path": "/foo/bar/1?real=3",
     "method": "GET",
     "headers": {
       "accept": "application/json",
       "content-type": "text/plain",
       "x-ignored": "1"
-    },
-    "body": "ABC"
+    }
   },
   "response": {
     "status": 200,

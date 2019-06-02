@@ -1,11 +1,6 @@
 {
-  "meta": {
-    "createdAt": "2018-08-10T23:19:27.010Z",
-    "host": "http://localhost:8898",
-    "tag": "echo"
-  },
   "request": {
-    "url": "/test/echo",
+    "path": "/test/echo",
     "method": "POST",
     "headers": {
       "user-agent": "node-fetch/1.0 (+https://github.com/bitinn/node-fetch)",

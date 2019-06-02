@@ -1,10 +1,6 @@
 {
-  "meta": {
-    "createdAt": "2017-09-10T23:19:27.010Z",
-    "host": "http://localhost:8898"
-  },
   "request": {
-    "url": "/test/3",
+    "path": "/test/3",
     "method": "GET",
     "headers": {
       "user-agent": "node-fetch/1.0 (+https://github.com/bitinn/node-fetch)",
@@ -21,6 +17,8 @@
       "connection": "close",
       "transfer-encoding": "chunked"
     },
-    "body": "{\"ok\":true}"
+    "body": {
+      "ok": true
+    }
   }
 }
