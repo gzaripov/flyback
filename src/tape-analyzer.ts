@@ -3,6 +3,7 @@ import Tape from './tape';
 export type TapeStats = {
   new?: boolean;
   used?: boolean;
+  deleted?: boolean;
 };
 
 export default class TapeAnalyzer {
@@ -24,6 +25,10 @@ export default class TapeAnalyzer {
     this.tapeStats.set(tape, { ...this.getStatsForTape(tape), new: true });
   }
 
+  markDeleted(tape: Tape) {
+    this.tapeStats.set(tape, { ...this.getStatsForTape(tape), deleted: true });
+  }
+
   printStatistics() {
     console.log(`===== SUMMARY =====`);
     const tapeEntries = [...this.tapeStats.entries()];
@@ -31,14 +36,14 @@ export default class TapeAnalyzer {
 
     if (newTapes.length > 0) {
       console.log('New tapes:');
-      newTapes.forEach(([tape]) => console.log(`- ${tape.request.fullPath}`));
+      newTapes.forEach(([tape]) => console.log(`- ${tape.path}`));
     }
 
     const unusedTapes = tapeEntries.filter(([tape, stats]) => !stats.new && tape);
 
     if (unusedTapes.length > 0) {
       console.log('Unused tapes:');
-      unusedTapes.forEach(([tape]) => console.log(`- ${tape.request.fullPath}`));
+      unusedTapes.forEach(([tape]) => console.log(`- ${tape.path}`));
     }
   }
 }

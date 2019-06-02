@@ -15,20 +15,24 @@ export default class RequestHandler {
 
   async findResponse(request: Request, recordMode: RecordMode): Promise<Response> {
     const tapeStore = this.tapeStoreManager.getTapeStore(request);
-    const matchingResponse = tapeStore.find(request);
+    const matchingTape = tapeStore.find(request);
 
     if (recordMode === 'OVERWRITE') {
       const response = await this.makeRealRequest(request);
 
       const tape = new Tape(request, response, this.context);
 
+      if (matchingTape) {
+        tapeStore.delete(matchingTape);
+      }
+
       tapeStore.save(tape);
 
       return response;
     }
 
-    if (matchingResponse) {
-      return matchingResponse;
+    if (matchingTape) {
+      return matchingTape.response;
     }
 
     if (recordMode === 'NEW') {

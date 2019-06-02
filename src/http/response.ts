@@ -1,23 +1,29 @@
 import Headers, { HeadersJson } from './headers';
 import { ServerResponse } from 'http';
+import Body, { BodyData } from './body';
+import MediaType from './media-type';
 
-type RequestParams = { status: number; headers: Headers; body?: Buffer };
+type ResponseParams = {
+  status: number;
+  headers: Headers;
+  body?: BodyData;
+};
 
 export type ResponseJson = {
   status: number;
   headers: HeadersJson;
-  body?: string;
+  body?: string | Object;
 };
 
 export default class Response {
   private readonly status: number;
   private readonly headers: Headers;
-  private readonly body?: Buffer;
+  private readonly body?: Body;
 
-  constructor({ status, headers, body }: RequestParams) {
+  constructor({ status, headers, body }: ResponseParams) {
     this.status = status;
     this.headers = headers;
-    this.body = body;
+    this.body = body ? new Body(body, new MediaType(headers)) : undefined;
 
     this.checkHeaders();
   }
@@ -26,7 +32,7 @@ export default class Response {
     const { headers, body } = this;
 
     if (body && headers.read('content-length')) {
-      headers.write('content-length', body.byteLength.toString());
+      headers.write('content-length', body.length.toString());
     }
   }
 
@@ -36,7 +42,7 @@ export default class Response {
     return {
       status,
       headers: headers.toJSON(),
-      body: body ? body.toString() : undefined,
+      body: body ? body.toJSON() : '',
     };
   }
 
@@ -44,16 +50,17 @@ export default class Response {
     const { status, headers, body } = this;
 
     response.writeHead(status, headers.toJSON());
-    response.end(body);
+    response.end(body ? body.toBuffer() : undefined);
   }
 
   static fromJSON(json: ResponseJson) {
-    const { status, headers, body } = json;
+    const { status, body } = json;
+    const headers = new Headers(json.headers);
 
     return new Response({
       status,
-      headers: new Headers(headers),
-      body: body ? Buffer.from(body) : undefined,
+      headers,
+      body: body ? new Body(body, new MediaType(headers)) : undefined,
     });
   }
 }

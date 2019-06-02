@@ -2,18 +2,18 @@ import fs from 'fs';
 import path from 'path';
 import mkdirp from 'mkdirp';
 import Tape from './tape';
-import { Context } from './options';
-import { Request, Response } from './http';
+import { Context } from './context';
+import { Request } from './http';
 import TapeFile from './tape-file';
 
 export default class TapeStore {
-  public tapeFiles: { [pathname: string]: TapeFile };
+  public tapeFiles: { [tapeName: string]: TapeFile };
   private context: Context;
-  private path?: string;
+  private path: string;
 
-  constructor(options: Context) {
-    this.path = options.tapesPath && path.normalize(`${options.tapesPath}/`);
-    this.context = options;
+  constructor(storePath: string, context: Context) {
+    this.path = path.normalize(`${storePath}/`);
+    this.context = context;
     this.tapeFiles = {};
     this.load();
   }
@@ -54,14 +54,14 @@ export default class TapeStore {
     );
   }
 
-  find(request: Request): Response | null {
-    const tapeFile = this.tapeFiles[request.pathname];
+  find(request: Request): Tape | null {
+    const tapeFile = this.tapeFiles[request.name];
 
     return tapeFile ? tapeFile.find(request) : null;
   }
 
   private findTapeFile(tape: Tape): TapeFile | null {
-    return this.tapeFiles[tape.pathname];
+    return this.tapeFiles[tape.name];
   }
 
   save(tape: Tape) {
@@ -75,34 +75,30 @@ export default class TapeStore {
     if (tapeFile) {
       tapeFile.add(tape);
     } else {
-      tapeFile = new TapeFile(tapePath, this.context);
-      tapeFile.add(tape);
-      this.tapeFiles[tape.pathname] = tapeFile;
+      tapeFile = new TapeFile(tapePath, this.context, [tape]);
+      this.tapeFiles[tapeFile.name] = tapeFile;
+    }
+
+    tapeFile.save();
+  }
+
+  delete(tape: Tape) {
+    this.context.tapeAnalyzer.markDeleted(tape);
+
+    const tapeFile = this.findTapeFile(tape);
+
+    if (tapeFile) {
+      tapeFile.delete(tape);
+      tapeFile.save();
     }
   }
 
   createTapePath(tape: Tape) {
-    let result;
+    const tapePath = path.normalize(path.join(this.path, tape.name));
 
-    if (this.context.tapePathGenerator) {
-      result = this.context.tapePathGenerator(tape.toJSON());
-    }
+    mkdirp.sync(path.dirname(tapePath));
 
-    if (!result && this.context.tapesPath) {
-      result = this.context.tapesPath;
-    }
-
-    if (!result) {
-      throw new Error(`Cant create path for tape ${tape.pathname}`);
-    }
-
-    result = path.normalize(path.join(result, tape.name));
-
-    const dir = path.dirname(result);
-
-    mkdirp.sync(dir);
-
-    return result;
+    return tapePath;
   }
 
   hasPath(pathToCheck: string) {

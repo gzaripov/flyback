@@ -46,7 +46,8 @@ const testServer = () => {
 
             return;
           }
-          case '/test/3': {
+          case '/test/3':
+          case '/test/3/500': {
             res.writeHead(500);
             res.end();
 

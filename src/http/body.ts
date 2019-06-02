@@ -1,20 +1,36 @@
 import deepEqual from 'fast-deep-equal';
 // import zlib from 'zlib';
 import MediaType from './media-type';
-import formatJson from '../utils/format-json';
+import { formatJsonString } from '../utils/format-json';
+
+export type BodyData = string | Buffer | Object;
+
+function bodyDataToBuffer(data: BodyData) {
+  if (typeof data === 'string') {
+    return Buffer.from(data);
+  }
+  if (data instanceof Buffer) {
+    return data;
+  }
+  if (typeof data === 'object') {
+    return Buffer.from(JSON.stringify(data));
+  }
+
+  throw new Error('Invalid body data type');
+}
 
 export default class Body {
   private readonly buffer: Buffer;
   private readonly mediaType: MediaType;
 
-  constructor(buffer: Buffer, mediaType: MediaType) {
-    this.buffer = this.normalize(buffer, mediaType);
+  constructor(data: BodyData, mediaType: MediaType) {
+    this.buffer = this.normalize(bodyDataToBuffer(data), mediaType);
     this.mediaType = mediaType;
   }
 
   private normalize(buffer: Buffer, mediaType: MediaType) {
     if (mediaType.isJSON() && buffer && buffer.length > 0) {
-      return Buffer.from(formatJson(buffer.toString()));
+      return Buffer.from(formatJsonString(buffer.toString()));
     }
 
     return buffer;

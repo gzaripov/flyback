@@ -1,5 +1,5 @@
 import { Request, Response } from './http';
-import { Context } from './options';
+import { Context } from './context';
 import { RequestJson } from './http/request';
 import { ResponseJson } from './http/response';
 
@@ -9,16 +9,15 @@ export type TapeJson = {
 };
 
 export default class Tape {
-  public readonly request: Request;
   public readonly response: Response;
-  public readonly name: string;
+  private readonly request: Request;
+  // @ts-ignore
   private readonly context: Context;
 
   constructor(request: Request, response: Response, context: Context) {
     this.request = request;
     this.response = response;
     this.context = context;
-    this.name = this.createTapeName();
 
     if (context.tapeDecorator) {
       const decoratedTapeJson = context.tapeDecorator(this.toJSON());
@@ -27,16 +26,20 @@ export default class Tape {
     }
   }
 
-  private createTapeName() {
-    if (this.context.tapeNameGenerator) {
-      return this.context.tapeNameGenerator(this.toJSON());
-    }
-
-    return this.request.pathname.substring(1).replace(/\//g, '.');
+  get name() {
+    return this.request.name;
   }
 
   get pathname() {
     return this.request.pathname;
+  }
+
+  get path() {
+    return this.request.fullPath;
+  }
+
+  containsRequest(request: Request) {
+    return this.request.equals(request);
   }
 
   toJSON(): TapeJson {

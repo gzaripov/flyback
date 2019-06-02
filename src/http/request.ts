@@ -3,15 +3,15 @@ import { Agent } from 'https';
 import MediaType from './media-type';
 import Headers, { HeadersJson } from './headers';
 import Response from './response';
-import { Context } from '../options';
-import Body from './body';
+import { Context } from '../context';
+import Body, { BodyData } from './body';
 import Path from './path';
 
 type RequestParams = {
   path: string;
   method?: string;
   headers: Headers;
-  body?: Buffer;
+  body?: BodyData;
   context: Context;
 };
 
@@ -19,10 +19,11 @@ export type RequestJson = {
   path: string;
   method: string;
   headers: HeadersJson;
-  body?: string;
+  body?: string | Object;
 };
 
 export default class Request {
+  public readonly name: string;
   private readonly path: Path;
   private readonly method: string;
   private readonly headers: Headers;
@@ -30,18 +31,45 @@ export default class Request {
   private readonly context: Context;
 
   constructor({ path, method = 'GET', headers, body, context }: RequestParams) {
+    this.context = context;
     this.path = new Path(path, context);
     this.method = method.toUpperCase();
-    this.headers = headers;
-    this.body = body && new Body(body, new MediaType(this.headers));
-    this.context = context;
-
-    this.deleteHostHeader();
+    this.headers = this.deleteHostHeader(headers);
+    this.body = this.createBody(body);
+    this.name = this.createName();
   }
 
-  private deleteHostHeader() {
+  private createBody(data?: BodyData) {
+    if (!data) {
+      return undefined;
+    }
+
+    const body = new Body(data, new MediaType(this.headers));
+
+    if (body.length === 0) {
+      return undefined;
+    }
+
+    if (this.method === 'GET' || this.method === 'HEAD') {
+      throw new Error('Request with GET/HEAD method cannot have body');
+    }
+
+    return body;
+  }
+
+  private deleteHostHeader(headers: Headers) {
     // delete host header to avoid errors i.e. Domain not found: localhost:9001
-    this.headers.delete('host');
+    headers.delete('host');
+
+    return headers;
+  }
+
+  private createName() {
+    if (this.context.tapeNameGenerator) {
+      return this.context.tapeNameGenerator(this.toJSON());
+    }
+
+    return this.pathname.substring(1).replace(/\//g, '.');
   }
 
   get pathname(): string {
@@ -62,7 +90,7 @@ export default class Request {
 
     const response = await fetch(url, {
       method,
-      headers: headers as any,
+      headers: headers.toJSON() as any,
       body: body && body.toBuffer(),
       compress: false,
       redirect: 'manual',
@@ -119,18 +147,19 @@ export default class Request {
       path: path.toString(),
       method,
       headers: headers.toJSON(),
-      body: body ? body.toJSON() : undefined,
+      body: body ? body.toJSON() : '',
     };
   }
 
   static fromJSON(json: RequestJson, context: Context): Request {
-    const { path, method, headers, body } = json;
+    const { path, method, body } = json;
+    const headers = new Headers(json.headers);
 
     return new Request({
       path,
       method,
-      headers: new Headers(headers),
-      body: body ? Buffer.from(body) : undefined,
+      headers,
+      body: body ? new Body(body, new MediaType(headers)) : undefined,
       context,
     });
   }
