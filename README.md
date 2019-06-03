@@ -43,51 +43,58 @@ Returns an unstarted flyback server instance.
 
 | Name | Type | Description | Default |   
 |------|------|-------------|---------|
-| **proxyUrl** | `String` | Where to proxy unknown requests| |
+| **proxyUrl** | `String` | Where to proxy unknown requests ||
 | **flybackUrl** | `String` | Where to serve flyback server (ignored for middleware) | localhost:8080 |
 | **tapesPath** | `String` | Path where to load and save tapes | undefined |
-| **recordMode** | `String \| Function` | Set record mode. [More info](#recording-modes) | `RecordMode.NEW` |
-| **fallbackMode** | `String \| Function` | Fallback mode for unknown requests when recording is disabled. [More info](#recording-modes) | `FallbackMode.NOT_FOUND` |
-| **https** | `Object` | HTTPS server [options](#https-options) | [Defaults](#https-options) |
-| **name** | `String` | Server name | Defaults to `host` value |
-| **tapeNameGenerator** | `Function` | [Customize](#file-name) how a tape name is generated for new tapes. | `null` |
+| **recordMode** | `RecordMode \| Function` | Set record mode. [More info](#recording-modes) | `RecordMode.NEW` |
+| **fallbackMode** | `FallbackMode \| Function` | Fallback mode for unknown requests when recording is disabled. [More info](#recording-modes) | `FallbackMode.NOT_FOUND` |
+| **tapeNameGenerator** | `Function` | [Customize](#file-name) how a tape file name is generated for new tapes. | `null` |
+| **tapePathGenerator** | `Function` | [Customize](#file-name) how a tape file path (to directory) is generated for new tapes. | `null` |
+| **tapeFileExtension** | `String` | Tape file extension | `.json` |
+| **https** | `Object` | HTTPS cert options [options](#https-options) used to create https server in FlybackServer | null |
+| **agent** | `https.Agent` | https.Agent for node-fetch to make requests to proxyUrl |
+| **ignoreQueryParams** | `[String]` | Query params to ignore when matching tapes. Useful when having dynamic query params like timestamps| `[]` |
+| **ignoreAllQueryParams** | `Boolean` | Ignore all query params when matching tapes. | `['content-length', 'host]` |
 | **ignoreHeaders** | `[String]` | List of headers to ignore when matching tapes. Useful when having dynamic headers like cookies or correlation ids | `['content-length', 'host]` |
-| **ignoreQueryParams** | `[String]` | List of query params to ignore when matching tapes. Useful when having dynamic query params like timestamps| `[]` |
+| **ignoreAllHeaders** | `[String]` | List of headers to ignore when matching tapes. Useful when having dynamic headers like cookies or correlation ids | `['content-length', 'host]` |
 | **ignoreBody** | `Boolean` | Should the request body be ignored when matching tapes | `false` |
-| **bodyMatcher** | `Function` | Customize how a request's body is matched against saved tapes. [More info](#custom-request-body-matcher) | `null` |
-| **urlMatcher** | `Function` | Customize how a request's URL is matched against saved tapes. [More info](#custom-request-url-matcher) | `null` |
-| **responseDecorator** | `Function` | Modify responses before they're returned. [More info](#custom-response-decorator) | `null` |  
-| **silent** | `Boolean` | Disable requests information console messages in the middle of requests | `false` |
+| **tapeMatcher** | `Function` | Customize how a request's body is matched against saved tapes. [More info](#custom-request-body-matcher) | `null` |
+| **tapeDecorator** | `Function` | Decorate tapes when they are created. [More info](#custom-response-decorator) | `null` |  
 | **summary** | `Boolean` | Enable exit summary of new and unused tapes at exit. [More info](#exit-summary) | `true` |
-| **debug** | `Boolean` | Enable verbose debug information | `false` |
+| **verbose** | `Boolean` | Enable requests information printing | `false` |
+| **debug** | `Boolean` | Enable debug information | `false` |
 
 ### HTTPS options
 | Name | Type | Description | Default |
 |------|------|-------------|---------|
-| **enabled** | `Boolean` | Enables HTTPS server | `false` |
 | **keyPath** | `String` | Path to the key file | `null` | 
 | **certPath** | `String` | Path to the cert file | `null` | 
 
-### start([callback])
-Starts the HTTP server and if provided calls `callback` after the server has successfully started.
+## Api
 
-### close()
+### FlybackServer(options)
+
+#### start([callback])
+Starts the HTTP server.
+
+#### close([callback])
 Stops the HTTP server.
 
+### createFlybackMiddleware(options)
+
 ## Tapes
-Tapes can be freely edited to match new requests or return a different response than the original. They are loaded recursively from the `path` directory at startup.   
-They use the [JSON5](http://json5.org/) format. JSON5 is an extensions to the JSON format that allows for very neat features like comments, trailing commas and keys without quotes.   
+Tapes can be freely edited to match new requests or return a different response than the original. They are loaded recursively from the `tapesPath` directory at startup if specified.   
+It is not necessary to specify tapesPath, you can generate tapePath from request, it can be helpful in testing with puppeteer, you can add header with test path, and tapes will be loaded from there and written to that path
 
 #### Format
-All tapes have the following 3 properties:   
-* **meta**: Stores metadata about the tape.
+All tapes have the following 2 properties:   
 * **req**: Request object. Used to match incoming requests against the tape.
 * **res**: Response object. The HTTP response that will be returned in case the tape matches a request.
 
-You can freely edit any part of the tape, and even add your own properties to `meta`.   
-Since tapes are only loaded on startup, any changes to a tape requires a server restart to be applied.
+You can edit any part of the tape through tapeDecorator option.   
+Flyback doesn't watch tape files so if you will change them in runtime, changes wont be applied
 
-#### File Name
+#### Tape names and grouping
 New tapes will be created under the `path` directory with the name `unnamed-n.json5`, where `n` is the tape number.   
 Tapes can be renamed at will, for example to give some meaning to the scenario the tape represents.  
 If a custom `tapeNameGenerator` is provided, it will be called to produce an alternate file path under `path` that can be based on the tape contents. Note that the file extension `.json5` will be appended automatically.

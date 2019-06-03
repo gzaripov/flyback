@@ -1,5 +1,4 @@
 import fetch from 'node-fetch';
-import { Agent } from 'https';
 import MediaType from './media-type';
 import Headers, { HeadersJson } from './headers';
 import Response from './response';
@@ -80,10 +79,8 @@ export default class Request {
     return this.path.toString();
   }
 
-  async send(endpoint: string, params: { agent?: Agent }) {
+  async send(endpoint: string) {
     const { path, method, headers, body } = this;
-    const { agent } = params;
-
     const url = endpoint.replace(/\/$/, '') + path;
 
     this.context.logger.log(`Making request to ${url}`);
@@ -94,7 +91,7 @@ export default class Request {
       body: body && body.toBuffer(),
       compress: false,
       redirect: 'manual',
-      agent,
+      agent: this.context.agent,
     });
 
     const responseBody = await response.buffer();

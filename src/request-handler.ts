@@ -100,8 +100,6 @@ export default class RequestHandler {
   async makeRealRequest(request: Request): Promise<Response> {
     const endpoint = this.context.proxyUrl;
 
-    const agent = this.context.agent || undefined;
-
-    return request.send(endpoint, { agent });
+    return request.send(endpoint);
   }
 }

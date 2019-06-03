@@ -12,7 +12,7 @@ type Server = HttpServer | HttpsServer;
 export default class FlybackServer {
   private context: Context;
   private server: Server;
-  public tapeStoreManager: TapeStoreManager;
+  private tapeStoreManager: TapeStoreManager;
 
   constructor(options: Options) {
     this.context = createContext(options);
@@ -20,7 +20,7 @@ export default class FlybackServer {
     this.server = this.createServer(createFlybackMiddleware(this.context, this.tapeStoreManager));
   }
 
-  createServer(requestListener: http.RequestListener): HttpServer | HttpsServer {
+  private createServer(requestListener: http.RequestListener): HttpServer | HttpsServer {
     if (this.context.https) {
       const httpsOpts = {
         key: fs.readFileSync(this.context.https.keyPath),
