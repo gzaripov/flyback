@@ -48,7 +48,6 @@ describe('TapeStoreManager', () => {
 
   it('returns the same store second on same path', () => {
     const opts = createContext({
-      silent: true,
       proxyUrl: 'localhost:8080',
       tapePathGenerator: (request) => {
         return request.headers.testpath[0];

@@ -49,7 +49,6 @@ const startflyback = async (opts?: Partial<Options>, callback?) => {
     flybackUrl,
     tapesPath,
     recordMode: 'NEW',
-    silent: true,
     summary: false,
     tapeNameGenerator,
     tapeDecorator: (tape: TapeJson) => {
@@ -425,7 +424,7 @@ describe('flyback', () => {
 
   describe('error handling', () => {
     it('returns a 500 if anything goes wrong', async () => {
-      const logger = new Logger({ silent: true } as Context);
+      const logger = new Logger({} as Context);
 
       const loggerSpy = jest.spyOn(logger, 'error').mockImplementation(() => undefined);
 
@@ -446,7 +445,7 @@ describe('flyback', () => {
 
   describe('summary printing', () => {
     it('prints the summary when enabled', async () => {
-      const logger = new Logger({ silent: true } as Context);
+      const logger = new Logger({} as Context);
       const spy = jest.spyOn(console, 'log').mockImplementation(() => 0);
 
       flybackServer = await startflyback({ summary: true, logger });
@@ -456,7 +455,7 @@ describe('flyback', () => {
     });
 
     it("doesn't print the summary when disabled", async () => {
-      const logger = new Logger({ silent: true } as Context);
+      const logger = new Logger({} as Context);
       const spy = jest.spyOn(logger, 'log').mockImplementation(() => 0);
 
       flybackServer = await startflyback({ summary: false, logger });
@@ -471,7 +470,6 @@ describe('flyback', () => {
     xit('should indicate that a tape has been used after usage', async () => {
       flybackServer = await startflyback({
         recordMode: 'DISABLED',
-        silent: true,
         summary: true,
       });
 

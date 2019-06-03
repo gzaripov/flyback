@@ -31,7 +31,6 @@ export type Options = {
   tapesPath?: string;
   recordMode?: RecordMode | ((request: Request) => RecordMode);
   fallbackMode?: FallbackMode | ((request: Request) => FallbackMode);
-  name?: string;
   tapeNameGenerator?: (request: RequestJson) => string;
   tapePathGenerator?: (request: RequestJson) => string;
   tapeFileExtension?: string;
@@ -47,8 +46,8 @@ export type Options = {
   ignoreBody?: boolean;
   tapeMatcher?: (tape: TapeJson, request: RequestJson) => boolean;
   tapeDecorator?: (tape: TapeJson) => TapeJson;
-  silent?: boolean;
   summary?: boolean;
+  verbose?: boolean;
   debug?: boolean;
   logger?: Logger;
 };
@@ -57,9 +56,8 @@ const defaultOptions = {
   flybackUrl: 'localhost:8080',
   recordMode: 'NEW' as RecordMode | ((request: Request) => RecordMode),
   fallbackMode: 'NOT_FOUND' as FallbackMode | ((request: Request) => FallbackMode),
-  name: 'unnamed',
   ignoreHeaders: ['content-length', 'host'],
-  silent: false,
+  verbose: false,
   summary: true,
   debug: false,
   logger: new Logger(),

@@ -2,9 +2,9 @@ import { Options, createContext } from '../../src/context';
 
 describe('Options', () => {
   it('merges user options and default options', () => {
-    const opts = createContext({ silent: true } as Options);
+    const opts = createContext({ verbose: true } as Options);
 
-    expect(opts.silent).toEqual(true);
+    expect(opts.verbose).toEqual(true);
     expect(opts.debug).toEqual(false);
   });
 
