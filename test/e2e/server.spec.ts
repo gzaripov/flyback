@@ -10,6 +10,7 @@ import Logger from '../../src/logger';
 import { TapeJson } from '../../src/tape';
 import { Context, Options } from '../../src/context';
 import { RequestJson } from '../../src/http/request';
+import TapeStoreManager from '../../src/tape-store-manager';
 
 let flybackServer: FlybackServer;
 let proxiedServer;
@@ -43,25 +44,34 @@ function readJSONFromFile(tapesPath: string, url: string): TapeJson {
   return JSON.parse(fs.readFileSync(`${tapesPath}/${fileName}.json`).toString());
 }
 
-const startflyback = async (opts?: Partial<Options>, callback?) => {
-  const flybackServer = new FlybackServer({
-    proxyUrl,
-    flybackUrl,
-    tapesPath,
-    recordMode: 'NEW',
-    summary: false,
-    tapeNameGenerator,
-    tapeDecorator: (tape: TapeJson) => {
-      const location = tape.response.headers['location'];
+const startFlyback = async (
+  opts?: Partial<Options>,
+  {
+    callback,
+    tapeStoreManager,
+  }: { callback?: VoidFunction; tapeStoreManager?: TapeStoreManager } = {},
+) => {
+  const flybackServer = new FlybackServer(
+    {
+      proxyUrl,
+      flybackUrl,
+      tapesPath,
+      recordMode: 'NEW',
+      summary: false,
+      tapeNameGenerator,
+      tapeDecorator: (tape: TapeJson) => {
+        const location = tape.response.headers['location'];
 
-      if (location && location[0]) {
-        tape.response.headers['location'] = [location[0].replace(proxyUrl, flybackUrl)];
-      }
+        if (location && location[0]) {
+          tape.response.headers['location'] = [location[0].replace(proxyUrl, flybackUrl)];
+        }
 
-      return tape;
+        return tape;
+      },
+      ...opts,
     },
-    ...opts,
-  });
+    tapeStoreManager,
+  );
 
   await flybackServer.start(callback);
 
@@ -110,7 +120,7 @@ describe('flyback', () => {
 
   describe('record mode NEW', () => {
     it('proxies and creates a new tape when the POST request is unknown with human readable req and res', async () => {
-      flybackServer = await startflyback();
+      flybackServer = await startFlyback();
 
       const reqBody = { foo: 'bar' };
       const headers = { 'content-type': 'application/json' };
@@ -135,7 +145,7 @@ describe('flyback', () => {
     });
 
     it('proxies and creates a new tape when the GET request is unknown', async () => {
-      flybackServer = await startflyback();
+      flybackServer = await startFlyback();
       const url = '/test/1';
       const res = await flybackFetch(url, { compress: false, method: 'GET' });
 
@@ -153,7 +163,7 @@ describe('flyback', () => {
     });
 
     it('proxies and creates a new tape when the POST request is unknown with human readable req and res', async () => {
-      flybackServer = await startflyback();
+      flybackServer = await startFlyback();
 
       const reqBody = JSON.stringify({ foo: 'bar' });
       const headers = { 'content-type': 'application/json' };
@@ -179,7 +189,7 @@ describe('flyback', () => {
     });
 
     it('proxies and creates a new tape when the HEAD request is unknown', async () => {
-      flybackServer = await startflyback();
+      flybackServer = await startFlyback();
 
       const headers = { 'content-type': 'application/json' };
       const url = 'test/head';
@@ -195,7 +205,7 @@ describe('flyback', () => {
     });
 
     it('proxies and creates a new tape with a custom tape name generator', async () => {
-      flybackServer = await startflyback();
+      flybackServer = await startFlyback();
 
       const url = `/test/1`;
       const res = await flybackFetch(url, { compress: false, method: 'GET' });
@@ -208,7 +218,7 @@ describe('flyback', () => {
     });
 
     it('decorates proxied responses', async () => {
-      flybackServer = await startflyback();
+      flybackServer = await startFlyback();
 
       const res = await flybackFetch('/test/redirect/1', {
         compress: false,
@@ -224,7 +234,7 @@ describe('flyback', () => {
     });
 
     it('handles when the proxied server returns a 500', async () => {
-      flybackServer = await startflyback();
+      flybackServer = await startFlyback();
 
       const path = 'test/3/500';
       const res = await flybackFetch(path);
@@ -238,7 +248,7 @@ describe('flyback', () => {
     });
 
     it('loads existing tapes and uses them if they match', async () => {
-      flybackServer = await startflyback({ recordMode: 'DISABLED' });
+      flybackServer = await startFlyback({ recordMode: 'DISABLED' });
 
       const res = await flybackFetch('/test/3', { compress: false });
 
@@ -250,7 +260,7 @@ describe('flyback', () => {
     });
 
     it('matches and returns pretty printed tapes', async () => {
-      flybackServer = await startflyback({
+      flybackServer = await startFlyback({
         recordMode: 'DISABLED',
         ignoreAllHeaders: true,
       });
@@ -281,9 +291,14 @@ describe('flyback', () => {
     it('calls provided callback', async () => {
       const counter = { count: 0 };
 
-      flybackServer = await startflyback({ recordMode: 'DISABLED' }, () => {
-        counter.count += 1;
-      });
+      flybackServer = await startFlyback(
+        { recordMode: 'DISABLED' },
+        {
+          callback: () => {
+            counter.count += 1;
+          },
+        },
+      );
       expect(counter.count).toEqual(1);
     });
 
@@ -301,7 +316,7 @@ describe('flyback', () => {
         expect(res.status).toEqual(404);
       };
 
-      flybackServer = await startflyback({ recordMode: 'DISABLED' });
+      flybackServer = await startFlyback({ recordMode: 'DISABLED' });
 
       // Different nested object
       let body = JSON.stringify({ param1: 3, param2: { subParam: 2 } });
@@ -329,7 +344,7 @@ describe('flyback', () => {
         return tapeJson;
       };
 
-      flybackServer = await startflyback({ recordMode: 'DISABLED', tapeDecorator });
+      flybackServer = await startFlyback({ recordMode: 'DISABLED', tapeDecorator });
 
       const headers = { 'content-type': 'application/json' };
       const body = JSON.stringify({ text: 'request-test-text' });
@@ -351,7 +366,7 @@ describe('flyback', () => {
 
   describe('record mode OVERWRITE', () => {
     it('overwrites an existing tape', async () => {
-      flybackServer = await startflyback({
+      flybackServer = await startFlyback({
         recordMode: 'OVERWRITE',
         ignoreHeaders: ['x-flyback-ping'],
       });
@@ -389,7 +404,7 @@ describe('flyback', () => {
 
   describe('record mode DISABLED', () => {
     it('returns a 404 on unkwown request with fallbackMode NOT_FOUND (default)', async () => {
-      flybackServer = await startflyback({ recordMode: 'DISABLED' });
+      flybackServer = await startFlyback({ recordMode: 'DISABLED' });
 
       const res = await flybackFetch('/test/1', { compress: false });
 
@@ -397,7 +412,7 @@ describe('flyback', () => {
     });
 
     it('proxies request to host on unkwown request with fallbackMode PROXY', async () => {
-      flybackServer = await startflyback({
+      flybackServer = await startFlyback({
         recordMode: 'DISABLED',
         fallbackMode: 'PROXY',
       });
@@ -425,14 +440,14 @@ describe('flyback', () => {
   describe('error handling', () => {
     it('returns a 500 if anything goes wrong', async () => {
       const logger = new Logger({} as Context);
-
       const loggerSpy = jest.spyOn(logger, 'error').mockImplementation(() => undefined);
+      const tapeStoreManager = new TapeStoreManager({} as Options);
 
-      flybackServer = await startflyback({ recordMode: 'DISABLED', logger });
+      flybackServer = await startFlyback({ recordMode: 'DISABLED', logger }, { tapeStoreManager });
 
       const error = new Error('Test error');
 
-      jest.spyOn(flybackServer.tapeStoreManager, 'getTapeStore').mockImplementation(() => {
+      jest.spyOn(tapeStoreManager, 'getTapeStore').mockImplementation(() => {
         throw error;
       });
 
@@ -448,7 +463,7 @@ describe('flyback', () => {
       const logger = new Logger({} as Context);
       const spy = jest.spyOn(console, 'log').mockImplementation(() => 0);
 
-      flybackServer = await startflyback({ summary: true, logger });
+      flybackServer = await startFlyback({ summary: true, logger });
       flybackServer.close();
 
       expect(spy).toBeCalledWith(expect.stringContaining('SUMMARY'));
@@ -458,7 +473,7 @@ describe('flyback', () => {
       const logger = new Logger({} as Context);
       const spy = jest.spyOn(logger, 'log').mockImplementation(() => 0);
 
-      flybackServer = await startflyback({ summary: false, logger });
+      flybackServer = await startFlyback({ summary: false, logger });
       flybackServer.close();
 
       expect(spy).toBeCalledWith(expect.not.stringContaining('SUMMARY'));
@@ -468,7 +483,7 @@ describe('flyback', () => {
   describe('tape usage information', () => {
     // TODO
     xit('should indicate that a tape has been used after usage', async () => {
-      flybackServer = await startflyback({
+      flybackServer = await startFlyback({
         recordMode: 'DISABLED',
         summary: true,
       });
@@ -495,7 +510,7 @@ describe('flyback', () => {
     it('should be able to run a https server', async () => {
       const flybackUrl = 'https://localhost:8886';
 
-      flybackServer = await startflyback({
+      flybackServer = await startFlyback({
         flybackUrl,
         recordMode: 'DISABLED',
         https: {

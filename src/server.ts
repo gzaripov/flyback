@@ -14,9 +14,9 @@ export default class FlybackServer {
   private server: Server;
   private tapeStoreManager: TapeStoreManager;
 
-  constructor(options: Options) {
+  constructor(options: Options, tapeStoreManager?: TapeStoreManager) {
     this.context = createContext(options);
-    this.tapeStoreManager = new TapeStoreManager(this.context);
+    this.tapeStoreManager = tapeStoreManager || new TapeStoreManager(this.context);
     this.server = this.createServer(createFlybackMiddleware(this.context, this.tapeStoreManager));
   }
 
