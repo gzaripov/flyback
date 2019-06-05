@@ -1,0 +1,33 @@
+{
+  "request": {
+    "path": "/test/gzip",
+    "method": "POST",
+    "headers": {
+      "content-type": "application/json",
+      "content-encoding": "gzip",
+      "accept": "*/*",
+      "content-length": "13",
+      "user-agent": "node-fetch/1.0 (+https://github.com/bitinn/node-fetch)",
+      "accept-encoding": "gzip,deflate",
+      "connection": "close"
+    },
+    "body": {
+      "foo": "bar"
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "date": [
+        "Tue, 04 Jun 2019 09:46:24 GMT"
+      ],
+      "connection": [
+        "close"
+      ],
+      "transfer-encoding": [
+        "chunked"
+      ]
+    },
+    "body": ""
+  }
+}

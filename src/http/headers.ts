@@ -6,7 +6,19 @@ export default class Headers {
   private headers: HeadersJson;
 
   constructor(headers: HeadersJson) {
-    this.headers = headers;
+    this.headers = this.normalizeHeaders(headers);
+  }
+
+  private normalizeHeaders(headers: HeadersJson) {
+    const normalizeHeaders = {} as HeadersJson;
+
+    const headerKeys = Object.keys(headers);
+
+    for (const headerKey of headerKeys) {
+      normalizeHeaders[headerKey.toLowerCase()] = headers[headerKey];
+    }
+
+    return headers;
   }
 
   read(header: string) {
@@ -47,6 +59,20 @@ export default class Headers {
     }
 
     return contentType || null;
+  }
+
+  contentEncoding(): string | null {
+    const contentEncoding = this.headers['content-encoding'];
+
+    if (!contentEncoding) {
+      return null;
+    }
+
+    if (Array.isArray(contentEncoding)) {
+      return contentEncoding[0];
+    }
+
+    return contentEncoding.toLowerCase().trim();
   }
 
   toJSON(): HeadersJson {

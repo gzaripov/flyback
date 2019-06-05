@@ -1,12 +1,13 @@
 import Headers, { HeadersJson } from './headers';
 import { ServerResponse } from 'http';
-import Body, { BodyData } from './body';
+import Body, { PrintableBody } from './body';
 import MediaType from './media-type';
+import { EncodedBody } from './encoded-body';
 
 type ResponseParams = {
   status: number;
   headers: Headers;
-  body?: BodyData;
+  body?: Body | Buffer;
 };
 
 export type ResponseJson = {
@@ -18,14 +19,32 @@ export type ResponseJson = {
 export default class Response {
   private readonly status: number;
   private readonly headers: Headers;
+  private readonly mediaType: MediaType;
   private readonly body?: Body;
 
   constructor({ status, headers, body }: ResponseParams) {
     this.status = status;
     this.headers = headers;
-    this.body = body ? new Body(body, new MediaType(headers)) : undefined;
+    this.mediaType = new MediaType(headers);
+    this.body = body instanceof Buffer ? this.createBody(body) : body;
 
     this.checkHeaders();
+  }
+
+  private createBody(data?: Buffer) {
+    if (!data) {
+      return undefined;
+    }
+
+    const body = this.mediaType.isCompressed()
+      ? new EncodedBody(data, this.mediaType)
+      : new PrintableBody(data, this.mediaType);
+
+    if (body.length === 0) {
+      return undefined;
+    }
+
+    return body;
   }
 
   private checkHeaders() {
@@ -42,7 +61,7 @@ export default class Response {
     return {
       status,
       headers: headers.toJSON(),
-      body: body ? body.toJSON() : '',
+      body: body ? body.toJson() : '',
     };
   }
 
@@ -60,7 +79,7 @@ export default class Response {
     return new Response({
       status,
       headers,
-      body: body ? new Body(body, new MediaType(headers)) : undefined,
+      body: body ? PrintableBody.fromJson(body, new MediaType(headers)) : undefined,
     });
   }
 }

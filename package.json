@@ -22,8 +22,8 @@
   "dependencies": {
     "@babel/runtime": "^7.4.3",
     "async-exit-hook": "^2.0.1",
-    "content-type": "^1.0.4",
     "fast-deep-equal": "^2.0.1",
+    "mime-format": "^2.0.0",
     "mkdirp": "^0.5.1",
     "node-fetch": "^2.6.0"
   },

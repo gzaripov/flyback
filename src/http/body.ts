@@ -1,39 +1,21 @@
 import deepEqual from 'fast-deep-equal';
-// import zlib from 'zlib';
 import MediaType from './media-type';
-import { formatJsonString } from '../utils/format-json';
 
-export type BodyData = string | Buffer | Object;
-
-function bodyDataToBuffer(data: BodyData) {
-  if (typeof data === 'string') {
-    return Buffer.from(data);
-  }
-  if (data instanceof Buffer) {
-    return data;
-  }
-  if (typeof data === 'object') {
-    return Buffer.from(JSON.stringify(data));
-  }
-
-  throw new Error('Invalid body data type');
+export default interface Body {
+  length: number;
+  mediaType: MediaType;
+  equals(otherBody: Body): boolean;
+  toBuffer(): Buffer;
+  toJson(): any;
 }
 
-export default class Body {
+export class PrintableBody implements Body {
   private readonly buffer: Buffer;
-  private readonly mediaType: MediaType;
+  public readonly mediaType: MediaType;
 
-  constructor(data: BodyData, mediaType: MediaType) {
-    this.buffer = this.normalize(bodyDataToBuffer(data), mediaType);
+  constructor(buffer: Buffer, mediaType: MediaType) {
+    this.buffer = buffer;
     this.mediaType = mediaType;
-  }
-
-  private normalize(buffer: Buffer, mediaType: MediaType) {
-    if (mediaType.isJSON() && buffer && buffer.length > 0) {
-      return Buffer.from(formatJsonString(buffer.toString()));
-    }
-
-    return buffer;
   }
 
   get length() {
@@ -42,29 +24,39 @@ export default class Body {
 
   equals(otherBody: Body): boolean {
     if (
-      this.mediaType.isJSON() &&
-      otherBody.mediaType.isJSON() &&
+      this.mediaType.isJson() &&
+      otherBody.mediaType.isJson() &&
       this.length > 0 &&
       otherBody.length > 0
     ) {
-      return deepEqual(this.toJSON(), otherBody.toJSON());
+      return deepEqual(this.toJson(), otherBody.toJson());
     }
 
-    return this.buffer.equals(otherBody.buffer);
+    return this.buffer.equals(otherBody.toBuffer());
   }
 
   toBuffer() {
     return this.buffer;
   }
 
-  toJSON() {
-    if (this.mediaType.isJSON()) {
-      return JSON.parse(this.buffer.toString('utf8'));
+  toJson() {
+    if (this.mediaType.isJson()) {
+      return JSON.parse(this.buffer.toString());
     }
     if (this.mediaType.isHumanReadable()) {
-      return this.buffer.toString('utf8');
+      return this.buffer.toString();
     } else {
       return this.buffer.toString('base64');
     }
+  }
+
+  static fromJson(data: string | Object, mediaType: MediaType) {
+    if (typeof data === 'object') {
+      return new PrintableBody(Buffer.from(JSON.stringify(data)), mediaType);
+    }
+
+    const encoding = mediaType.isHumanReadable() ? 'utf8' : 'base64';
+
+    return new PrintableBody(Buffer.from(data, encoding), mediaType);
   }
 }

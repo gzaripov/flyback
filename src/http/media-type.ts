@@ -1,16 +1,7 @@
-import contentTypeParser from 'content-type';
 import Headers from './headers';
+import mimeFormat from 'mime-format';
 
-export const jsonTypes = ['application/json'];
-
-const humanReadableContentTypes = [
-  'application/javascript',
-  'text/css',
-  'text/html',
-  'text/javascript',
-  'text/plain',
-  ...jsonTypes,
-];
+const supportedEncodings = ['gzip', 'br', 'deflate'];
 
 export default class MediaType {
   private headers: Headers;
@@ -19,36 +10,29 @@ export default class MediaType {
     this.headers = headers;
   }
 
-  isHumanReadable() {
-    const contentEncoding = this.headers.read('content-encoding');
-    const notCompressed = !contentEncoding || contentEncoding === 'identity';
-
-    const contentType = this.contentType();
-
-    if (!contentType) {
-      return false;
-    }
-
-    return notCompressed && humanReadableContentTypes.indexOf(contentType.type) >= 0;
-  }
-
-  isJSON() {
-    const contentType = this.contentType();
-
-    if (!contentType) {
-      return false;
-    }
-
-    return jsonTypes.indexOf(contentType.type) >= 0;
-  }
-
-  contentType() {
+  isHumanReadable(): boolean {
     const contentType = this.headers.contentType();
 
     if (!contentType) {
-      return null;
+      return false;
     }
 
-    return contentTypeParser.parse(contentType);
+    return mimeFormat.lookup(contentType).type === 'text';
+  }
+
+  isCompressed(): boolean {
+    const contentEncoding = this.contentEncoding();
+
+    return !!contentEncoding && supportedEncodings.includes(contentEncoding);
+  }
+
+  isJson(): boolean {
+    const contentType = this.headers.contentType();
+
+    return !!contentType && mimeFormat.lookup(contentType).format === 'json';
+  }
+
+  contentEncoding() {
+    return this.headers.contentEncoding();
   }
 }

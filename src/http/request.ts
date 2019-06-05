@@ -3,14 +3,15 @@ import MediaType from './media-type';
 import Headers, { HeadersJson } from './headers';
 import Response from './response';
 import { Context } from '../context';
-import Body, { BodyData } from './body';
+import Body, { PrintableBody } from './body';
 import Path from './path';
+import { EncodedBody } from './encoded-body';
 
 type RequestParams = {
   path: string;
   method?: string;
   headers: Headers;
-  body?: BodyData;
+  body?: Body | Buffer;
   context: Context;
 };
 
@@ -26,6 +27,7 @@ export default class Request {
   private readonly path: Path;
   private readonly method: string;
   private readonly headers: Headers;
+  private readonly mediaType: MediaType;
   private readonly body?: Body;
   private readonly context: Context;
 
@@ -34,16 +36,19 @@ export default class Request {
     this.path = new Path(path, context);
     this.method = method.toUpperCase();
     this.headers = this.deleteHostHeader(headers);
-    this.body = this.createBody(body);
+    this.mediaType = new MediaType(this.headers);
+    this.body = body instanceof Buffer ? this.createBody(body) : body;
     this.name = this.createName();
   }
 
-  private createBody(data?: BodyData) {
+  private createBody(data?: Buffer) {
     if (!data) {
       return undefined;
     }
 
-    const body = new Body(data, new MediaType(this.headers));
+    const body = this.mediaType.isCompressed()
+      ? new EncodedBody(data, this.mediaType)
+      : new PrintableBody(data, this.mediaType);
 
     if (body.length === 0) {
       return undefined;
@@ -144,7 +149,7 @@ export default class Request {
       path: path.toString(),
       method,
       headers: headers.toJSON(),
-      body: body ? body.toJSON() : '',
+      body: body ? body.toJson() : '',
     };
   }
 
@@ -156,7 +161,7 @@ export default class Request {
       path,
       method,
       headers,
-      body: body ? new Body(body, new MediaType(headers)) : undefined,
+      body: body ? PrintableBody.fromJson(body, new MediaType(headers)) : undefined,
       context,
     });
   }

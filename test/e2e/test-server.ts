@@ -1,4 +1,4 @@
-const http = require('http');
+import http from 'http';
 
 const testServer = () => {
   return http.createServer(async (req, res) => {
@@ -63,6 +63,12 @@ const testServer = () => {
             res.writeHead(302, {
               Location: '/test/1',
             });
+            res.end();
+
+            return;
+          }
+          case '/test/gzip': {
+            res.writeHead(200);
             res.end();
 
             return;

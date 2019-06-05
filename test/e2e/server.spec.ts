@@ -488,17 +488,9 @@ describe('flyback', () => {
         summary: true,
       });
 
-      // expect(flybackServer.hasTapeBeenUsed('saved-request.json')).toEqual(false);
-
       const res = await flybackFetch('/test/3', { compress: false });
 
       expect(res.status).toEqual(200);
-
-      // expect(flybackServer.hasTapeBeenUsed('saved-request.json')).toEqual(true);
-
-      // flybackServer.resetTapeUsage();
-
-      // expect(flybackServer.hasTapeBeenUsed('saved-request.json')).toEqual(false);
 
       const body = await res.json();
 
@@ -526,6 +518,33 @@ describe('flyback', () => {
       const res = await flybackFetch('/test/3', { agent, compress: false }, flybackUrl);
 
       expect(res.status).toEqual(200);
+    });
+  });
+
+  describe('request decomression', () => {
+    it.only('write tape with decompressed json', async () => {
+      flybackServer = await startFlyback();
+
+      const reqBody = { foo: 'bar' };
+      const headers = { 'content-type': 'application/json', 'content-encoding': 'gzip' };
+      const url = '/test/gzip';
+      const response = await flybackFetch(url, {
+        compress: true,
+        method: 'POST',
+        headers,
+        body: JSON.stringify(reqBody),
+      });
+
+      expect(response.status).toEqual(200);
+
+      // const expectedResBody = { ok: true, body: { foo: 'bar' } };
+      // const body = await response.json();
+      // const tape = readJSONFromFile(tapesPath, url);
+
+      // expect(body).toEqual(expectedResBody);
+      // expect(tape.request.path).toEqual('/test/1');
+      // expect(tape.request.body).toEqual(reqBody);
+      // expect(tape.response.body).toEqual(expectedResBody);
     });
   });
 });
