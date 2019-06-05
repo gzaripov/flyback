@@ -21,8 +21,10 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.4.3",
+    "@types/iltorb": "^2.3.0",
     "async-exit-hook": "^2.0.1",
     "fast-deep-equal": "^2.0.1",
+    "iltorb": "^2.4.3",
     "mime-format": "^2.0.0",
     "mkdirp": "^0.5.1",
     "node-fetch": "^2.6.0"

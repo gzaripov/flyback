@@ -1,7 +1,7 @@
 import Headers from './headers';
 import mimeFormat from 'mime-format';
 
-const supportedEncodings = ['gzip', 'br', 'deflate'];
+const supportedEncodings = ['gzip', 'br', 'deflate', 'base64'];
 
 export default class MediaType {
   private headers: Headers;
@@ -20,10 +20,10 @@ export default class MediaType {
     return mimeFormat.lookup(contentType).type === 'text';
   }
 
-  isCompressed(): boolean {
+  isEncoded(): boolean {
     const contentEncoding = this.contentEncoding();
 
-    return !!contentEncoding && supportedEncodings.includes(contentEncoding);
+    return !!contentEncoding && contentEncoding !== 'identity';
   }
 
   isJson(): boolean {

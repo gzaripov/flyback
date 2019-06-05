@@ -36,7 +36,7 @@ export default class Response {
       return undefined;
     }
 
-    const body = this.mediaType.isCompressed()
+    const body = this.mediaType.isEncoded()
       ? new EncodedBody(data, this.mediaType)
       : new PrintableBody(data, this.mediaType);
 

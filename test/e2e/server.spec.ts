@@ -1,9 +1,10 @@
 import fs from 'fs';
 import path from 'path';
+import zlib from 'zlib';
+import iltorb from 'iltorb';
 import https from 'https';
 import fetch, { RequestInit } from 'node-fetch';
 import del from 'del';
-import testServer from './test-server';
 import FlybackServer from '../../src/server';
 import { urlToListenOptions } from '../../src/utils/url';
 import Logger from '../../src/logger';
@@ -11,9 +12,10 @@ import { TapeJson } from '../../src/tape';
 import { Context, Options } from '../../src/context';
 import { RequestJson } from '../../src/http/request';
 import TapeStoreManager from '../../src/tape-store-manager';
+import TestServer from './test-server';
 
 let flybackServer: FlybackServer;
-let proxiedServer;
+let apiServer: TestServer;
 
 jest.setTimeout(1000000);
 
@@ -59,15 +61,6 @@ const startFlyback = async (
       recordMode: 'NEW',
       summary: false,
       tapeNameGenerator,
-      tapeDecorator: (tape: TapeJson) => {
-        const location = tape.response.headers['location'];
-
-        if (location && location[0]) {
-          tape.response.headers['location'] = [location[0].replace(proxyUrl, flybackUrl)];
-        }
-
-        return tape;
-      },
       ...opts,
     },
     tapeStoreManager,
@@ -96,8 +89,8 @@ const cleanupTapes = () => {
 
 describe('flyback', () => {
   beforeAll(async () => {
-    proxiedServer = testServer();
-    await proxiedServer.listen(urlToListenOptions(proxyUrl));
+    apiServer = new TestServer();
+    await apiServer.listen(urlToListenOptions(proxyUrl));
   });
 
   beforeEach(() => cleanupTapes());
@@ -112,9 +105,9 @@ describe('flyback', () => {
   afterAll(() => {
     // cleanupTapes();
 
-    if (proxiedServer) {
-      proxiedServer.close();
-      proxiedServer = null;
+    if (apiServer) {
+      apiServer.close();
+      apiServer = null;
     }
   });
 
@@ -218,17 +211,26 @@ describe('flyback', () => {
     });
 
     it('decorates proxied responses', async () => {
-      flybackServer = await startFlyback();
+      flybackServer = await startFlyback({
+        tapeDecorator: (tape: TapeJson) => {
+          const location = tape.response.headers['location'];
 
-      const res = await flybackFetch('/test/redirect/1', {
-        compress: false,
+          if (typeof location === 'string') {
+            tape.response.headers['location'] = [location.replace(proxyUrl, flybackUrl)];
+          }
+
+          return tape;
+        },
+      });
+
+      const response = await flybackFetch('/test/redirect/1', {
         method: 'GET',
         redirect: 'manual',
       });
 
-      expect(res.status).toEqual(302);
+      expect(response.status).toEqual(302);
 
-      const location = res.headers.get('location');
+      const location = response.headers.get('location');
 
       expect(location).toEqual(`${flybackUrl}/test/1`);
     });
@@ -521,30 +523,133 @@ describe('flyback', () => {
     });
   });
 
-  describe('request decomression', () => {
-    it.only('write tape with decompressed json', async () => {
-      flybackServer = await startFlyback();
+  describe('body decomression', () => {
+    describe('write tape with decompressed body', () => {
+      const testDecompression = async (
+        bodyText: string,
+        compress: (buffer: Buffer) => Buffer,
+        { contentType = '', contentEncoding = '' },
+      ) => {
+        flybackServer = await startFlyback();
+        const headers = {
+          'content-type': contentType,
+          'content-encoding': contentEncoding,
+        };
+        const url = '/test/decompression';
 
-      const reqBody = { foo: 'bar' };
-      const headers = { 'content-type': 'application/json', 'content-encoding': 'gzip' };
-      const url = '/test/gzip';
-      const response = await flybackFetch(url, {
-        compress: true,
-        method: 'POST',
-        headers,
-        body: JSON.stringify(reqBody),
+        const body = compress(Buffer.from(bodyText));
+
+        apiServer.handleNextRequest((_, res) => {
+          res.writeHead(200, headers);
+          res.end(body);
+        });
+
+        await flybackFetch(url, {
+          compress: true,
+          method: 'POST',
+          headers,
+          body,
+        });
+
+        return readJSONFromFile(tapesPath, url);
+      };
+
+      describe('from json', () => {
+        const bodyJson = { foo: 'bar', bar: 'foo', number: 100, bool: true };
+        const bodyText = JSON.stringify(bodyJson);
+
+        it('brotli', async () => {
+          const tape = await testDecompression(bodyText, iltorb.compressSync, {
+            contentEncoding: 'br',
+            contentType: 'application/json',
+          });
+
+          expect(tape.request.body).toEqual(bodyJson);
+          expect(tape.response.body).toEqual(bodyJson);
+        });
+
+        it('gzip', async () => {
+          const tape = await testDecompression(bodyText, zlib.gzipSync, {
+            contentEncoding: 'gzip',
+            contentType: 'application/json',
+          });
+
+          expect(tape.request.body).toEqual(bodyJson);
+          expect(tape.response.body).toEqual(bodyJson);
+        });
+
+        it('deflate', async () => {
+          const tape = await testDecompression(bodyText, zlib.deflateSync, {
+            contentEncoding: 'deflate',
+            contentType: 'application/json',
+          });
+
+          expect(tape.request.body).toEqual(bodyJson);
+          expect(tape.response.body).toEqual(bodyJson);
+        });
+
+        it('base64', async () => {
+          const tape = await testDecompression(
+            bodyText,
+            (body) => Buffer.from(body.toString('base64')),
+            {
+              contentEncoding: 'base64',
+              contentType: 'application/json',
+            },
+          );
+
+          expect(tape.request.body).toEqual(bodyJson);
+          expect(tape.response.body).toEqual(bodyJson);
+        });
       });
 
-      expect(response.status).toEqual(200);
+      describe('from plain text', () => {
+        const bodyText = 'I am happy when flyback works';
 
-      // const expectedResBody = { ok: true, body: { foo: 'bar' } };
-      // const body = await response.json();
-      // const tape = readJSONFromFile(tapesPath, url);
+        it('brotli', async () => {
+          const tape = await testDecompression(bodyText, iltorb.compressSync, {
+            contentEncoding: 'br',
+            contentType: 'text/plain',
+          });
 
-      // expect(body).toEqual(expectedResBody);
-      // expect(tape.request.path).toEqual('/test/1');
-      // expect(tape.request.body).toEqual(reqBody);
-      // expect(tape.response.body).toEqual(expectedResBody);
+          expect(tape.request.body).toEqual(bodyText);
+          expect(tape.response.body).toEqual(bodyText);
+        });
+
+        it('gzip', async () => {
+          const tape = await testDecompression(bodyText, zlib.gzipSync, {
+            contentEncoding: 'gzip',
+            contentType: 'text/plain',
+          });
+
+          expect(tape.request.body).toEqual(bodyText);
+          expect(tape.response.body).toEqual(bodyText);
+        });
+
+        it('deflate', async () => {
+          const tape = await testDecompression(bodyText, zlib.deflateSync, {
+            contentEncoding: 'deflate',
+            contentType: 'text/plain',
+          });
+
+          expect(tape.request.body).toEqual(bodyText);
+          expect(tape.response.body).toEqual(bodyText);
+        });
+
+        it('base64', async () => {
+          const tape = await testDecompression(
+            bodyText,
+            (body) => Buffer.from(body.toString('base64')),
+            {
+              contentEncoding: 'base64',
+              contentType: 'text/plain',
+            },
+          );
+
+          expect(tape.request.body).toEqual(bodyText);
+          expect(tape.response.body).toEqual(bodyText);
+        });
+      });
     });
   });
 });

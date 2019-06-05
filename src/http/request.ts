@@ -41,14 +41,14 @@ export default class Request {
     this.name = this.createName();
   }
 
-  private createBody(data?: Buffer) {
-    if (!data) {
+  private createBody(buffer?: Buffer) {
+    if (!buffer) {
       return undefined;
     }
 
-    const body = this.mediaType.isCompressed()
-      ? new EncodedBody(data, this.mediaType)
-      : new PrintableBody(data, this.mediaType);
+    const body = this.mediaType.isEncoded()
+      ? new EncodedBody(buffer, this.mediaType)
+      : new PrintableBody(buffer, this.mediaType);
 
     if (body.length === 0) {
       return undefined;
@@ -153,7 +153,7 @@ export default class Request {
     };
   }
 
-  static fromJSON(json: RequestJson, context: Context): Request {
+  static fromJson(json: RequestJson, context: Context): Request {
     const { path, method, body } = json;
     const headers = new Headers(json.headers);
 

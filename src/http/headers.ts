@@ -15,10 +15,15 @@ export default class Headers {
     const headerKeys = Object.keys(headers);
 
     for (const headerKey of headerKeys) {
-      normalizeHeaders[headerKey.toLowerCase()] = headers[headerKey];
+      const headerValue =
+        Array.isArray(headers[headerKey]) && headers[headerKey].length === 1
+          ? headers[headerKey][0]
+          : headers[headerKey];
+
+      normalizeHeaders[headerKey.toLowerCase()] = headerValue;
     }
 
-    return headers;
+    return normalizeHeaders;
   }
 
   read(header: string) {

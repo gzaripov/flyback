@@ -1,22 +1,8 @@
 import zlib from 'zlib';
+// we support node 8.+ so we cant use brotli from zlib as it is shipped in 10.+
+import iltorb from 'iltorb';
 import Body, { PrintableBody } from './body';
 import MediaType from './media-type';
-
-// function encodeBodyData(buffer: Buffer, contentEncoding: string): Buffer {
-//   if (contentEncoding === 'gzip') {
-//     return zlib.gzipSync(buffer);
-//   }
-
-//   if (contentEncoding === 'br') {
-//     return zlib.brotliCompressSync(buffer);
-//   }
-
-//   if (contentEncoding === 'deflate') {
-//     return zlib.deflateSync(buffer);
-//   }
-
-//   return buffer;
-// }
 
 function decodeBodyData(buffer: Buffer, contentEncoding: string) {
   if (contentEncoding === 'gzip') {
@@ -24,11 +10,15 @@ function decodeBodyData(buffer: Buffer, contentEncoding: string) {
   }
 
   if (contentEncoding === 'br') {
-    return zlib.brotliDecompressSync(buffer);
+    return iltorb.decompressSync(buffer);
   }
 
   if (contentEncoding === 'deflate') {
     return zlib.inflateSync(buffer);
+  }
+
+  if (contentEncoding === 'base64') {
+    return Buffer.from(buffer.toString(), 'base64');
   }
 
   return buffer;
