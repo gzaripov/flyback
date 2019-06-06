@@ -1,5 +1,6 @@
 import http, { IncomingMessage, ServerResponse, Server } from 'http';
-import { ListenOptions } from 'net';
+import findFreePort from 'find-free-port-sync';
+import { urlToListenOptions } from '../../src/utils/url';
 
 function defaultHandler(req: IncomingMessage, requestBody: Buffer, res: ServerResponse) {
   switch (req.url) {
@@ -68,7 +69,7 @@ function defaultHandler(req: IncomingMessage, requestBody: Buffer, res: ServerRe
 
 type Handler = (request: IncomingMessage, response: ServerResponse) => void;
 
-export default class TestServer {
+export class ApiServer {
   private readonly server: Server;
   private nextHanlder: Handler;
 
@@ -80,11 +81,12 @@ export default class TestServer {
     this.nextHanlder = handler;
   }
 
-  public listen(opts: ListenOptions) {
-    this.server.listen(opts);
+  public listen(url: string) {
+    this.server.listen(urlToListenOptions(url));
   }
 
   public close() {
+    this.nextHanlder = null;
     this.server.close();
   }
 
@@ -114,3 +116,15 @@ export default class TestServer {
       });
   }
 }
+
+export const apiServer = new ApiServer();
+export const apiPort = findFreePort({ start: 8000, end: 8999 });
+export const apiUrl = `http://localhost:${apiPort}`;
+
+beforeAll(async () => {
+  apiServer.listen(apiUrl);
+});
+
+afterAll(() => {
+  apiServer.close();
+});
