@@ -2,7 +2,7 @@ import zlib from 'zlib';
 // we support node 8.+ so we cant use brotli from zlib as it is shipped in 10.+
 import iltorb from 'iltorb';
 import Body, { PrintableBody } from './body';
-import MediaType from './media-type';
+import MediaFormat from './media-format';
 
 function decodeBodyData(buffer: Buffer, contentEncoding: string) {
   if (contentEncoding === 'gzip') {
@@ -27,14 +27,14 @@ function decodeBodyData(buffer: Buffer, contentEncoding: string) {
 export class EncodedBody implements Body {
   private body: PrintableBody;
   private encodedBuffer: Buffer;
-  public mediaType: MediaType;
+  public mediaFormat: MediaFormat;
 
-  constructor(buffer: Buffer, mediaType: MediaType) {
+  constructor(buffer: Buffer, mediaFormat: MediaFormat) {
     this.encodedBuffer = buffer;
-    this.mediaType = mediaType;
+    this.mediaFormat = mediaFormat;
     this.body = new PrintableBody(
-      decodeBodyData(this.encodedBuffer, mediaType.contentEncoding() as string),
-      mediaType,
+      decodeBodyData(this.encodedBuffer, mediaFormat.contentEncoding() as string),
+      mediaFormat,
     );
   }
 

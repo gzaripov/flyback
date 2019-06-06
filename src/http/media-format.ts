@@ -3,7 +3,7 @@ import mimeFormat from 'mime-format';
 
 const supportedEncodings = ['gzip', 'br', 'deflate', 'base64'];
 
-export default class MediaType {
+export default class MediaFormat {
   private headers: Headers;
 
   constructor(headers: Headers) {
@@ -14,6 +14,10 @@ export default class MediaType {
     const contentType = this.headers.contentType();
 
     if (!contentType) {
+      return false;
+    }
+
+    if (this.isEncoded() && !this.canBeDecoded()) {
       return false;
     }
 
@@ -29,10 +33,20 @@ export default class MediaType {
   isJson(): boolean {
     const contentType = this.headers.contentType();
 
+    if (this.isEncoded() && !this.canBeDecoded()) {
+      return false;
+    }
+
     return !!contentType && mimeFormat.lookup(contentType).format === 'json';
   }
 
   contentEncoding() {
     return this.headers.contentEncoding();
+  }
+
+  canBeDecoded(): boolean {
+    const contentEncoding = this.contentEncoding();
+
+    return !!contentEncoding && supportedEncodings.includes(contentEncoding);
   }
 }

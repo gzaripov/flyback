@@ -650,6 +650,18 @@ describe('flyback', () => {
           expect(tape.response.body).toEqual(bodyText);
         });
       });
+
+      it('converts unknown content-encoding to base64', async () => {
+        const jsonText = JSON.stringify({ string: 'json' });
+        const base64JsonText = Buffer.from(jsonText).toString('base64');
+        const tape = await testDecompression(jsonText, (buffer) => buffer, {
+          contentEncoding: 'gzippeb',
+          contentType: 'application/json',
+        });
+
+        expect(tape.request.body).toEqual(base64JsonText);
+        expect(tape.response.body).toEqual(base64JsonText);
+      });
     });
   });
 });

@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import MediaType from './media-type';
+import MediaFormat from './media-format';
 import Headers, { HeadersJson } from './headers';
 import Response from './response';
 import { Context } from '../context';
@@ -27,7 +27,7 @@ export default class Request {
   private readonly path: Path;
   private readonly method: string;
   private readonly headers: Headers;
-  private readonly mediaType: MediaType;
+  private readonly mediaFormat: MediaFormat;
   private readonly body?: Body;
   private readonly context: Context;
 
@@ -36,7 +36,7 @@ export default class Request {
     this.path = new Path(path, context);
     this.method = method.toUpperCase();
     this.headers = this.deleteHostHeader(headers);
-    this.mediaType = new MediaType(this.headers);
+    this.mediaFormat = new MediaFormat(this.headers);
     this.body = body instanceof Buffer ? this.createBody(body) : body;
     this.name = this.createName();
   }
@@ -46,9 +46,9 @@ export default class Request {
       return undefined;
     }
 
-    const body = this.mediaType.isEncoded()
-      ? new EncodedBody(buffer, this.mediaType)
-      : new PrintableBody(buffer, this.mediaType);
+    const body = this.mediaFormat.isEncoded()
+      ? new EncodedBody(buffer, this.mediaFormat)
+      : new PrintableBody(buffer, this.mediaFormat);
 
     if (body.length === 0) {
       return undefined;
@@ -161,7 +161,7 @@ export default class Request {
       path,
       method,
       headers,
-      body: body ? PrintableBody.fromJson(body, new MediaType(headers)) : undefined,
+      body: body ? PrintableBody.fromJson(body, new MediaFormat(headers)) : undefined,
       context,
     });
   }

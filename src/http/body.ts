@@ -1,9 +1,9 @@
 import deepEqual from 'fast-deep-equal';
-import MediaType from './media-type';
+import MediaFormat from './media-format';
 
 export default interface Body {
   length: number;
-  mediaType: MediaType;
+  mediaFormat: MediaFormat;
   equals(otherBody: Body): boolean;
   toBuffer(): Buffer;
   toJson(): any;
@@ -11,11 +11,11 @@ export default interface Body {
 
 export class PrintableBody implements Body {
   private readonly buffer: Buffer;
-  public readonly mediaType: MediaType;
+  public readonly mediaFormat: MediaFormat;
 
-  constructor(buffer: Buffer, mediaType: MediaType) {
+  constructor(buffer: Buffer, mediaFormat: MediaFormat) {
     this.buffer = buffer;
-    this.mediaType = mediaType;
+    this.mediaFormat = mediaFormat;
   }
 
   get length() {
@@ -24,8 +24,8 @@ export class PrintableBody implements Body {
 
   equals(otherBody: Body): boolean {
     if (
-      this.mediaType.isJson() &&
-      otherBody.mediaType.isJson() &&
+      this.mediaFormat.isJson() &&
+      otherBody.mediaFormat.isJson() &&
       this.length > 0 &&
       otherBody.length > 0
     ) {
@@ -40,23 +40,23 @@ export class PrintableBody implements Body {
   }
 
   toJson() {
-    if (this.mediaType.isJson()) {
+    if (this.mediaFormat.isJson()) {
       return JSON.parse(this.buffer.toString());
     }
-    if (this.mediaType.isHumanReadable()) {
+    if (this.mediaFormat.isHumanReadable()) {
       return this.buffer.toString();
     } else {
       return this.buffer.toString('base64');
     }
   }
 
-  static fromJson(data: string | Object, mediaType: MediaType) {
+  static fromJson(data: string | Object, mediaFormat: MediaFormat) {
     if (typeof data === 'object') {
-      return new PrintableBody(Buffer.from(JSON.stringify(data)), mediaType);
+      return new PrintableBody(Buffer.from(JSON.stringify(data)), mediaFormat);
     }
 
-    const encoding = mediaType.isHumanReadable() ? 'utf8' : 'base64';
+    const encoding = mediaFormat.isHumanReadable() ? 'utf8' : 'base64';
 
-    return new PrintableBody(Buffer.from(data, encoding), mediaType);
+    return new PrintableBody(Buffer.from(data, encoding), mediaFormat);
   }
 }
