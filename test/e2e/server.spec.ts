@@ -2,7 +2,7 @@ import fs from 'fs';
 import https from 'https';
 import Logger from '../../src/logger';
 import { TapeJson } from '../../src/tape';
-import { Context, Options } from '../../src/context';
+import { Context, Options, RecordMode } from '../../src/context';
 import { apiUrl } from './api-server';
 import {
   withFlyback,
@@ -20,7 +20,6 @@ describe('flyback', () => {
       const url = '/test/1';
 
       const response = await flybackFetch(url, {
-        compress: false,
         method: 'POST',
         headers,
         body: JSON.stringify(reqBody),
@@ -40,7 +39,7 @@ describe('flyback', () => {
 
     it('proxies and creates a new tape when the GET request is unknown', async () => {
       const url = '/test/1';
-      const res = await flybackFetch(url, { compress: false, method: 'GET' });
+      const res = await flybackFetch(url, { method: 'GET' });
 
       expect(res.status).toEqual(200);
 
@@ -60,7 +59,6 @@ describe('flyback', () => {
       const headers = { 'content-type': 'application/json' };
       const url = `test/1`;
       const res = await flybackFetch(url, {
-        compress: false,
         method: 'POST',
         headers,
         body: reqBody,
@@ -95,7 +93,7 @@ describe('flyback', () => {
 
     it('proxies and creates a new tape with a custom tape name generator', async () => {
       const url = `/test/1`;
-      const res = await flybackFetch(url, { compress: false, method: 'GET' });
+      const res = await flybackFetch(url, { method: 'GET' });
 
       expect(res.status).toEqual(200);
 
@@ -144,7 +142,7 @@ describe('flyback', () => {
     });
 
     it('loads existing tapes and uses them if they match', async () => {
-      const res = await flybackFetch('/test/3', { compress: false }, { recordMode: 'DISABLED' });
+      const res = await flybackFetch('/test/3', {}, { recordMode: 'DISABLED' });
 
       expect(res.status).toEqual(200);
 
@@ -160,7 +158,6 @@ describe('flyback', () => {
       const res = await flybackFetch(
         '/test/pretty',
         {
-          compress: false,
           method: 'POST',
           headers,
           body,
@@ -207,7 +204,6 @@ describe('flyback', () => {
         const res = await flybackFetch(
           '/test/pretty',
           {
-            compress: false,
             method: 'POST',
             headers,
             body,
@@ -249,15 +245,20 @@ describe('flyback', () => {
       const res = await flybackFetch(
         '/test/echo',
         {
-          compress: false,
           method: 'POST',
           headers,
           body,
         },
-        { recordMode: 'DISABLED', tapeDecorator },
+        {
+          recordMode: 'DISABLED',
+          ignoreHeaders: ['content-length', 'accept-encoding'],
+          tapeDecorator,
+        },
       );
 
       const resBody = await res.json();
+
+      console.log(resBody);
 
       expect(res.status).toEqual(200);
       expect(resBody).toEqual({ text: 'response-test-text__decorated' });
@@ -274,7 +275,7 @@ describe('flyback', () => {
       const url = 'test/1';
       let headers = { 'x-flyback-ping': 'test1' };
 
-      let res = await flybackFetch(url, { compress: false, headers }, flybackOpts);
+      let res = await flybackFetch(url, { headers }, flybackOpts);
 
       expect(res.status).toEqual(200);
       let resBody = await res.json();
@@ -289,7 +290,7 @@ describe('flyback', () => {
 
       headers = { 'x-flyback-ping': 'test2' };
 
-      res = await flybackFetch(url, { compress: false, headers }, flybackOpts);
+      res = await flybackFetch(url, { headers }, flybackOpts);
       expect(res.status).toEqual(200);
       resBody = await res.json();
       expectedBody = { ok: true, body: 'test2' };
@@ -304,7 +305,7 @@ describe('flyback', () => {
 
   describe('record mode DISABLED', () => {
     it('returns a 404 on unkwown request with fallbackMode NOT_FOUND (default)', async () => {
-      const res = await flybackFetch('/test/1', { compress: false }, { recordMode: 'DISABLED' });
+      const res = await flybackFetch('/test/1', {}, { recordMode: 'DISABLED' });
 
       expect(res.status).toEqual(404);
     });
@@ -315,7 +316,6 @@ describe('flyback', () => {
       const res = await flybackFetch(
         '/test/1',
         {
-          compress: false,
           method: 'POST',
           headers,
           body: reqBody,
@@ -337,6 +337,68 @@ describe('flyback', () => {
     });
   });
 
+  describe('record mode PROXY', () => {
+    it('proxies request', async () => {
+      const url = '/test/3';
+
+      const response = await flybackFetch(
+        url,
+        {
+          method: 'GET',
+          headers: { 'record-mode': 'disabled' },
+        },
+        {
+          recordMode: 'PROXY',
+          ignoreAllHeaders: true,
+        },
+      );
+
+      expect(response.status).toEqual(500);
+    });
+  });
+
+  describe('record mode function', () => {
+    it('allows dynamically pass record mode', async () => {
+      const url = '/test/3';
+
+      const recordMode = (request) => {
+        if (typeof request.headers['record-mode'] === 'string') {
+          return request.headers['record-mode'].toUpperCase() as RecordMode;
+        }
+
+        return 'PROXY';
+      };
+
+      const responseWithDisabledRm = await flybackFetch(
+        url,
+        {
+          method: 'GET',
+          headers: { 'record-mode': 'disabled' },
+        },
+        {
+          recordMode,
+          ignoreAllHeaders: true,
+        },
+      );
+
+      expect(responseWithDisabledRm.status).toEqual(200);
+
+      const responseWithProxyRm = await flybackFetch(
+        url,
+        {
+          method: 'GET',
+          headers: { 'record-mode': 'proxy' },
+        },
+        {
+          recordMode,
+          ignoreAllHeaders: true,
+        },
+      );
+
+      expect(responseWithProxyRm.status).toEqual(500);
+    });
+  });
+
   describe('error handling', () => {
     // TODO
     it.skip('returns a 500 if anything goes wrong', async () => {
@@ -344,11 +406,7 @@ describe('flyback', () => {
       const loggerSpy = jest.spyOn(logger, 'error').mockImplementation(() => undefined);
       const error = new Error('Test error');
 
-      const response = await flybackFetch(
-        '/test/1',
-        { compress: false },
-        { recordMode: 'DISABLED', logger },
-      );
+      const response = await flybackFetch('/test/1', {}, { recordMode: 'DISABLED', logger });
 
       expect(loggerSpy).toHaveBeenCalledWith(error);
       expect(response.status).toEqual(500);
@@ -383,7 +441,7 @@ describe('flyback', () => {
         summary: true,
       });
 
-      const res = await flybackFetch('/test/3', { compress: false });
+      const res = await flybackFetch('/test/3', {});
 
       expect(res.status).toEqual(200);
 
@@ -401,7 +459,7 @@ describe('flyback', () => {
 
       const response = await flybackFetch(
         '/test/3',
-        { agent, compress: false },
+        { agent },
         {
           recordMode: 'DISABLED',
           https: {

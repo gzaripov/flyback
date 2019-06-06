@@ -1,7 +1,6 @@
 import Logger from './logger';
 import { TapeJson } from './tape';
 import { Agent } from 'https';
-import { Request } from './http';
 import { RequestJson } from './http/request';
 import TapeAnalyzer from './tape-analyzer';
 
@@ -29,8 +28,8 @@ export type Options = {
   proxyUrl: string;
   flybackUrl?: string;
   tapesPath?: string;
-  recordMode?: RecordMode | ((request: Request) => RecordMode);
-  fallbackMode?: FallbackMode | ((request: Request) => FallbackMode);
+  recordMode?: RecordMode | ((request: RequestJson) => RecordMode);
+  fallbackMode?: FallbackMode | ((request: RequestJson) => FallbackMode);
   tapeNameGenerator?: (request: RequestJson) => string;
   tapePathGenerator?: (request: RequestJson) => string;
   tapeFileExtension?: string;
@@ -54,8 +53,8 @@ export type Options = {
 
 const defaultOptions = {
   flybackUrl: 'localhost:8080',
-  recordMode: 'NEW' as RecordMode | ((request: Request) => RecordMode),
-  fallbackMode: 'NOT_FOUND' as FallbackMode | ((request: Request) => FallbackMode),
+  recordMode: 'NEW' as RecordMode | ((request: RequestJson) => RecordMode),
+  fallbackMode: 'NOT_FOUND' as FallbackMode | ((request: RequestJson) => FallbackMode),
   ignoreHeaders: ['content-length', 'host'],
   verbose: false,
   summary: true,
@@ -69,14 +68,14 @@ export type Context = Options &
     tapeAnalyzer: TapeAnalyzer;
   };
 
-export function validateRecord(record?: RecordMode | ((request: Request) => RecordMode)) {
+export function validateRecord(record?: RecordMode | ((request: RequestJson) => RecordMode)) {
   if (typeof record === 'string' && !Object.keys(RecordModes).includes(record)) {
     throw new Error(`INVALID OPTION: record has an invalid value of '${record}'`);
   }
 }
 
 export function validateFallbackMode(
-  fallbackMode?: FallbackMode | ((request: Request) => FallbackMode),
+  fallbackMode?: FallbackMode | ((request: RequestJson) => FallbackMode),
 ) {
   if (typeof fallbackMode === 'string' && !Object.keys(FallbackModes).includes(fallbackMode)) {
     throw new Error(`INVALID OPTION: fallbackMode has an invalid value of '${fallbackMode}'`);

@@ -52,7 +52,18 @@ export default class Headers {
     }
 
     return matchHeaders.every((header) => {
-      return this.headers[header].toString() === otherHeaders.headers[header].toString();
+      const thisHeader = this.headers[header];
+      const otherHeader = otherHeaders.headers[header];
+
+      if (Array.isArray(thisHeader) && Array.isArray(otherHeader)) {
+        return thisHeader.toString() === otherHeader.toString();
+      }
+
+      if (thisHeader === otherHeader) {
+        return true;
+      }
+
+      return thisHeader === otherHeader;
     });
   }
 

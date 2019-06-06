@@ -50,44 +50,44 @@ export default class RequestHandler {
     return this.onNoRecord(request);
   }
 
-  async handle(req: Request): Promise<Response> {
+  async handle(request: Request): Promise<Response> {
     const recordMode =
       typeof this.context.recordMode !== 'function'
         ? this.context.recordMode
-        : this.context.recordMode(req);
+        : this.context.recordMode(request.toJSON());
 
     validateRecord(recordMode);
 
     if (recordMode === 'PROXY') {
-      return await this.makeRealRequest(req);
+      return await this.makeRealRequest(request);
     }
 
-    const response = await this.findResponse(req, recordMode);
+    const response = await this.findResponse(request, recordMode);
 
     return response;
   }
 
-  async onNoRecord(req: Request): Promise<Response> {
+  async onNoRecord(request: Request): Promise<Response> {
     const fallbackMode =
       typeof this.context.fallbackMode !== 'function'
         ? this.context.fallbackMode
-        : this.context.fallbackMode(req);
+        : this.context.fallbackMode(request.toJSON());
 
     validateFallbackMode(fallbackMode);
 
     this.context.logger.log(
       `Tape for ${
-        req.pathname
+        request.pathname
       } not found and recording is disabled (fallbackMode: ${fallbackMode})`,
     );
 
     this.context.logger.debug({
-      url: req.pathname,
-      request: req.toJSON(),
+      url: request.pathname,
+      request: request.toJSON(),
     });
 
     if (fallbackMode === 'PROXY') {
-      return await this.makeRealRequest(req);
+      return await this.makeRealRequest(request);
     }
 
     return new Response({

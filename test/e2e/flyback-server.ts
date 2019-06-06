@@ -76,10 +76,13 @@ export function flybackFetch(
   const protocol = flybackOpts.https ? 'https' : 'http';
   const flybackUrl = `${protocol}://${flybackHost}`;
 
-  return withFlyback(() => fetch(`${flybackUrl}/${normalizePath(relativeUrl)}`, init), {
-    ...flybackOpts,
-    flybackUrl,
-  });
+  return withFlyback(
+    () => fetch(`${flybackUrl}/${normalizePath(relativeUrl)}`, { compress: false, ...init }),
+    {
+      ...flybackOpts,
+      flybackUrl,
+    },
+  );
 }
 
 function cleanupTapes() {
