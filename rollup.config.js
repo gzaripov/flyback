@@ -3,6 +3,7 @@ const commonjs = require('rollup-plugin-commonjs');
 const resolve = require('rollup-plugin-node-resolve');
 const babel = require('rollup-plugin-babel');
 const copy = require('rollup-plugin-copy');
+const autoExternal = require('rollup-plugin-auto-external');
 const pkg = require('./package.json');
 
 const extensions = ['.js', '.ts'];
@@ -20,8 +21,8 @@ export default {
     copy({
       targets: ['CHANGELOG.md', 'LICENSE.md', 'README.md', 'package.json'],
     }),
+    autoExternal(),
   ],
-  external: ['fs', 'http', 'https', 'path', 'url', 'stream', 'zlib'],
   output: [
     {
       file: path.join('dist', pkg.main),
