@@ -46,7 +46,7 @@ export default class Request {
       return undefined;
     }
 
-    const body = this.mediaFormat.isEncoded()
+    const body = this.mediaFormat.isDecodable()
       ? new EncodedBody(buffer, this.mediaFormat)
       : new PrintableBody(buffer, this.mediaFormat);
 

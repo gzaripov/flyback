@@ -36,7 +36,7 @@ export default class Response {
       return undefined;
     }
 
-    const body = this.mediaFormat.isEncoded()
+    const body = this.mediaFormat.isDecodable()
       ? new EncodedBody(data, this.mediaFormat)
       : new PrintableBody(data, this.mediaFormat);
 

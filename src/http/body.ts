@@ -40,14 +40,17 @@ export class PrintableBody implements Body {
   }
 
   toJson() {
+    const charset = this.mediaFormat.charset() as BufferEncoding;
+
     if (this.mediaFormat.isJson()) {
-      return JSON.parse(this.buffer.toString());
+      return JSON.parse(this.buffer.toString(charset));
     }
+
     if (this.mediaFormat.isHumanReadable()) {
-      return this.buffer.toString();
-    } else {
-      return this.buffer.toString('base64');
+      return this.buffer.toString(charset);
     }
+
+    return this.buffer.toString('base64');
   }
 
   static fromJson(data: string | Object, mediaFormat: MediaFormat) {

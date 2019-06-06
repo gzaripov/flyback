@@ -651,16 +651,47 @@ describe('flyback', () => {
         });
       });
 
-      it('converts unknown content-encoding to base64', async () => {
-        const jsonText = JSON.stringify({ string: 'json' });
-        const base64JsonText = Buffer.from(jsonText).toString('base64');
-        const tape = await testDecompression(jsonText, (buffer) => buffer, {
-          contentEncoding: 'gzippeb',
-          contentType: 'application/json',
+      describe('handles unkown encoding and charsets', () => {
+        it('converts unknown content-encoding to base64', async () => {
+          const jsonText = JSON.stringify({ string: 'json' });
+          const base64JsonText = Buffer.from(jsonText).toString('base64');
+          const tape = await testDecompression(jsonText, (buffer) => buffer, {
+            contentEncoding: 'gzippeb',
+            contentType: 'application/json',
+          });
+
+          expect(tape.request.body).toEqual(base64JsonText);
+          expect(tape.response.body).toEqual(base64JsonText);
         });
 
-        expect(tape.request.body).toEqual(base64JsonText);
-        expect(tape.response.body).toEqual(base64JsonText);
+        it('converts unknown charset to base64', async () => {
+          const jsonText = JSON.stringify({ string: 'json' });
+          const base64JsonText = Buffer.from(jsonText).toString('base64');
+          const tape = await testDecompression(jsonText, (buffer) => buffer, {
+            contentEncoding: 'base64',
+            contentType: 'application/json;charset=unkown-charset',
+          });
+
+          expect(tape.request.body).toEqual(base64JsonText);
+          expect(tape.response.body).toEqual(base64JsonText);
+        });
+      });
+
+      describe('works with all supported encodings', () => {
+        const supportedCharsets = ['utf8', 'utf-8'];
+
+        for (const charset of supportedCharsets) {
+          it(`works with ${charset} encoding`, async () => {
+            const jsonText = `I work with ${charset} encoding`;
+            const encodedText = Buffer.from(jsonText).toString(charset);
+            const tape = await testDecompression(jsonText, (buffer) => buffer, {
+              contentType: `text/plain;charset=${charset}`,
+            });
+
+            expect(tape.request.body).toEqual(encodedText);
+            expect(tape.response.body).toEqual(encodedText);
+          });
+        }
       });
     });
   });

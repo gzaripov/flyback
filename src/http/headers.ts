@@ -59,11 +59,13 @@ export default class Headers {
   contentType(): string | null {
     const contentType = this.headers['content-type'];
 
-    if (Array.isArray(contentType)) {
-      return contentType[0];
+    if (!contentType) {
+      return null;
     }
 
-    return contentType || null;
+    const type = Array.isArray(contentType) ? contentType[0] : contentType;
+
+    return type.toLowerCase().trim();
   }
 
   contentEncoding(): string | null {
@@ -73,11 +75,9 @@ export default class Headers {
       return null;
     }
 
-    if (Array.isArray(contentEncoding)) {
-      return contentEncoding[0];
-    }
+    const encoding = Array.isArray(contentEncoding) ? contentEncoding[0] : contentEncoding;
 
-    return contentEncoding.toLowerCase().trim();
+    return encoding.toLowerCase().trim();
   }
 
   toJSON(): HeadersJson {

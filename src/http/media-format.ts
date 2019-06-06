@@ -2,6 +2,7 @@ import Headers from './headers';
 import mimeFormat from 'mime-format';
 
 const supportedEncodings = ['gzip', 'br', 'deflate', 'base64'];
+const supportedCharsets = ['utf8', 'utf-8'];
 
 export default class MediaFormat {
   private headers: Headers;
@@ -17,23 +18,17 @@ export default class MediaFormat {
       return false;
     }
 
-    if (this.isEncoded() && !this.canBeDecoded()) {
+    if (!this.isDecodable()) {
       return false;
     }
 
     return mimeFormat.lookup(contentType).type === 'text';
   }
 
-  isEncoded(): boolean {
-    const contentEncoding = this.contentEncoding();
-
-    return !!contentEncoding && contentEncoding !== 'identity';
-  }
-
   isJson(): boolean {
     const contentType = this.headers.contentType();
 
-    if (this.isEncoded() && !this.canBeDecoded()) {
+    if (!this.isDecodable()) {
       return false;
     }
 
@@ -44,9 +39,28 @@ export default class MediaFormat {
     return this.headers.contentEncoding();
   }
 
-  canBeDecoded(): boolean {
-    const contentEncoding = this.contentEncoding();
+  charset() {
+    const contentType = this.headers.contentType() || '';
 
-    return !!contentEncoding && supportedEncodings.includes(contentEncoding);
+    return (contentType && mimeFormat.lookup(contentType).charset) || 'utf8';
+  }
+
+  isDecodable(): boolean {
+    const contentEncoding = this.contentEncoding();
+    const charset = this.charset();
+
+    if (
+      contentEncoding &&
+      contentEncoding !== 'identity' &&
+      !supportedEncodings.includes(contentEncoding)
+    ) {
+      return false;
+    }
+
+    if (charset && !supportedCharsets.includes(charset)) {
+      return false;
+    }
+
+    return true;
   }
 }
