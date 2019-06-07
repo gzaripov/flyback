@@ -59,13 +59,13 @@ const defaultOptions = {
   verbose: false,
   summary: true,
   debug: false,
-  logger: new Logger(),
   tapeExtension: 'json',
 };
 
 export type Context = Options &
   typeof defaultOptions & {
     tapeAnalyzer: TapeAnalyzer;
+    logger: Logger;
   };
 
 export function validateRecord(record?: RecordMode | ((request: RequestJson) => RecordMode)) {

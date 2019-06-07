@@ -1,5 +1,3 @@
-jest.setTimeout(1000000);
-
 // malfromed-tape.json parse error message is expected,
 // so dont pollute test logs
 const logError = console.error;
@@ -9,3 +7,6 @@ console.error = (message: Object) => {
     logError(message);
   }
 };
+
+// uncomment when debugging
+// jest.setTimeout(1000000);

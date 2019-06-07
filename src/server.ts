@@ -14,7 +14,7 @@ export default class FlybackServer {
 
   constructor(options: Options) {
     this.context = createContext(options);
-    this.server = this.createServer(createFlybackMiddleware(this.context));
+    this.server = this.createServer(createFlybackMiddleware(options));
   }
 
   private createServer(requestListener: http.RequestListener): HttpServer | HttpsServer {

@@ -1,7 +1,10 @@
 import zlib from 'zlib';
 import iltorb from 'iltorb';
+import path from 'path';
+import fsExtra from 'fs-extra';
 import { flybackFetch, tapesPath, readJSONFromFile } from './flyback-server';
 import { apiServer } from './api-server';
+import { RecordModes } from '../../src/context';
 
 const testDecompression = async (
   bodyText: string,
@@ -21,7 +24,6 @@ const testDecompression = async (
   });
 
   await flybackFetch(url, {
-    compress: true,
     method: 'POST',
     headers,
     body,
@@ -170,6 +172,56 @@ describe('body decomression', () => {
           expect(tape.response.body).toEqual(encodedText);
         });
       }
+    });
+  });
+
+  describe('read and returns tape with decompressed body', () => {
+    it('returns decompressed json', async () => {
+      const bodyJson = { foo: 'bar', bar: 'foo', number: 100, bool: true };
+      const bodyText = JSON.stringify(bodyJson);
+      const headers = {
+        'content-type': 'application/json',
+        'content-encoding': 'gzip',
+      };
+
+      const url = '/test/decompression/2';
+      const body = zlib.gzipSync(Buffer.from(bodyText));
+
+      apiServer.handleNextRequest((req, res) => {
+        res.writeHead(200, headers);
+        res.end(body);
+      });
+
+      await flybackFetch(url, {
+        method: 'POST',
+        headers,
+        body,
+      });
+
+      const tapeFileJson = readJSONFromFile(tapesPath, url);
+      const tapeName = 'test.decompression.json';
+
+      const response = await flybackFetch(
+        url,
+        {
+          method: 'POST',
+          headers,
+          body,
+        },
+        {
+          recordMode: RecordModes.DISABLED,
+          tapeNameGenerator: () => tapeName,
+          tapePathGenerator: () => {
+            fsExtra.writeJSONSync(path.join(tapesPath, tapeName), tapeFileJson);
+
+            return tapesPath;
+          },
+        },
+      );
+
+      const responseText = zlib.gunzipSync(await response.buffer()).toString();
+
+      expect(tapeFileJson.response.body).toEqual(JSON.parse(responseText));
     });
   });
 });

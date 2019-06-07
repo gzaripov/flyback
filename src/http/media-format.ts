@@ -1,5 +1,6 @@
 import Headers from './headers';
 import mimeFormat from 'mime-format';
+import charset from 'charset';
 
 const supportedEncodings = ['gzip', 'br', 'deflate', 'base64'];
 const supportedCharsets = ['utf8', 'utf-8'];
@@ -42,7 +43,7 @@ export default class MediaFormat {
   charset() {
     const contentType = this.headers.contentType() || '';
 
-    return (contentType && mimeFormat.lookup(contentType).charset) || 'utf8';
+    return (contentType && charset(contentType)) || 'utf8';
   }
 
   isDecodable(): boolean {

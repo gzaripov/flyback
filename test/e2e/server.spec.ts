@@ -400,7 +400,7 @@ describe('flyback', () => {
     });
   });
 
-  it.only('works with dynamic folder', async () => {
+  it('works with dynamic folder', async () => {
     const url = '/test/3';
 
     const recordMode = (request) => {

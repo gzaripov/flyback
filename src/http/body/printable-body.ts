@@ -1,15 +1,8 @@
 import deepEqual from 'fast-deep-equal';
-import MediaFormat from './media-format';
+import MediaFormat from '../media-format';
+import Body from './body';
 
-export default interface Body {
-  length: number;
-  mediaFormat: MediaFormat;
-  equals(otherBody: Body): boolean;
-  toBuffer(): Buffer;
-  toJson(): any;
-}
-
-export class PrintableBody implements Body {
+export default class PrintableBody implements Body {
   private readonly buffer: Buffer;
   public readonly mediaFormat: MediaFormat;
 
@@ -20,6 +13,10 @@ export class PrintableBody implements Body {
 
   get length() {
     return this.buffer.byteLength;
+  }
+
+  isEmpty() {
+    return this.length === 0;
   }
 
   equals(otherBody: Body): boolean {
@@ -53,13 +50,13 @@ export class PrintableBody implements Body {
     return this.buffer.toString('base64');
   }
 
-  static fromJson(data: string | Object, mediaFormat: MediaFormat) {
-    if (typeof data === 'object') {
-      return new PrintableBody(Buffer.from(JSON.stringify(data)), mediaFormat);
+  static fromJson(bodyJson: string | Object, mediaFormat: MediaFormat) {
+    if (typeof bodyJson === 'object') {
+      return new PrintableBody(Buffer.from(JSON.stringify(bodyJson)), mediaFormat);
     }
 
     const encoding = mediaFormat.isHumanReadable() ? 'utf8' : 'base64';
 
-    return new PrintableBody(Buffer.from(data, encoding), mediaFormat);
+    return new PrintableBody(Buffer.from(bodyJson, encoding), mediaFormat);
   }
 }

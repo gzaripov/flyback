@@ -1,8 +1,8 @@
 import Headers, { HeadersJson } from './headers';
 import { ServerResponse } from 'http';
-import Body, { PrintableBody } from './body';
+import { Body } from './body';
 import MediaFormat from './media-format';
-import { EncodedBody } from './encoded-body';
+import { BodyCreator } from './body';
 
 type ResponseParams = {
   status: number;
@@ -26,21 +26,17 @@ export default class Response {
     this.status = status;
     this.headers = headers;
     this.mediaFormat = new MediaFormat(headers);
-    this.body = body instanceof Buffer ? this.createBody(body) : body;
-
+    this.body = this.createBody(body);
     this.checkHeaders();
   }
 
-  private createBody(data?: Buffer) {
-    if (!data) {
-      return undefined;
-    }
+  private createBody(bodyOrBuffer?: Body | Buffer): Body | undefined {
+    const body =
+      bodyOrBuffer instanceof Buffer
+        ? new BodyCreator(this.mediaFormat).createFromBuffer(bodyOrBuffer)
+        : bodyOrBuffer;
 
-    const body = this.mediaFormat.isDecodable()
-      ? new EncodedBody(data, this.mediaFormat)
-      : new PrintableBody(data, this.mediaFormat);
-
-    if (body.length === 0) {
+    if (!body || body.isEmpty()) {
       return undefined;
     }
 
@@ -79,7 +75,7 @@ export default class Response {
     return new Response({
       status,
       headers,
-      body: body ? PrintableBody.fromJson(body, new MediaFormat(headers)) : undefined,
+      body: body ? new BodyCreator(new MediaFormat(headers)).createFromJson(body) : undefined,
     });
   }
 }

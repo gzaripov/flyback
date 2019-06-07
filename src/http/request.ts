@@ -3,9 +3,9 @@ import MediaFormat from './media-format';
 import Headers, { HeadersJson } from './headers';
 import Response from './response';
 import { Context } from '../context';
-import Body, { PrintableBody } from './body';
 import Path from './path';
-import { EncodedBody } from './encoded-body';
+import BodyCreator from './body/body-creator';
+import Body from './body/body';
 
 type RequestParams = {
   path: string;
@@ -37,20 +37,17 @@ export default class Request {
     this.method = method.toUpperCase();
     this.headers = this.deleteHostHeader(headers);
     this.mediaFormat = new MediaFormat(this.headers);
-    this.body = body instanceof Buffer ? this.createBody(body) : body;
+    this.body = this.createBody(body);
     this.name = this.createName();
   }
 
-  private createBody(buffer?: Buffer) {
-    if (!buffer) {
-      return undefined;
-    }
+  private createBody(bodyOrBuffer?: Body | Buffer): Body | undefined {
+    const body =
+      bodyOrBuffer instanceof Buffer
+        ? new BodyCreator(this.mediaFormat).createFromBuffer(bodyOrBuffer)
+        : bodyOrBuffer;
 
-    const body = this.mediaFormat.isDecodable()
-      ? new EncodedBody(buffer, this.mediaFormat)
-      : new PrintableBody(buffer, this.mediaFormat);
-
-    if (body.length === 0) {
+    if (!body || body.isEmpty()) {
       return undefined;
     }
 
@@ -161,7 +158,7 @@ export default class Request {
       path,
       method,
       headers,
-      body: body ? PrintableBody.fromJson(body, new MediaFormat(headers)) : undefined,
+      body: body ? new BodyCreator(new MediaFormat(headers)).createFromJson(body) : undefined,
       context,
     });
   }
