@@ -3,7 +3,7 @@ import zlib from 'zlib';
 import iltorb from 'iltorb';
 import PrintableBody from './printable-body';
 import MediaFormat from '../media-format';
-import Body from './body';
+import { Body } from './';
 
 function encodeBodyData(buffer: Buffer, contentEncoding: string): Buffer {
   if (contentEncoding === 'gzip') {

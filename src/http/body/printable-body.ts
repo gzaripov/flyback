@@ -1,6 +1,6 @@
 import deepEqual from 'fast-deep-equal';
 import MediaFormat from '../media-format';
-import Body from './body';
+import { Body } from './';
 
 export default class PrintableBody implements Body {
   private readonly buffer: Buffer;

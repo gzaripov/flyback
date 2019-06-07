@@ -1,7 +1,7 @@
 import MediaFormat from '../media-format';
 import { EncodedBody } from './encoded-body';
 import PrintableBody from './printable-body';
-import Body from './body';
+import { Body } from './';
 
 export default class BodyCreator {
   private mediaFormat: MediaFormat;

@@ -5,7 +5,7 @@ import Response from './response';
 import { Context } from '../context';
 import Path from './path';
 import BodyCreator from './body/body-creator';
-import Body from './body/body';
+import { Body } from './body';
 
 type RequestParams = {
   path: string;
