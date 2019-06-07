@@ -2,7 +2,7 @@ import fs from 'fs';
 import https from 'https';
 import Logger from '../../src/logger';
 import { TapeJson } from '../../src/tape';
-import { Context, Options, RecordMode } from '../../src/context';
+import { Context, Options, RecordMode, RecordModes } from '../../src/context';
 import { apiUrl } from './api-server';
 import {
   withFlyback,
@@ -11,6 +11,7 @@ import {
   tapesPath,
   readJSONFromFile,
 } from './flyback-server';
+import { RequestJson } from '../../src/http/request';
 
 describe('flyback', () => {
   describe('record mode NEW', () => {
@@ -397,6 +398,55 @@ describe('flyback', () => {
 
       expect(responseWithProxyRm.status).toEqual(500);
     });
+  });
+
+  it.only('works with dynamic folder', async () => {
+    const url = '/test/3';
+
+    const recordMode = (request) => {
+      if (!request.headers['x-tape-path']) {
+        return RecordModes.PROXY;
+      }
+
+      return RecordModes.DISABLED;
+    };
+
+    const tapePathGenerator = jest.fn(
+      (request: RequestJson) => request.headers['x-tape-path'] as string,
+    );
+
+    const flybackOpts: Partial<Options> = {
+      recordMode,
+      ignoreAllHeaders: true,
+      tapePathGenerator,
+      // we add default tapesPath in flybackFetch
+      tapesPath: undefined,
+    };
+
+    const responseWithTapePath = await flybackFetch(
+      url,
+      {
+        method: 'GET',
+        headers: { 'x-tape-path': tapesPath },
+      },
+      flybackOpts,
+    );
+
+    expect(tapePathGenerator).toHaveBeenCalled();
+    expect(responseWithTapePath.status).toEqual(200);
+
+    tapePathGenerator.mockClear();
+
+    const responseWithoutTapePath = await flybackFetch(
+      url,
+      {
+        method: 'GET',
+      },
+      flybackOpts,
+    );
+
+    expect(tapePathGenerator).not.toHaveBeenCalled();
+    expect(responseWithoutTapePath.status).toEqual(500);
   });
 
   describe('error handling', () => {

@@ -23,7 +23,7 @@ export default class TapeStore {
       mkdirp.sync(this.path);
       this.loadTapesAtDir(this.path);
     }
-    this.context.logger.log(`Loaded ${this.tapeFiles.length} tapes`);
+    this.context.logger.log(`Loaded ${Object.keys(this.tapeFiles).length} tapes`);
   }
 
   loadTapesAtDir(directory: string) {

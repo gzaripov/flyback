@@ -11,10 +11,10 @@ export type RecordMode =
   | 'PROXY'; // Just proxy request, don't save tape
 
 export const RecordModes = {
-  NEW: 'NEW',
-  OVERWRITE: 'OVERWRITE',
-  DISABLED: 'DISABLED',
-  PROXY: 'PROXY',
+  NEW: 'NEW' as const,
+  OVERWRITE: 'OVERWRITE' as const,
+  DISABLED: 'DISABLED' as const,
+  PROXY: 'PROXY' as const,
 };
 
 export type FallbackMode = 'NOT_FOUND' | 'PROXY';
