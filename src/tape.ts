@@ -46,14 +46,14 @@ export default class Tape {
     const { request, response } = this;
 
     return {
-      request: request.toJSON(),
-      response: response.toJSON(),
+      request: request.toJson(),
+      response: response.toJson(),
     };
   }
 
   static fromJSON(tapeJson: TapeJson, context: Context) {
     const { request, response } = tapeJson;
 
-    return new Tape(Request.fromJson(request, context), Response.fromJSON(response), context);
+    return new Tape(Request.fromJson(request, context), Response.fromJson(response), context);
   }
 }

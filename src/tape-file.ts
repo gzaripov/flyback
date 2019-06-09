@@ -81,7 +81,7 @@ export default class TapeFile {
   find(request: Request): Tape | null {
     const foundTape = [...this.tapes].find((tape) => {
       if (this.context.tapeMatcher) {
-        return this.context.tapeMatcher(tape.toJSON(), request.toJSON());
+        return this.context.tapeMatcher(tape.toJSON(), request.toJson());
       }
 
       return tape.containsRequest(request);

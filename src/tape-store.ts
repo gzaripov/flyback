@@ -7,7 +7,7 @@ import { Request } from './http';
 import TapeFile from './tape-file';
 
 export default class TapeStore {
-  public tapeFiles: { [tapeName: string]: TapeFile };
+  private tapeFiles: { [tapeName: string]: TapeFile };
   private context: Context;
   private path: string;
 
@@ -60,10 +60,6 @@ export default class TapeStore {
     return tapeFile ? tapeFile.find(request) : null;
   }
 
-  private findTapeFile(tape: Tape): TapeFile | null {
-    return this.tapeFiles[tape.name];
-  }
-
   save(tape: Tape) {
     this.context.tapeAnalyzer.markNew(tape);
     this.context.tapeAnalyzer.markUsed(tape);
@@ -93,7 +89,11 @@ export default class TapeStore {
     }
   }
 
-  createTapePath(tape: Tape) {
+  hasPath(pathToCheck: string) {
+    return this.path === path.normalize(`${pathToCheck}/`);
+  }
+
+  private createTapePath(tape: Tape) {
     const tapePath = path.normalize(path.join(this.path, tape.name));
 
     mkdirp.sync(path.dirname(tapePath));
@@ -101,7 +101,7 @@ export default class TapeStore {
     return tapePath;
   }
 
-  hasPath(pathToCheck: string) {
-    return this.path === path.normalize(`${pathToCheck}/`);
+  private findTapeFile(tape: Tape): TapeFile | null {
+    return this.tapeFiles[tape.name];
   }
 }

@@ -20,7 +20,7 @@ export default class TapeStoreManager {
 
   getTapeStore(request?: Request) {
     if (request && this.context.tapePathGenerator) {
-      const path = this.context.tapePathGenerator(request.toJSON());
+      const path = this.context.tapePathGenerator(request.toJson());
 
       if (path) {
         let tapeStore = this.findTapeStore(path);
@@ -37,9 +37,7 @@ export default class TapeStoreManager {
       }
 
       this.context.logger.log(
-        `tapePathGenerator returned invalid path for ${
-          request.pathname
-        }, fallback to default tape store`,
+        `tapePathGenerator returned invalid path for ${request.pathname}, fallback to default tape store`,
       );
     }
 

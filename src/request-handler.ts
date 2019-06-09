@@ -1,8 +1,15 @@
 import assert from 'assert';
-import { Context, validateRecord, validateFallbackMode, RecordMode } from './context';
 import TapeStoreManager from './tape-store-manager';
 import { Request, Response, Headers } from './http';
 import Tape from './tape';
+import {
+  Context,
+  validateRecord,
+  validateFallbackMode,
+  RecordMode,
+  RecordModes,
+  FallbackModes,
+} from './context';
 
 export default class RequestHandler {
   private tapeStoreManager: TapeStoreManager;
@@ -17,7 +24,7 @@ export default class RequestHandler {
     const tapeStore = this.tapeStoreManager.getTapeStore(request);
     const matchingTape = tapeStore.find(request);
 
-    if (recordMode === 'OVERWRITE') {
+    if (recordMode === RecordModes.OVERWRITE) {
       const response = await this.makeRealRequest(request);
 
       const tape = new Tape(request, response, this.context);
@@ -35,17 +42,17 @@ export default class RequestHandler {
       return matchingTape.response;
     }
 
-    if (recordMode === 'NEW') {
+    if (recordMode === RecordModes.NEW) {
       const response = await this.makeRealRequest(request);
 
       const tape = new Tape(request, response, this.context);
 
       tapeStore.save(tape);
 
-      return response;
+      return tape.response;
     }
 
-    assert(recordMode === 'DISABLED', `Invalid recordMode ${recordMode}`);
+    assert(recordMode === RecordModes.DISABLED, `Invalid recordMode ${recordMode}`);
 
     return this.onNoRecord(request);
   }
@@ -54,11 +61,11 @@ export default class RequestHandler {
     const recordMode =
       typeof this.context.recordMode !== 'function'
         ? this.context.recordMode
-        : this.context.recordMode(request.toJSON());
+        : this.context.recordMode(request.toJson());
 
     validateRecord(recordMode);
 
-    if (recordMode === 'PROXY') {
+    if (recordMode === RecordModes.PROXY) {
       return await this.makeRealRequest(request);
     }
 
@@ -71,22 +78,20 @@ export default class RequestHandler {
     const fallbackMode =
       typeof this.context.fallbackMode !== 'function'
         ? this.context.fallbackMode
-        : this.context.fallbackMode(request.toJSON());
+        : this.context.fallbackMode(request.toJson());
 
     validateFallbackMode(fallbackMode);
 
     this.context.logger.log(
-      `Tape for ${
-        request.pathname
-      } not found and recording is disabled (fallbackMode: ${fallbackMode})`,
+      `Tape for ${request.pathname} not found and recording is disabled (fallbackMode: ${fallbackMode})`,
     );
 
     this.context.logger.debug({
       url: request.pathname,
-      request: request.toJSON(),
+      request: request.toJson(),
     });
 
-    if (fallbackMode === 'PROXY') {
+    if (fallbackMode === FallbackModes.PROXY) {
       return await this.makeRealRequest(request);
     }
 

@@ -67,7 +67,7 @@ export default class Request {
 
   private createName() {
     if (this.context.tapeNameGenerator) {
-      return this.context.tapeNameGenerator(this.toJSON());
+      return this.context.tapeNameGenerator(this.toJson());
     }
 
     return this.pathname.substring(1).replace(/\//g, '.');
@@ -139,7 +139,7 @@ export default class Request {
     return typeof this.body !== typeof otherRequest.body;
   }
 
-  toJSON(): RequestJson {
+  toJson(): RequestJson {
     const { path, method, headers, body } = this;
 
     return {

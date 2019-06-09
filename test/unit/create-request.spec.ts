@@ -23,7 +23,7 @@ describe('createRequest', () => {
     incomingMessage.emit('data', Buffer.from('ABC'));
     incomingMessage.emit('end');
 
-    const requestJson = (await request).toJSON();
+    const requestJson = (await request).toJson();
 
     expect(requestJson).toEqual({
       path: '/create-request',

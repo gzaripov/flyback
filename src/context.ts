@@ -22,8 +22,8 @@ export const RecordModes = {
 export type FallbackMode = 'NOT_FOUND' | 'PROXY';
 
 export const FallbackModes = {
-  NOT_FOUND: 'NOT_FOUND',
-  PROXY: 'PROXY',
+  NOT_FOUND: 'NOT_FOUND' as const,
+  PROXY: 'PROXY' as const,
 };
 
 export type Options = {
@@ -54,8 +54,8 @@ export type Options = {
 };
 
 const defaultOptions = {
-  flybackUrl: 'localhost:8080',
-  recordMode: 'NEW' as RecordMode | ((request: RequestJson) => RecordMode),
+  flybackUrl: 'http://localhost:8080',
+  recordMode: RecordModes.NEW as RecordMode | ((request: RequestJson) => RecordMode),
   fallbackMode: 'NOT_FOUND' as FallbackMode | ((request: RequestJson) => FallbackMode),
   ignoreHeaders: ['content-length', 'host'],
   verbose: false,

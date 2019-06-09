@@ -51,7 +51,7 @@ export default class Response {
     }
   }
 
-  toJSON(): ResponseJson {
+  toJson(): ResponseJson {
     const { status, headers, body } = this;
 
     return {
@@ -68,7 +68,7 @@ export default class Response {
     response.end(body ? body.toBuffer() : undefined);
   }
 
-  static fromJSON(json: ResponseJson) {
+  static fromJson(json: ResponseJson) {
     const { status, body } = json;
     const headers = new Headers(json.headers);
 
