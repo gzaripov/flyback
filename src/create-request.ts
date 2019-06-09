@@ -28,7 +28,7 @@ export async function createRequest(im: IncomingMessage, context: Context): Prom
   });
 
   return new Request({
-    path: url.parse(im.url).path || '/',
+    path: url.parse(im.url).path as string,
     method: im.method,
     headers: new Headers(im.headers as HeadersJson),
     body,
