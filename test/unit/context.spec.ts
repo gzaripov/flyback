@@ -1,21 +1,11 @@
-import { Options, createContext } from '../../src/context';
+import { createContext } from '../../src/context';
 
 describe('Options', () => {
   it('merges user options and default options', () => {
-    const opts = createContext({ verbose: true } as Options);
+    const opts = createContext({ proxyUrl: 'https://proxy-url.test', verbose: true });
 
     expect(opts.verbose).toEqual(true);
     expect(opts.debug).toEqual(false);
-  });
-
-  it('defaults name to the proxyUrl', () => {
-    const proxyUrl = 'https://my-api.com';
-    let opts = createContext({ proxyUrl });
-
-    expect(opts.name).toEqual(proxyUrl);
-
-    opts = createContext({ proxyUrl, name: 'My Server' });
-    expect(opts.name).toEqual('My Server');
   });
 
   describe('options validation', () => {

@@ -1,3 +1,5 @@
+import url from 'url';
+import assert from 'assert';
 import Logger from './logger';
 import { TapeJson } from './tape';
 import { Agent } from 'https';
@@ -25,7 +27,7 @@ export const FallbackModes = {
 };
 
 export type Options = {
-  proxyUrl: string;
+  proxyUrl?: string;
   flybackUrl?: string;
   tapesPath?: string;
   recordMode?: RecordMode | ((request: RequestJson) => RecordMode);
@@ -82,7 +84,23 @@ export function validateFallbackMode(
   }
 }
 
+function validateUrl(siteUrl: string) {
+  const { protocol, host } = url.parse(siteUrl);
+
+  if (!protocol || !protocol.startsWith('http')) {
+    throw new Error(`${siteUrl} is not valid, pass url with http or https protocol`);
+  }
+
+  assert(host, `${siteUrl} is not valid, pass url with host`);
+}
+
 function validateOptions(opts: Options) {
+  if (opts.flybackUrl) {
+    validateUrl(opts.flybackUrl);
+  }
+  if (opts.proxyUrl) {
+    validateUrl(opts.proxyUrl);
+  }
   validateRecord(opts.recordMode);
   validateFallbackMode(opts.fallbackMode);
 }
@@ -92,7 +110,6 @@ export function createContext(userOpts: Options) {
 
   return {
     ...defaultOptions,
-    name: userOpts.proxyUrl,
     logger: new Logger({ ...defaultOptions, ...userOpts } as Context),
     ...userOpts,
     tapeAnalyzer: new TapeAnalyzer(),

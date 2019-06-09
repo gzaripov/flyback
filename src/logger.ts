@@ -11,7 +11,7 @@ export default class Logger {
   }
 
   log(message: any) {
-    if (this.options.verbose) {
+    if (this.options.debug || this.options.verbose) {
       console.log(message);
     }
   }

@@ -1,5 +1,6 @@
-import { createRequest } from '../../src/middleware';
 import { IncomingMessage } from 'http';
+import { createRequest } from '../../src/create-request';
+import { mockContext } from './mocks';
 
 describe('createRequest', () => {
   it('creates request', () => {
@@ -11,8 +12,9 @@ describe('createRequest', () => {
         cookie: ['fristcookie', 'secondcookie'],
       },
     } as any) as IncomingMessage;
+    const context = mockContext();
 
-    const request = createRequest(incomingMessage, Buffer.from('ABC'));
+    const request = createRequest(incomingMessage, context);
 
     expect(request).toEqual({
       url: 'http://create-request.com',
@@ -31,8 +33,9 @@ describe('createRequest', () => {
         cookie: ['fristcookie', 'secondcookie'],
       },
     } as any) as IncomingMessage;
+    const context = mockContext();
 
-    expect(() => createRequest(incomingMessage, Buffer.from(''))).toThrow(
+    expect(() => createRequest(incomingMessage, context)).toThrow(
       new Error(`Invalid incoming message ${incomingMessage}`),
     );
   });

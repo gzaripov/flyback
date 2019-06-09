@@ -1,5 +1,5 @@
 import Logger from '../../src/logger';
-import { Context } from '../../src/options';
+import { mockContext } from './mocks';
 
 describe('Logger', () => {
   beforeEach(() => {
@@ -13,8 +13,9 @@ describe('Logger', () => {
   });
 
   describe('#log', () => {
-    it('does nothing if silent option is enabled', () => {
-      const logger = new Logger({ silent: true } as Context);
+    it('does nothing when verbose option is not passed', () => {
+      const context = mockContext();
+      const logger = new Logger(context);
 
       logger.log('Test');
 
@@ -23,8 +24,9 @@ describe('Logger', () => {
       expect(console.error).not.toHaveBeenCalled();
     });
 
-    it('writes to log console if silent option is disabled', () => {
-      const logger = new Logger({ silent: false } as Context);
+    it('writes to log console when verbose is true', () => {
+      const context = mockContext({ verbose: true });
+      const logger = new Logger(context);
 
       logger.log('Test');
 
@@ -37,7 +39,8 @@ describe('Logger', () => {
 
   describe('#debug', () => {
     it('does nothing if debug option is disabled', () => {
-      const logger = new Logger({ debug: false } as Context);
+      const context = mockContext({ debug: false });
+      const logger = new Logger(context);
 
       logger.debug('Test');
 
@@ -47,7 +50,8 @@ describe('Logger', () => {
     });
 
     it('writes to debug console if debug option is enabled', () => {
-      const logger = new Logger({ debug: true } as Context);
+      const context = mockContext({ debug: true });
+      const logger = new Logger(context);
 
       logger.debug('Test');
 
@@ -59,7 +63,8 @@ describe('Logger', () => {
 
   describe('#error', () => {
     it('writes to error console if silent option is enabled', () => {
-      const logger = new Logger({ silent: true } as Context);
+      const context = mockContext({ verbose: true });
+      const logger = new Logger(context);
 
       logger.error('Test');
 
@@ -70,7 +75,8 @@ describe('Logger', () => {
     });
 
     it('writes to error console if silent option is disabled', () => {
-      const logger = new Logger({ silent: false } as Context);
+      const context = mockContext({ verbose: true });
+      const logger = new Logger(context);
 
       logger.error('Test');
 

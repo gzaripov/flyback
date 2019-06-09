@@ -1,7 +1,7 @@
+import assert from 'assert';
 import { Context, validateRecord, validateFallbackMode, RecordMode } from './context';
 import TapeStoreManager from './tape-store-manager';
 import { Request, Response, Headers } from './http';
-import { assertBoolean } from './utils/asserts';
 import Tape from './tape';
 
 export default class RequestHandler {
@@ -45,7 +45,7 @@ export default class RequestHandler {
       return response;
     }
 
-    assertBoolean(recordMode === 'DISABLED', `Invalid recordMode ${recordMode}`);
+    assert(recordMode === 'DISABLED', `Invalid recordMode ${recordMode}`);
 
     return this.onNoRecord(request);
   }
@@ -100,6 +100,11 @@ export default class RequestHandler {
   async makeRealRequest(request: Request): Promise<Response> {
     const endpoint = this.context.proxyUrl;
 
-    return request.send(endpoint);
+    assert(
+      endpoint,
+      'Cant make request to proxy without url, pass proxyUrl or change record mode to DISABLED',
+    );
+
+    return request.send(endpoint as string);
   }
 }

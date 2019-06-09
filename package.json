@@ -28,7 +28,8 @@
     "iltorb": "^2.4.3",
     "mime-format": "^2.0.0",
     "mkdirp": "^0.5.1",
-    "node-fetch": "^2.6.0"
+    "node-fetch": "^2.6.0",
+    "node-mocks-http": "^1.7.5"
   },
   "devDependencies": {
     "@babel/core": "^7.4.3",
