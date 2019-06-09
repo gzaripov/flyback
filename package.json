@@ -7,14 +7,14 @@
   "license": "MIT",
   "description": "A node.js HTTP proxy that records and playbacks requests",
   "scripts": {
-    "build": "npm run type-check && npm run build:cleanup && npm run build:rollup && npm run build:typings",
+    "build": "yarn run type-check && yarn run build:cleanup && yarn run build:rollup && yarn run build:typings",
     "build:type-check": "tsc --noEmit",
     "build:cleanup": "rm -rf dist",
     "build:rollup": "rollup -c",
     "build:typings": "tsc --declaration --emitDeclarationOnly --outDir dist/typings",
     "type-check": "tsc --noEmit",
     "start": "node ./example/start.js",
-    "test": "npm run type-check && jest",
+    "test": "yarn run type-check && jest",
     "jest": "jest",
     "rollup": "rollup",
     "release": "standard-version"
