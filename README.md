@@ -49,7 +49,7 @@ Returns an unstarted flyback server instance.
 | Name | Type | Description | Default |
 |------|------|-------------|---------|
 | *proxyUrl* | `String` | Where to proxy unknown requests |
-| *flybackUrl* | `String` | Where to serve flyback server (ignored for middleware) | localhost:8080 |
+| *flybackUrl* | `String` | Where to serve flyback server (ignored for middleware) | http://localhost:8080 |
 | *tapesPath* | `String` | Path where to load and save tapes | undefined |
 | *recordMode* | `RecordMode \| Function` | Set record mode. [More info](#recording-modes) | `RecordMode.NEW` |
 | *fallbackMode* | `FallbackMode \| Function` | Fallback mode for unknown requests when recording is disabled. [More info](#recording-modes) | `FallbackMode.NOT_FOUND` |
