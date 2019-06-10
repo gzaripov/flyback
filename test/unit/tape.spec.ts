@@ -8,7 +8,7 @@ describe('Tape', () => {
     const tapeJson: TapeJson = {
       request: {
         path: '/foo/bar/1?real=3',
-        method: 'GET',
+        method: 'POST',
         headers: {
           accept: 'text/unknown',
           'content-type': 'text/plain',
@@ -67,32 +67,32 @@ describe('Tape', () => {
         method: 'PUT',
         headers: {
           accept: 'text/unknown',
-          'content-type': ['application/json'],
+          'content-type': 'application/json',
           'multi-value-header': ['value-a', 'value-b'],
           'x-ignored': '1',
-          'content-length': ['20'],
+          'content-length': '39',
         },
-        body: JSON.stringify({
+        body: {
           param: 'value',
           nested: {
             param2: 3,
           },
-        }),
+        },
       },
       response: {
         status: 200,
         headers: {
-          'content-type': ['application/json'],
+          'content-type': 'application/json',
           'x-ignored': '2',
-          'content-length': ['20'],
+          'content-length': '46',
         },
-        body: JSON.stringify({
+        body: {
           foo: 'bar',
           utf8: '🔤',
           nested: {
             fuu: 3,
           },
-        }),
+        },
       },
     };
 
@@ -101,7 +101,7 @@ describe('Tape', () => {
     expect(tape.toJSON()).toEqual(tapeJson);
   });
 
-  it('creates a tape from the json with request and response dont have bodies', () => {
+  it('creates a tape from the json with request and response that dont have bodies', () => {
     const tapeJson: TapeJson = {
       request: {
         path: '/foo/bar/1?real=3',
@@ -112,6 +112,7 @@ describe('Tape', () => {
           'multi-value-header': ['value-a', 'value-b'],
           'x-ignored': '1',
         },
+        body: '',
       },
       response: {
         status: 200,
@@ -119,6 +120,7 @@ describe('Tape', () => {
           'content-type': 'text/unknown',
           'x-ignored': '2',
         },
+        body: '',
       },
     };
 
@@ -204,9 +206,7 @@ describe('Tape', () => {
 
     it('returns correct tape name when use a tapeNameGenerator', () => {
       const context = mockContext({
-        tapeNameGenerator: (tapeJson) => {
-          const { path, method } = tapeJson.request;
-
+        tapeNameGenerator: ({ path, method }) => {
           return method + path.replace(/\//g, '.');
         },
       });
