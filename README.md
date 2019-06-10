@@ -6,6 +6,7 @@ It is created for use in your integration or e2e tests or running your applicati
 
 [![npm version](https://badge.fury.io/js/flyback.svg)](https://badge.fury.io/js/flyback)
 [![CircleCI](https://circleci.com/gh/gzaripov/flyback.svg?style=svg)](https://circleci.com/gh/gzaripov/flyback)
+[![codecov](https://codecov.io/gh/gzaripov/flyback/branch/master/graph/badge.svg)](https://codecov.io/gh/gzaripov/flyback)
 
 ## Installation
 
