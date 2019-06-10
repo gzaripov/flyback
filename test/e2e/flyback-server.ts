@@ -39,7 +39,7 @@ export function readJSONFromFile(tapesPath: string, url: string): TapeJson {
   return JSON.parse(fs.readFileSync(`${tapesPath}/${fileName}.json`).toString());
 }
 
-const tapeNameGenerator = (request: RequestJson) => takeTapeNameFromPath(request.path);
+const tapeNameGenerator = (request: RequestJson) => takeTapeNameFromPath(request.pathname);
 
 // instance of flyback server can only be used in one test
 export async function withFlyback<T>(run: (() => T) | (() => Promise<T>), opts?: Partial<Options>) {

@@ -6,6 +6,7 @@ import { Context } from '../context';
 import Path from './path';
 import BodyCreator from './body/body-creator';
 import { Body } from './body';
+import { QueryParamsObject, queryParamsToObject, objectToQueryParams } from '../utils/url';
 
 type RequestParams = {
   path: string;
@@ -16,7 +17,8 @@ type RequestParams = {
 };
 
 export type RequestJson = {
-  path: string;
+  pathname: string;
+  query?: QueryParamsObject;
   method: string;
   headers: HeadersJson;
   body?: string | Object;
@@ -142,8 +144,12 @@ export default class Request {
   toJson(): RequestJson {
     const { path, method, headers, body } = this;
 
+    const [pathname, queryString] = path.toString().split('?');
+    const query = queryString ? queryParamsToObject(queryString) : undefined;
+
     return {
-      path: path.toString(),
+      pathname,
+      query,
       method,
       headers: headers.toJSON(),
       body: body ? body.toJson() : undefined,
@@ -151,8 +157,9 @@ export default class Request {
   }
 
   static fromJson(json: RequestJson, context: Context): Request {
-    const { path, method, body } = json;
+    const { pathname, query, method, body } = json;
     const headers = new Headers(json.headers);
+    const path = pathname + (query ? `?${objectToQueryParams(query)}` : '');
 
     return new Request({
       path,

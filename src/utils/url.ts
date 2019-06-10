@@ -1,5 +1,7 @@
-import url from 'url';
+import url, { URLSearchParams } from 'url';
 import { ListenOptions } from 'net';
+
+export type QueryParamsObject = { [key: string]: string | string[] | undefined };
 
 export function urlToListenOptions(siteUrl: string): ListenOptions {
   const { hostname, port, protocol } = url.parse(siteUrl);
@@ -24,4 +26,14 @@ export function urlToListenOptions(siteUrl: string): ListenOptions {
     host: hostname,
     port: Number.parseInt(port, 10),
   };
+}
+
+export function queryParamsToObject(query: string): QueryParamsObject {
+  const searchParams = new URLSearchParams(query);
+
+  return [...searchParams.entries()].reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+}
+
+export function objectToQueryParams(object: QueryParamsObject): string {
+  return new URLSearchParams(object).toString();
 }

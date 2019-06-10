@@ -26,7 +26,7 @@ describe('createRequest', () => {
     const requestJson = (await request).toJson();
 
     expect(requestJson).toEqual({
-      path: '/create-request',
+      pathname: '/create-request',
       method: 'POST',
       headers: {
         accepts: 'application/json',

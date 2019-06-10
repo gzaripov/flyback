@@ -1,5 +1,6 @@
 import Tape, { TapeJson } from '../../src/tape';
 import { mockContext } from './mocks';
+import { objectToQueryParams } from '../../src/utils/url';
 
 describe('Tape', () => {
   const context = mockContext();
@@ -7,7 +8,10 @@ describe('Tape', () => {
   it('creates a tape from the json', () => {
     const tapeJson: TapeJson = {
       request: {
-        path: '/foo/bar/1?real=3',
+        pathname: '/foo/bar/1',
+        query: {
+          real: '3',
+        },
         method: 'POST',
         headers: {
           accept: 'text/unknown',
@@ -35,7 +39,10 @@ describe('Tape', () => {
   it('creates a tape from the json with request and response not human readable', () => {
     const tapeJson: TapeJson = {
       request: {
-        path: '/foo/bar/1?real=3',
+        pathname: '/foo/bar/1',
+        query: {
+          real: '3',
+        },
         method: 'POST',
         headers: {
           accept: 'text/unknown',
@@ -63,7 +70,10 @@ describe('Tape', () => {
   it('can read pretty JSON in body', () => {
     const tapeJson: TapeJson = {
       request: {
-        path: '/foo/bar/1?real=3',
+        pathname: '/foo/bar/1',
+        query: {
+          real: '3',
+        },
         method: 'PUT',
         headers: {
           accept: 'text/unknown',
@@ -104,7 +114,10 @@ describe('Tape', () => {
   it('creates a tape from the json with request and response that dont have bodies', () => {
     const tapeJson: TapeJson = {
       request: {
-        path: '/foo/bar/1?real=3',
+        pathname: '/foo/bar/1',
+        query: {
+          real: '3',
+        },
         method: 'DELETE',
         headers: {
           accept: 'text/unknown',
@@ -142,7 +155,10 @@ describe('Tape', () => {
 
     const tapeJson: TapeJson = {
       request: {
-        path: '/foo/bar/1?real=3',
+        pathname: '/foo/bar/1',
+        query: {
+          real: '3',
+        },
         method: 'DELETE',
         headers: {
           accept: 'text/unknown',
@@ -168,7 +184,10 @@ describe('Tape', () => {
   it('returns correct pathname', () => {
     const tapeJson: TapeJson = {
       request: {
-        path: '/foo/bar/1?real=3',
+        pathname: '/foo/bar/1',
+        query: {
+          real: '3',
+        },
         method: 'GET',
         headers: {},
       },
@@ -186,7 +205,10 @@ describe('Tape', () => {
   describe('Tape name', () => {
     const tapeJson: TapeJson = {
       request: {
-        path: '/api/v3/money?sorting=decrease',
+        pathname: '/api/v3/money',
+        query: {
+          sorting: 'decrease',
+        },
         method: 'GET',
         headers: {},
       },
@@ -204,8 +226,8 @@ describe('Tape', () => {
 
     it('returns correct tape name when use a tapeNameGenerator', () => {
       const context = mockContext({
-        tapeNameGenerator: ({ path, method }) => {
-          return method + path.replace(/\//g, '.');
+        tapeNameGenerator: ({ pathname, query, method }) => {
+          return `${method + pathname.replace(/\//g, '.')}?${objectToQueryParams(query)}`;
         },
       });
 

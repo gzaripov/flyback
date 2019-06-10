@@ -31,7 +31,8 @@ export function mockRequest({
   context?: Context;
 } = {}) {
   const requestJson: RequestJson = {
-    path: request.path || '/foo/bar/1?real=3',
+    pathname: request.pathname || '/foo/bar/1',
+    query: request.query || { real: '3' },
     method: request.method || 'POST',
     headers: request.headers || {
       accept: 'application/json',

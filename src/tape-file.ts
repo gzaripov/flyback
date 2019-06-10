@@ -59,7 +59,7 @@ export default class TapeFile {
 
   save() {
     const jsonTapes = [...this.tapes].map((tape) => tape.toJson());
-    const paths = jsonTapes.map((tape) => `${'\n -'}${tape.request.path}`);
+    const paths = jsonTapes.map((tape) => `${'\n -'}${tape.request.pathname}`);
 
     this.context.logger.log(
       `Saving tape file${jsonTapes.length > 1 ? 's' : ''} ${paths}\n at ${this.path}`,

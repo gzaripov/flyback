@@ -1,6 +1,9 @@
 {
   "request": {
-    "path": "/foo/bar/1?real=3",
+    "pathname": "/foo/bar/1",
+    "query": {
+      "real": "3"
+    },
     "method": "GET",
     "headers": {
       "accept": "application/json",

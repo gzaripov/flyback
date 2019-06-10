@@ -33,7 +33,7 @@ describe('flyback', () => {
       const tape = readJSONFromFile(tapesPath, url);
 
       expect(body).toEqual(expectedResBody);
-      expect(tape.request.path).toEqual('/test/1');
+      expect(tape.request.pathname).toEqual('/test/1');
       expect(tape.request.body).toEqual(reqBody);
       expect(tape.response.body).toEqual(expectedResBody);
     });
@@ -51,7 +51,7 @@ describe('flyback', () => {
 
       const tape = readJSONFromFile(tapesPath, url);
 
-      expect(tape.request.path).toEqual('/test/1');
+      expect(tape.request.pathname).toEqual('/test/1');
       expect(tape.response.body).toEqual(expectedResBody);
     });
 
@@ -74,7 +74,7 @@ describe('flyback', () => {
 
       const tape = readJSONFromFile(tapesPath, url);
 
-      expect(tape.request.path).toEqual('/test/1');
+      expect(tape.request.pathname).toEqual('/test/1');
       expect(tape.response.body).toEqual(expectedResBody);
     });
 
@@ -87,7 +87,7 @@ describe('flyback', () => {
 
       const tape = readJSONFromFile(tapesPath, url);
 
-      expect(tape.request.path).toEqual('/test/head');
+      expect(tape.request.pathname).toEqual('/test/head');
       expect(tape.request.body).toBeUndefined();
       expect(tape.response.body).toBeUndefined();
     });
@@ -100,7 +100,7 @@ describe('flyback', () => {
 
       const tape = readJSONFromFile(tapesPath, url);
 
-      expect(tape.request.path).toEqual(url);
+      expect(tape.request.pathname).toEqual(url);
     });
 
     it('decorates proxied responses', async () => {
@@ -138,7 +138,7 @@ describe('flyback', () => {
 
       const tape = readJSONFromFile(tapesPath, path);
 
-      expect(tape.request.path).toEqual('/test/3/500');
+      expect(tape.request.pathname).toEqual('/test/3/500');
       expect(tape.response.status).toEqual(500);
     });
 
@@ -284,7 +284,7 @@ describe('flyback', () => {
 
       let tape = readJSONFromFile(tapesPath, url);
 
-      expect(tape.request.path).toEqual('/test/1');
+      expect(tape.request.pathname).toEqual('/test/1');
       expect(tape.response.body).toEqual(expectedBody);
 
       headers = { 'x-flyback-ping': 'test2' };
@@ -297,7 +297,7 @@ describe('flyback', () => {
 
       tape = readJSONFromFile(tapesPath, url);
 
-      expect(tape.request.path).toEqual('/test/1');
+      expect(tape.request.pathname).toEqual('/test/1');
       expect(tape.response.body).toEqual(expectedBody);
     });
   });
