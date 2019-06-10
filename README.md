@@ -5,7 +5,7 @@ Flyback is a javascript HTTP recorder written in typescript. Can be used as stan
 It is created for use in your integration or e2e tests or running your application against mocked HTTP servers.       
 
 [![npm version](https://badge.fury.io/js/flyback.svg)](https://badge.fury.io/js/flyback)
-[![Build Status](https://travis-ci.org/ijpiantanida/flyback.svg?branch=master)](https://travis-ci.org/ijpiantanida/flyback)
+[![CircleCI](https://circleci.com/gh/gzaripov/flyback.svg?style=svg)](https://circleci.com/gh/gzaripov/flyback)
 
 ## Installation
 
