@@ -12,7 +12,7 @@ aliases:
       - website/node_modules
     key: v2-dependencies-{{ .Branch }}-{{ checksum "yarn.lock" }}
 
-  - &install node scripts/remove-postinstall && yarn --no-progress --frozen-lockfile --ignore-engines && node scripts/build
+  - &install yarn --no-progress --frozen-lockfile
 
 jobs:
   build:
