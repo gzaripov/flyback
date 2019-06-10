@@ -1,4 +1,6 @@
 version: 2.1
+orbs:
+  codecov: codecov/codecov@1.0.2
 aliases:
   - &restore-cache
     keys:
@@ -37,6 +39,11 @@ jobs:
       - save_cache: *save-cache
       - run:
           command: yarn test
+      - codecov/upload:
+          file: {{ coverage/coverage-final.json }}
+      - store_artifacts:
+          path: coverage
+      
 
   test-node-10:
     working_directory: ~/flyback
