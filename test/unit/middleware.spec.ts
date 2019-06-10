@@ -1,12 +1,9 @@
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
 import { createRequest, createResponse } from 'node-mocks-http';
 import { createFlybackMiddleware } from '../../src/middleware';
 import { EventEmitter } from 'events';
 import { IncomingMessage, ServerResponse } from 'http';
 import { RecordModes } from '../../src/context';
-import { mockLogger } from './mocks';
+import { mockLogger, mockTapesPath } from './mocks';
 
 describe('createFlybackMiddleware', () => {
   it('creates middleware without error', () => {
@@ -15,7 +12,7 @@ describe('createFlybackMiddleware', () => {
 
   describe('middleware', () => {
     it('middleware calls nextFn without args when error wasnt thrown', async () => {
-      const tapesPath = fs.mkdtempSync(path.join(os.tmpdir(), 'tapes'));
+      const tapesPath = mockTapesPath();
 
       const middleware = createFlybackMiddleware({
         recordMode: RecordModes.DISABLED,
@@ -45,7 +42,7 @@ describe('createFlybackMiddleware', () => {
     });
 
     it('middleware works without nextFn arg', async () => {
-      const tapesPath = fs.mkdtempSync(path.join(os.tmpdir(), 'tapes'));
+      const tapesPath = mockTapesPath();
 
       const middleware = createFlybackMiddleware({
         recordMode: RecordModes.DISABLED,

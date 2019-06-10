@@ -1,3 +1,6 @@
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { Context, Options, createContext } from '../../src/context';
 import Logger from '../../src/logger';
 import Request, { RequestJson } from '../../src/http/request';
@@ -14,6 +17,10 @@ export function mockLogger(): Logger {
     debug: jest.fn(),
     error: jest.fn(),
   } as unknown) as Logger;
+}
+
+export function mockTapesPath(): string {
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'tapes'));
 }
 
 export function mockRequest({
