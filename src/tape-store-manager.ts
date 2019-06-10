@@ -18,8 +18,8 @@ export default class TapeStoreManager {
     }
   }
 
-  getTapeStore(request?: Request) {
-    if (request && this.context.tapePathGenerator) {
+  getTapeStore(request: Request) {
+    if (this.context.tapePathGenerator) {
       const path = this.context.tapePathGenerator(request.toJson());
 
       if (path) {

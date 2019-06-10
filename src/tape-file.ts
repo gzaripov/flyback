@@ -48,7 +48,7 @@ export default class TapeFile {
       const jsonTapes: TapeJson[] = Array.isArray(fileJson) ? fileJson : [fileJson];
 
       jsonTapes.forEach((tapeJson) => {
-        const tape = Tape.fromJSON(tapeJson, this.context);
+        const tape = Tape.fromJson(tapeJson, this.context);
 
         this.tapes.add(tape);
       });
@@ -58,7 +58,7 @@ export default class TapeFile {
   }
 
   save() {
-    const jsonTapes = [...this.tapes].map((tape) => tape.toJSON());
+    const jsonTapes = [...this.tapes].map((tape) => tape.toJson());
     const paths = jsonTapes.map((tape) => `${'\n -'}${tape.request.path}`);
 
     this.context.logger.log(
@@ -81,7 +81,7 @@ export default class TapeFile {
   find(request: Request): Tape | null {
     const foundTape = [...this.tapes].find((tape) => {
       if (this.context.tapeMatcher) {
-        return this.context.tapeMatcher(tape.toJSON(), request.toJson());
+        return this.context.tapeMatcher(tape.toJson(), request.toJson());
       }
 
       return tape.containsRequest(request);

@@ -33,7 +33,7 @@ describe('Tape Store', () => {
       tapesPath,
     });
 
-    const tape = Tape.fromJSON(tapeJson, context);
+    const tape = Tape.fromJson(tapeJson, context);
     const tapeStore = new TapeStore(tapesPath, context);
     const tapeFilePath = path.join(tapesPath, `${tape.name}.json`);
 
@@ -51,7 +51,7 @@ describe('Tape Store', () => {
       tapeNameGenerator: () => testName,
     });
 
-    const tape = Tape.fromJSON(tapeJson, context);
+    const tape = Tape.fromJson(tapeJson, context);
     const tapeStore = new TapeStore(tapesPath, context);
 
     tapeStore.save(tape);

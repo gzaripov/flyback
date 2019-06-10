@@ -27,9 +27,9 @@ describe('Tape', () => {
       },
     };
 
-    const tape = Tape.fromJSON(tapeJson, context);
+    const tape = Tape.fromJson(tapeJson, context);
 
-    expect(tape.toJSON()).toEqual(tapeJson);
+    expect(tape.toJson()).toEqual(tapeJson);
   });
 
   it('creates a tape from the json with request and response not human readable', () => {
@@ -55,9 +55,9 @@ describe('Tape', () => {
       },
     };
 
-    const tape = Tape.fromJSON(tapeJson, context);
+    const tape = Tape.fromJson(tapeJson, context);
 
-    expect(tape.toJSON()).toEqual(tapeJson);
+    expect(tape.toJson()).toEqual(tapeJson);
   });
 
   it('can read pretty JSON in body', () => {
@@ -96,9 +96,9 @@ describe('Tape', () => {
       },
     };
 
-    const tape = Tape.fromJSON(tapeJson, context);
+    const tape = Tape.fromJson(tapeJson, context);
 
-    expect(tape.toJSON()).toEqual(tapeJson);
+    expect(tape.toJson()).toEqual(tapeJson);
   });
 
   it('creates a tape from the json with request and response that dont have bodies', () => {
@@ -124,9 +124,9 @@ describe('Tape', () => {
       },
     };
 
-    const tape = Tape.fromJSON(tapeJson, context);
+    const tape = Tape.fromJson(tapeJson, context);
 
-    expect(tape.toJSON()).toEqual(tapeJson);
+    expect(tape.toJson()).toEqual(tapeJson);
   });
 
   it('decorates tape when tapeDecorator is specified', () => {
@@ -162,9 +162,9 @@ describe('Tape', () => {
       },
     };
 
-    const tape = Tape.fromJSON(tapeJson, context);
+    const tape = Tape.fromJson(tapeJson, context);
 
-    expect(tape.toJSON().request.method).toEqual('TEST');
+    expect(tape.toJson().request.method).toEqual('TEST');
   });
 
   it('returns correct pathname', () => {
@@ -180,7 +180,7 @@ describe('Tape', () => {
       },
     };
 
-    const tape = Tape.fromJSON(tapeJson, context);
+    const tape = Tape.fromJson(tapeJson, context);
 
     expect(tape.pathname).toBe('/foo/bar/1');
   });
@@ -199,7 +199,7 @@ describe('Tape', () => {
     };
 
     it('returns correct tape name', () => {
-      const tape = Tape.fromJSON(tapeJson, context);
+      const tape = Tape.fromJson(tapeJson, context);
 
       expect(tape.name).toBe('api.v3.money');
     });
@@ -211,13 +211,13 @@ describe('Tape', () => {
         },
       });
 
-      const tape = Tape.fromJSON(tapeJson, context);
+      const tape = Tape.fromJson(tapeJson, context);
 
       expect(tape.name).toBe('GET.api.v3.money?sorting=decrease');
     });
 
     it('returns correct tape name when use a tapeNameGenerator and it doesnt return extension', () => {
-      const tape = Tape.fromJSON(tapeJson, context);
+      const tape = Tape.fromJson(tapeJson, context);
 
       expect(tape.name).toBe('api.v3.money');
     });

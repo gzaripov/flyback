@@ -101,13 +101,14 @@ describe('RequestHandler', () => {
               }),
           });
 
-          const response = await requestHandler.handle(mockRequest());
+          const request = mockRequest();
+          const response = await requestHandler.handle(request);
           const responseJson = response.toJson();
 
           expect(responseJson.status).toEqual(200);
           expect(responseJson.body).toEqual('Foobar');
 
-          expect(tapeStoreManager.getTapeStore().save).toHaveBeenCalled();
+          expect(tapeStoreManager.getTapeStore(request).save).toHaveBeenCalled();
         });
 
         it("when there's a tapeDecorator returns the decorated response", async () => {
@@ -168,7 +169,7 @@ describe('RequestHandler', () => {
 
           expect(responseJson.status).toEqual(200);
           expect(responseJson.body).toEqual('Foobar');
-          expect(tapeStoreManager.getTapeStore().save).toHaveBeenCalled();
+          expect(tapeStoreManager.getTapeStore(request).save).toHaveBeenCalled();
         });
       });
 
@@ -191,7 +192,7 @@ describe('RequestHandler', () => {
           expect(responseJson.status).toEqual(200);
           expect(responseJson.body).toEqual('Foobar');
 
-          expect(tapeStoreManager.getTapeStore().save).toHaveBeenCalled();
+          expect(tapeStoreManager.getTapeStore(request).save).toHaveBeenCalled();
         });
       });
     });
@@ -262,7 +263,7 @@ describe('RequestHandler', () => {
             expect(responseJson.status).toEqual(200);
             expect(responseJson.body).toEqual('Foobar');
 
-            expect(tapeStoreManager.getTapeStore().save).not.toHaveBeenCalled();
+            expect(tapeStoreManager.getTapeStore(request).save).not.toHaveBeenCalled();
           });
         });
 
@@ -340,13 +341,14 @@ describe('RequestHandler', () => {
             }),
         });
 
+        const request = mockRequest();
         const response = await requestHandler.handle(mockRequest({ context }));
         const responseJson = response.toJson();
 
         expect(responseJson.status).toEqual(200);
         expect(responseJson.body).toEqual('Foobar');
 
-        expect(tapeStoreManager.getTapeStore().save).not.toHaveBeenCalled();
+        expect(tapeStoreManager.getTapeStore(request).save).not.toHaveBeenCalled();
       });
     });
 
@@ -396,12 +398,13 @@ describe('RequestHandler', () => {
             }),
         }).handle(mockRequest({ context: newContext }));
 
+        const request = mockRequest();
         const responseJson = response.toJson();
 
         expect(responseJson.status).toEqual(200);
         expect(responseJson.body).toEqual('Foobar');
 
-        expect(tapeStoreManager.getTapeStore().save).toHaveBeenCalled();
+        expect(tapeStoreManager.getTapeStore(request).save).toHaveBeenCalled();
       });
     });
   });

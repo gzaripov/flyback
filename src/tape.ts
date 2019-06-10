@@ -20,9 +20,9 @@ export default class Tape {
     this.context = context;
 
     if (context.tapeDecorator) {
-      const decoratedTapeJson = context.tapeDecorator(this.toJSON());
+      const decoratedTapeJson = context.tapeDecorator(this.toJson());
 
-      return Tape.fromJSON(decoratedTapeJson, { ...context, tapeDecorator: undefined });
+      return Tape.fromJson(decoratedTapeJson, { ...context, tapeDecorator: undefined });
     }
   }
 
@@ -42,7 +42,7 @@ export default class Tape {
     return this.request.equals(request);
   }
 
-  toJSON(): TapeJson {
+  toJson(): TapeJson {
     const { request, response } = this;
 
     return {
@@ -51,7 +51,7 @@ export default class Tape {
     };
   }
 
-  static fromJSON(tapeJson: TapeJson, context: Context) {
+  static fromJson(tapeJson: TapeJson, context: Context) {
     const { request, response } = tapeJson;
 
     return new Tape(Request.fromJson(request, context), Response.fromJson(response), context);
