@@ -19,6 +19,7 @@ export default {
       exclude: 'node_modules/**',
     }),
     copy({
+      outputFolder: 'dist',
       targets: ['CHANGELOG.md', 'LICENSE.md', 'README.md', 'package.json'],
     }),
     autoExternal(),
