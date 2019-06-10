@@ -48,7 +48,7 @@ jobs:
       - run: *install
       - save_cache: *save-cache
       - run:
-          command: yarn test-ci
+          command: yarn test
 
   test-node-11:
     working_directory: ~/flyback
@@ -60,7 +60,7 @@ jobs:
       - run: *install
       - save_cache: *save-cache
       - run:
-          command: yarn test-ci-partial
+          command: yarn test
 
 # Workflows enables us to run multiple jobs in parallel
 workflows:
