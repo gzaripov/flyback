@@ -40,10 +40,6 @@ const  middleware  =  createFlybackMiddleware(options);
 
 ```
 
-### flyback(opts)
-
-Returns an unstarted flyback server instance.
-
 **Options:**
 
 | Name | Type | Description | Default |
