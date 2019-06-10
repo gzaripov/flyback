@@ -1,5 +1,5 @@
-import MediaType from '../../src/utils/media-type';
-import { Response, Headers } from '../../src/http';
+import MediaType from '../../../src/http/media-format';
+import { Response, Headers } from '../../../src/http';
 
 function createResponse(headers: Headers = {}) {
   return ({ headers } as any) as Response;

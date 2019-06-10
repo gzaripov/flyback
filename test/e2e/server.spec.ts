@@ -257,12 +257,10 @@ describe('flyback', () => {
         },
       );
 
-      const resBody = await res.json();
-
-      console.log(resBody);
+      const responseBody = await res.json();
 
       expect(res.status).toEqual(200);
-      expect(resBody).toEqual({ text: 'response-test-text__decorated' });
+      expect(responseBody).toEqual({ text: 'response-test-text__decorated' });
     });
   });
 
