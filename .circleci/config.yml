@@ -41,8 +41,6 @@ jobs:
           command: yarn test
       - codecov/upload:
           file: coverage/coverage-final.json
-      - store_artifacts:
-          path: coverage
       
 
   test-node-10:
