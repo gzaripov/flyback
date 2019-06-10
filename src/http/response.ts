@@ -57,7 +57,7 @@ export default class Response {
     return {
       status,
       headers: headers.toJSON(),
-      body: body ? body.toJson() : '',
+      body: body ? body.toJson() : undefined,
     };
   }
 

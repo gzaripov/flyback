@@ -112,7 +112,6 @@ describe('Tape', () => {
           'multi-value-header': ['value-a', 'value-b'],
           'x-ignored': '1',
         },
-        body: '',
       },
       response: {
         status: 200,
@@ -120,7 +119,6 @@ describe('Tape', () => {
           'content-type': 'text/unknown',
           'x-ignored': '2',
         },
-        body: '',
       },
     };
 

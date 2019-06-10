@@ -88,8 +88,8 @@ describe('flyback', () => {
       const tape = readJSONFromFile(tapesPath, url);
 
       expect(tape.request.path).toEqual('/test/head');
-      expect(tape.request.body).toEqual('');
-      expect(tape.response.body).toEqual('');
+      expect(tape.request.body).toBeUndefined();
+      expect(tape.response.body).toBeUndefined();
     });
 
     it('proxies and creates a new tape with a custom tape name generator', async () => {

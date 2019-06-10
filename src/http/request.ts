@@ -146,7 +146,7 @@ export default class Request {
       path: path.toString(),
       method,
       headers: headers.toJSON(),
-      body: body ? body.toJson() : '',
+      body: body ? body.toJson() : undefined,
     };
   }
 
