@@ -40,7 +40,7 @@ jobs:
       - run:
           command: yarn test
       - codecov/upload:
-          file: {{ coverage/coverage-final.json }}
+          file: coverage/coverage-final.json
       - store_artifacts:
           path: coverage
       
