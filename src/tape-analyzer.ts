@@ -1,49 +1,73 @@
-import Tape from './tape';
+import chalk from 'chalk';
+import TapeFile from './tape-file';
+import { Statistics } from './context';
 
 export type TapeStats = {
   new?: boolean;
   used?: boolean;
   deleted?: boolean;
+  loaded?: boolean;
+  overwritten?: boolean;
 };
 
 export default class TapeAnalyzer {
-  private tapeStats: Map<Tape, TapeStats>;
+  private tapeStats: Map<TapeFile, TapeStats>;
 
-  constructor() {
+  constructor(registerStatsGetter?: (statsGetter: (stats: Statistics) => void) => void) {
     this.tapeStats = new Map();
+
+    if (registerStatsGetter) {
+      registerStatsGetter(this.statistics.bind(this));
+    }
   }
 
-  getStatsForTape(tape: Tape) {
+  getStatsForTape(tape: TapeFile) {
     return this.tapeStats.get(tape) || {};
   }
 
-  markUsed(tape: Tape) {
+  statistics() {
+    return [...this.tapeStats.entries()].map(([tapeFile, stats]) => ({
+      name: tapeFile.name,
+      path: tapeFile.path,
+      ...stats,
+    }));
+  }
+
+  markLoaded(tape: TapeFile) {
+    this.tapeStats.set(tape, { ...this.getStatsForTape(tape), loaded: true });
+  }
+
+  markOverwritten(tape: TapeFile) {
+    this.tapeStats.set(tape, { ...this.getStatsForTape(tape), overwritten: true });
+  }
+
+  markUsed(tape: TapeFile) {
     this.tapeStats.set(tape, { ...this.getStatsForTape(tape), used: true });
   }
 
-  markNew(tape: Tape) {
+  markNew(tape: TapeFile) {
     this.tapeStats.set(tape, { ...this.getStatsForTape(tape), new: true });
   }
 
-  markDeleted(tape: Tape) {
+  markDeleted(tape: TapeFile) {
     this.tapeStats.set(tape, { ...this.getStatsForTape(tape), deleted: true });
   }
 
   printStatistics() {
-    console.log(`===== SUMMARY =====`);
-    const tapeEntries = [...this.tapeStats.entries()];
-    const newTapes = tapeEntries.filter(([, stats]) => stats.new);
+    chalk.bold.white(`===== SUMMARY =====`);
+    const stats = this.statistics();
+    const newTapes = stats.filter((tape) => tape.new);
 
     if (newTapes.length > 0) {
-      console.log('New tapes:');
-      newTapes.forEach(([tape]) => console.log(`- ${tape.path}`));
+      chalk.green('Written tapes:');
+      newTapes.forEach((tape) => chalk.white(`- ${tape.path}`));
     }
 
-    const unusedTapes = tapeEntries.filter(([tape, stats]) => !stats.new && tape);
+    const unusedTapes = stats.filter((tape) => !tape.new);
 
     if (unusedTapes.length > 0) {
-      console.log('Unused tapes:');
-      unusedTapes.forEach(([tape]) => console.log(`- ${tape.path}`));
+      chalk.red('Unused tapes:');
+      unusedTapes.forEach((tape) => chalk.white(`- ${tape.path}`));
     }
   }
 }

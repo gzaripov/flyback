@@ -38,6 +38,7 @@ export default class TapeStore {
           const tapeFile = new TapeFile(fullPath, this.context);
 
           this.tapeFiles[tapeFile.name] = tapeFile;
+          this.context.tapeAnalyzer.markLoaded(tapeFile);
         } catch (e) {
           this.context.logger.error(`Error reading tape ${fullPath}\n${e.toString()}`);
         }
@@ -57,13 +58,21 @@ export default class TapeStore {
   find(request: Request): Tape | null {
     const tapeFile = this.tapeFiles[request.name];
 
-    return tapeFile ? tapeFile.find(request) : null;
+    if (!tapeFile) {
+      return null;
+    }
+
+    const tape = tapeFile.find(request);
+
+    if (tape) {
+      this.context.logger.log(`Found matching tape for ${request.fullPath} at ${this.path}`);
+      this.context.tapeAnalyzer.markUsed(tapeFile);
+    }
+
+    return tape;
   }
 
   save(tape: Tape) {
-    this.context.tapeAnalyzer.markNew(tape);
-    this.context.tapeAnalyzer.markUsed(tape);
-
     const tapePath = this.createTapePath(tape);
 
     let tapeFile = this.findTapeFile(tape);
@@ -76,17 +85,30 @@ export default class TapeStore {
     }
 
     tapeFile.save();
+
+    this.context.tapeAnalyzer.markNew(tapeFile);
+    this.context.tapeAnalyzer.markUsed(tapeFile);
   }
 
   delete(tape: Tape) {
-    this.context.tapeAnalyzer.markDeleted(tape);
-
     const tapeFile = this.findTapeFile(tape);
 
     if (tapeFile) {
       tapeFile.delete(tape);
       tapeFile.save();
+      this.context.tapeAnalyzer.markDeleted(tapeFile);
     }
+  }
+
+  overwrite(oldTape: Tape, newTape: Tape) {
+    const tapeFile = this.findTapeFile(oldTape);
+
+    if (tapeFile) {
+      this.context.tapeAnalyzer.markOverwritten(tapeFile);
+    }
+
+    this.delete(oldTape);
+    this.save(newTape);
   }
 
   hasPath(pathToCheck: string) {

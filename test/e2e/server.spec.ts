@@ -461,12 +461,11 @@ describe('flyback', () => {
     });
   });
 
-  describe('summary printing', () => {
+  describe.skip('summary printing', () => {
     it('prints the summary when enabled', async () => {
-      const logger = new Logger({} as Context);
       const spy = jest.spyOn(console, 'log').mockImplementation(() => 0);
 
-      await withFlyback(() => 0, { summary: true, logger });
+      await withFlyback(() => 0);
 
       expect(spy).toBeCalledWith(expect.stringContaining('SUMMARY'));
     });

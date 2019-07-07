@@ -7,7 +7,7 @@ import formatJson from './utils/format-json';
 
 export default class TapeFile {
   public readonly name: string;
-  private readonly path: string;
+  public readonly path: string;
   private readonly tapes: Set<Tape>;
   private readonly context: Context;
 
@@ -88,9 +88,6 @@ export default class TapeFile {
     });
 
     if (foundTape) {
-      this.context.logger.log(`Found matching tape for ${request.fullPath} at ${this.path}`);
-      this.context.tapeAnalyzer.markUsed(foundTape);
-
       return foundTape;
     }
 
