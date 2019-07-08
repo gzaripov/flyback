@@ -1,12 +1,11 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import RequestHandler from './request-handler';
-import { Options, createContext } from './context';
+import { Context, createContext, Options } from './context';
 import TapeStoreManager from './tape-store-manager';
 import { createRequest } from './create-request';
 
-export const createFlybackMiddleware = (options: Options) => {
-  const context = createContext(options);
-  const tapeStoreManager = new TapeStoreManager(options);
+export const createMiddleware = (context: Context) => {
+  const tapeStoreManager = new TapeStoreManager(context);
   const requestHandler = new RequestHandler(context, tapeStoreManager);
 
   return async (
@@ -29,4 +28,10 @@ export const createFlybackMiddleware = (options: Options) => {
       nextFn(error);
     }
   };
+};
+
+export const createFlybackMiddleware = (options: Options) => {
+  const context = createContext(options);
+
+  return createMiddleware(context);
 };

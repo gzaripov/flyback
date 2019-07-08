@@ -4,8 +4,8 @@ import path from 'path';
 import fetch, { RequestInit } from 'node-fetch';
 import tcp from 'tcp-port-used';
 import findFreePort from 'find-free-port-sync';
-import { Options } from '../../src/context';
-import FlybackServer from '../../src/server';
+import { Options, createContext, ContextOptions } from '../../src/context';
+import { createServer } from '../../src/server';
 import { RequestJson } from '../../src/http/request';
 import { apiUrl } from './api-server';
 import { TapeJson } from '../../src/tape';
@@ -42,18 +42,27 @@ export function readJSONFromFile(tapesPath: string, url: string): TapeJson {
 const tapeNameGenerator = (request: RequestJson) => takeTapeNameFromPath(request.pathname);
 
 // instance of flyback server can only be used in one test
-export async function withFlyback<T>(run: (() => T) | (() => Promise<T>), opts?: Partial<Options>) {
+export async function withFlyback<T>(
+  run: (() => T) | (() => Promise<T>),
+  opts?: Partial<Options>,
+  ctxOpts?: ContextOptions,
+) {
   fsExtra.copySync(ORIGINAL_TAPES_PATH, tapesPath, { overwrite: true });
 
-  const flybackServer = new FlybackServer({
-    proxyUrl: apiUrl,
-    flybackUrl,
-    tapesPath,
-    recordMode: 'NEW',
-    summary: false,
-    tapeNameGenerator,
-    ...opts,
-  });
+  const context = createContext(
+    {
+      proxyUrl: apiUrl,
+      flybackUrl,
+      tapesPath,
+      recordMode: 'NEW',
+      summary: false,
+      tapeNameGenerator,
+      ...opts,
+    },
+    ctxOpts,
+  );
+
+  const flybackServer = createServer(context);
 
   const { host, port } = urlToListenOptions(flybackUrl);
 

@@ -1,5 +1,12 @@
+import { createFlybackServer } from './server';
 import { createFlybackMiddleware } from './middleware';
-import FlybackServer from './server';
 import { RecordModes, FallbackModes } from './context';
+import create from './create';
 
-export { createFlybackMiddleware, FlybackServer, RecordModes, FallbackModes };
+export { createFlybackServer, createFlybackMiddleware, RecordModes, FallbackModes };
+
+export default {
+  create,
+  createServer: createFlybackServer,
+  createMiddleware: createFlybackMiddleware,
+};
