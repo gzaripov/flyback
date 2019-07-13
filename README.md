@@ -61,7 +61,7 @@ const  middleware  =  createFlybackMiddleware(options);
 | *ignoreBody* | `Boolean` | Should the request body be ignored when matching tapes | `false` |
 | *tapeMatcher* | `Function` | Customize how a request's body is matched against saved tapes. [More info](#custom-request-body-matcher) | `null` |
 | *tapeDecorator* | `Function` | Decorate tapes when they are created. [More info](#custom-response-decorator) | `null` |
-| *summary* | `Boolean` | Enable exit summary of new and unused tapes at exit. [More info](#exit-summary) | `true` |
+| *summary* | `Boolean` | Enable exit summary of new and unused tapes at exit. Printed when flyback server stoppped [More info](#exit-summary) | `true` |
 | *verbose* | `Boolean` | Enable requests information printing | `false` |
 | *debug* | `Boolean` | Enable debug information | `false` |
 
@@ -88,6 +88,13 @@ Stops the HTTP server.
 
 returns node [middleware](https://expressjs.com/en/guide/using-middleware.html)
  
+### createFlybackServer(options)
+
+returns FlybackServer instances
+
+### create(options)
+
+returns flyback instance with created server, middleware and tape usage statistics
 
 ## Tapes
 

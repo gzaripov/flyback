@@ -1,39 +1,43 @@
-import Logger from '../../src/logger';
 import TapeAnalyzer from '../../src/tape-analyzer';
-import { mockLogger } from './mocks';
+import { mockTapeFile } from './mocks';
 
-describe.skip('Tape Analyzer', () => {
-  describe('printStatistics', () => {
-    it('prints nothing when there are no new tapes and no unused tapes', () => {
-      const logger = mockLogger();
-      const tapeAnalyzer = new TapeAnalyzer();
-
-      tapeAnalyzer.printStatistics();
-
-      expect(logger.log).toBeCalledWith(expect.not.stringContaining('New'));
-      expect(logger.log).toBeCalledWith(expect.not.stringContaining('Unused'));
+describe('Tape Analyzer', () => {
+  it.only('collects statistics', () => {
+    const tapeFile = mockTapeFile({
+      request: { pathname: '/test/1' },
     });
-
-    it('prints the path of new tapes', () => {
-      const logger = new Logger();
-      const tapeAnalyzer = new TapeAnalyzer();
-
-      tapeAnalyzer.printStatistics();
-
-      expect(logger.log).toBeCalledWith(expect.stringContaining('path1'));
-      expect(logger.log).toBeCalledWith(expect.not.stringContaining('path2'));
-      expect(logger.log).toBeCalledWith(expect.stringContaining('path3'));
+    const tapeFile2 = mockTapeFile({
+      request: { pathname: '/test/2' },
     });
-
-    it('prints the path of unused tapes', () => {
-      const logger = new Logger();
-      const tapeAnalyzer = new TapeAnalyzer();
-
-      tapeAnalyzer.printStatistics();
-
-      expect(logger.log).toBeCalledWith(expect.stringContaining('path1'));
-      expect(logger.log).toBeCalledWith(expect.not.stringContaining('path2'));
-      expect(logger.log).toBeCalledWith(expect.stringContaining('path3'));
+    const tapeFile3 = mockTapeFile({
+      request: { pathname: '/test/3' },
     });
+    const analyzer = new TapeAnalyzer();
+
+    analyzer.markLoaded(tapeFile);
+    analyzer.markOverwritten(tapeFile);
+    analyzer.markUsed(tapeFile2);
+    analyzer.markNew(tapeFile2);
+    analyzer.markDeleted(tapeFile3);
+
+    expect(analyzer.statistics()).toEqual([
+      {
+        name: 'test.1',
+        path: expect.any(String),
+        loaded: true,
+        overwritten: true,
+      },
+      {
+        name: 'test.2',
+        path: expect.any(String),
+        used: true,
+        new: true,
+      },
+      {
+        name: 'test.3',
+        path: expect.any(String),
+        deleted: true,
+      },
+    ]);
   });
 });

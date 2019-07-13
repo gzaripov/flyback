@@ -75,7 +75,11 @@ export default class TapeFile {
   }
 
   delete(tape: Tape) {
-    this.tapes.delete(tape);
+    const tapeToDelete = this.find(tape.request);
+
+    if (tapeToDelete) {
+      this.tapes.delete(tapeToDelete);
+    }
   }
 
   find(request: Request): Tape | null {

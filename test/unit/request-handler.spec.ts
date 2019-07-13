@@ -14,6 +14,7 @@ function mockTapeStore(tapes: Tape[] = []): TapeStore {
     find: jest.fn(() => tapes[0]),
     save: jest.fn(),
     delete: jest.fn(),
+    overwrite: jest.fn(),
     hasPath: jest.fn(),
   } as unknown) as TapeStore;
 }
@@ -169,7 +170,7 @@ describe('RequestHandler', () => {
 
           expect(responseJson.status).toEqual(200);
           expect(responseJson.body).toEqual('Foobar');
-          expect(tapeStoreManager.getTapeStore(request).save).toHaveBeenCalled();
+          expect(tapeStoreManager.getTapeStore(request).overwrite).toHaveBeenCalled();
         });
       });
 

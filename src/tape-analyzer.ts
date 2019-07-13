@@ -1,8 +1,18 @@
 import chalk from 'chalk';
 import TapeFile from './tape-file';
-import { Statistics } from './context';
+import p from 'pluralize';
 
 export type TapeStats = {
+  new?: boolean;
+  used?: boolean;
+  deleted?: boolean;
+  loaded?: boolean;
+  overwritten?: boolean;
+};
+
+export type Stats = {
+  name: string;
+  path: string;
   new?: boolean;
   used?: boolean;
   deleted?: boolean;
@@ -13,12 +23,8 @@ export type TapeStats = {
 export default class TapeAnalyzer {
   private tapeStats: Map<TapeFile, TapeStats>;
 
-  constructor(registerStatsGetter?: (statsGetter: (stats: Statistics) => void) => void) {
+  constructor() {
     this.tapeStats = new Map();
-
-    if (registerStatsGetter) {
-      registerStatsGetter(this.statistics.bind(this));
-    }
   }
 
   getStatsForTape(tape: TapeFile) {
@@ -26,11 +32,18 @@ export default class TapeAnalyzer {
   }
 
   statistics() {
-    return [...this.tapeStats.entries()].map(([tapeFile, stats]) => ({
-      name: tapeFile.name,
-      path: tapeFile.path,
-      ...stats,
-    }));
+    return [...this.tapeStats.entries()].map(([tapeFile, stats]) => {
+      if (stats.overwritten) {
+        stats.new = false;
+        stats.deleted = false;
+      }
+
+      return {
+        name: tapeFile.name,
+        path: tapeFile.path,
+        ...stats,
+      };
+    });
   }
 
   markLoaded(tape: TapeFile) {
@@ -53,21 +66,46 @@ export default class TapeAnalyzer {
     this.tapeStats.set(tape, { ...this.getStatsForTape(tape), deleted: true });
   }
 
-  printStatistics() {
-    chalk.bold.white(`===== SUMMARY =====`);
-    const stats = this.statistics();
-    const newTapes = stats.filter((tape) => tape.new);
+  printStatistics(statistics = this.statistics()) {
+    const newTapes = statistics.filter((tape) => tape.new);
+    const deletedTapes = statistics.filter((tape) => tape.deleted);
+    const obsoleteTapes = statistics.filter((tape) => tape.loaded && !tape.used);
+    const overwrittenTapes = statistics.filter((tape) => tape.overwritten);
+
+    const printTapesCount = (count: number) => `${count.toString()} ${p('tape', count)}`;
+
+    const printPath = ({ path }: { path: string }) => {
+      const splitPoint = path.lastIndexOf('/') + 1;
+      const dir = path.substring(0, splitPoint);
+      const name = path.substring(splitPoint);
+
+      return `  ${chalk.bold.gray(dir) + chalk.bold.white(name)}\n`;
+    };
+
+    let st = '';
+
+    st += chalk.bold.white(`\nFlyback Summary\n`);
 
     if (newTapes.length > 0) {
-      chalk.green('Written tapes:');
-      newTapes.forEach((tape) => chalk.white(`- ${tape.path}`));
+      st += chalk.bold.green(` > ${printTapesCount(newTapes.length)} written:\n`);
+      st += newTapes.map(printPath).join('');
     }
 
-    const unusedTapes = stats.filter((tape) => !tape.new);
-
-    if (unusedTapes.length > 0) {
-      chalk.red('Unused tapes:');
-      unusedTapes.forEach((tape) => chalk.white(`- ${tape.path}`));
+    if (deletedTapes.length > 0) {
+      st += chalk.bold.green(` > ${printTapesCount(deletedTapes.length)} deleted:\n`);
+      st += deletedTapes.map(printPath).join('');
     }
+
+    if (overwrittenTapes.length > 0) {
+      st += chalk.bold.green(` > ${printTapesCount(overwrittenTapes.length)} overwritten:\n`);
+      st += overwrittenTapes.map(printPath).join('');
+    }
+
+    if (obsoleteTapes.length > 0) {
+      st += chalk.bold.red(` > ${printTapesCount(obsoleteTapes.length)} obsolete:\n`);
+      st += obsoleteTapes.map(printPath).join('');
+    }
+
+    console.log(st);
   }
 }

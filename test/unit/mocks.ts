@@ -1,11 +1,14 @@
 import fs from 'fs';
 import os from 'os';
+import tmp from 'tmp';
 import path from 'path';
+import { mkdirpSync } from 'fs-extra';
 import { Context, Options, createContext } from '../../src/context';
 import Logger from '../../src/logger';
 import Request, { RequestJson } from '../../src/http/request';
 import Response, { ResponseJson } from '../../src/http/response';
 import Tape from '../../src/tape';
+import TapeFile from '../../src/tape-file';
 
 export function mockContext(options: Partial<Options> = {}): Context {
   return createContext(options);
@@ -58,14 +61,32 @@ export function mockResponse(response: Partial<ResponseJson> = {}) {
   return Response.fromJson(responseJson);
 }
 
+export type MockTapeOptions = {
+  request?: Partial<RequestJson>;
+  response?: Partial<ResponseJson>;
+  context?: Context;
+};
+
 export function mockTape({
   request = {},
   response = {},
   context = mockContext({}),
-}: {
-  request?: Partial<RequestJson>;
-  response?: Partial<ResponseJson>;
-  context?: Context;
-} = {}) {
+}: MockTapeOptions = {}) {
   return new Tape(mockRequest({ request, context }), mockResponse(response), context);
+}
+
+export function mockTapeFile({
+  request = {},
+  response = {},
+  context = mockContext({}),
+}: MockTapeOptions = {}) {
+  const { name: filePath } = tmp.fileSync({
+    postfix: '.json',
+  });
+
+  mkdirpSync(path.dirname(filePath));
+
+  fs.writeFileSync(filePath, JSON.stringify([mockTape({ request, response, context }).toJson()]));
+
+  return new TapeFile(filePath, context);
 }

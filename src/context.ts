@@ -21,16 +21,6 @@ export const RecordModes = {
 
 export type FallbackMode = 'NOT_FOUND' | 'PROXY';
 
-export type Statistics = {
-  name: string;
-  path: string;
-  new?: boolean;
-  used?: boolean;
-  deleted?: boolean;
-  loaded?: boolean;
-  overwritten?: boolean;
-};
-
 export const FallbackModes = {
   NOT_FOUND: 'NOT_FOUND' as const,
   PROXY: 'PROXY' as const,
@@ -57,7 +47,6 @@ export type Options = {
   ignoreBody?: boolean;
   tapeMatcher?: (tape: TapeJson, request: RequestJson) => boolean;
   tapeDecorator?: (tape: TapeJson) => TapeJson;
-  registerStatsGetter?: (statsGetter: (stats: Statistics) => void) => void;
   summary?: boolean;
   verbose?: boolean;
   debug?: boolean;
@@ -127,6 +116,6 @@ export function createContext(userOpts: Options, { analyzer }: ContextOptions = 
     ...defaultOptions,
     logger: new Logger({ ...defaultOptions, ...userOpts } as Context),
     ...userOpts,
-    tapeAnalyzer: analyzer || new TapeAnalyzer(userOpts.registerStatsGetter),
+    tapeAnalyzer: analyzer || new TapeAnalyzer(),
   };
 }
