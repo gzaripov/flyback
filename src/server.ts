@@ -4,17 +4,17 @@ import fs from 'fs';
 import onExit from 'async-exit-hook';
 import { urlToListenOptions } from './utils/url';
 import { Context, createContext, Options } from './context';
-import { createFlybackMiddleware } from './middleware';
+import { createMiddleware } from './middleware';
 
 type Server = HttpServer | HttpsServer;
 
-export default class FlybackServer {
+export class FlybackServer {
   private context: Context;
   private server: Server;
 
-  constructor(options: Options) {
-    this.context = createContext(options);
-    this.server = this.createServer(createFlybackMiddleware(options));
+  constructor(context: Context) {
+    this.context = createContext(context);
+    this.server = this.createServer(createMiddleware(context));
   }
 
   private createServer(requestListener: http.RequestListener): HttpServer | HttpsServer {
@@ -70,3 +70,13 @@ export default class FlybackServer {
     });
   }
 }
+
+export function createServer(context: Context) {
+  return new FlybackServer(context);
+}
+
+export const createFlybackServer = (options: Options) => {
+  const context = createContext(options);
+
+  return createServer(context);
+};

@@ -105,13 +105,17 @@ function validateOptions(opts: Options) {
   validateFallbackMode(opts.fallbackMode);
 }
 
-export function createContext(userOpts: Options) {
+export type ContextOptions = {
+  analyzer?: TapeAnalyzer;
+};
+
+export function createContext(userOpts: Options, { analyzer }: ContextOptions = {}): Context {
   validateOptions(userOpts);
 
   return {
     ...defaultOptions,
     logger: new Logger({ ...defaultOptions, ...userOpts } as Context),
     ...userOpts,
-    tapeAnalyzer: new TapeAnalyzer(),
+    tapeAnalyzer: analyzer || new TapeAnalyzer(),
   };
 }

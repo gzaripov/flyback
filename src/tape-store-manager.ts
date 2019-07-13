@@ -1,5 +1,5 @@
 import TapeStore from './tape-store';
-import { Context, Options, createContext } from './context';
+import { Context } from './context';
 import { Request } from './http';
 import Tape from './tape';
 
@@ -8,8 +8,8 @@ export default class TapeStoreManager {
   private tapeStores: TapeStore[];
   private defaultTapeStore?: TapeStore;
 
-  constructor(options: Options) {
-    this.context = createContext(options);
+  constructor(context: Context) {
+    this.context = context;
     this.tapeStores = [];
 
     if (this.context.tapesPath) {

@@ -7,7 +7,7 @@ import { mockTapesPath } from './mocks';
 
 const tapeJson: TapeJson = {
   request: {
-    path: '/foo/bar/1?real=3',
+    pathname: '/foo/bar/1?real=3',
     method: 'POST',
     headers: {
       accept: 'text/unknown',

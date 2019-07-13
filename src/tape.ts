@@ -9,8 +9,8 @@ export type TapeJson = {
 };
 
 export default class Tape {
+  public readonly request: Request;
   public readonly response: Response;
-  private readonly request: Request;
   // @ts-ignore
   private readonly context: Context;
 

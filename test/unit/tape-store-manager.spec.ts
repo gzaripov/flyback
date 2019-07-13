@@ -4,7 +4,7 @@ import { Request } from '../../src/http';
 import { RequestJson } from '../../src/http/request';
 
 const requestJson: RequestJson = {
-  path: '/foo/bar/1?real=3',
+  pathname: '/foo/bar/1?real=3',
   method: 'POST',
   headers: {
     accept: ['text/unknown'],

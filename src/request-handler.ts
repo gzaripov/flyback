@@ -30,10 +30,10 @@ export default class RequestHandler {
       const tape = new Tape(request, response, this.context);
 
       if (matchingTape) {
-        tapeStore.delete(matchingTape);
+        tapeStore.overwrite(matchingTape, tape);
+      } else {
+        tapeStore.save(tape);
       }
-
-      tapeStore.save(tape);
 
       return response;
     }
