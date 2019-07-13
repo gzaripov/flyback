@@ -34,8 +34,8 @@ export default class TapeAnalyzer {
   statistics() {
     return [...this.tapeStats.entries()].map(([tapeFile, stats]) => {
       if (stats.overwritten) {
-        stats.new = false;
-        stats.deleted = false;
+        delete stats.new;
+        delete stats.deleted;
       }
 
       return {

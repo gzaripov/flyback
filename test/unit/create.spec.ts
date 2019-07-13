@@ -9,6 +9,7 @@ describe('flyback.create', () => {
       server: expect.any(FlybackServer),
       middleware: expect.any(Function),
       getStatistics: expect.any(Function),
+      printStatistics: expect.any(Function),
     });
   });
 });
