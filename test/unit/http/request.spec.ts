@@ -79,4 +79,16 @@ describe('Request', () => {
       );
     });
   });
+
+  it('ignores trailing slash in path when generating name', () => {
+    const context = mockContext();
+
+    const request = new Request({
+      path: '/api/v4/users/',
+      headers: new Headers({}),
+      context,
+    });
+
+    expect(request.name).toBe('api.v4.users');
+  });
 });

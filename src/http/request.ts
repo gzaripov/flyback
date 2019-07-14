@@ -74,7 +74,12 @@ export default class Request {
       return this.context.tapeNameGenerator(this.toJson());
     }
 
-    return this.pathname.substring(1).replace(/\//g, '.');
+    return (
+      this.pathname
+        // remove trailing slashes
+        .replace(/^\/|\/$/g, '')
+        .replace(/\//g, '.')
+    );
   }
 
   get pathname(): string {
