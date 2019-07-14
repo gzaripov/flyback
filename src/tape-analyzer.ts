@@ -67,6 +67,10 @@ export default class TapeAnalyzer {
   }
 
   printStatistics(statistics = this.statistics()) {
+    if (statistics.length === 0) {
+      return;
+    }
+
     const newTapes = statistics.filter((tape) => tape.new);
     const deletedTapes = statistics.filter((tape) => tape.deleted);
     const obsoleteTapes = statistics.filter((tape) => tape.loaded && !tape.used);
@@ -83,8 +87,6 @@ export default class TapeAnalyzer {
     };
 
     let st = '';
-
-    st += chalk.bold.white(`\nFlyback Summary\n`);
 
     if (newTapes.length > 0) {
       st += chalk.bold.green(` > ${printTapesCount(newTapes.length)} written:\n`);
@@ -106,6 +108,8 @@ export default class TapeAnalyzer {
       st += obsoleteTapes.map(printPath).join('');
     }
 
-    console.log(st);
+    if (st) {
+      console.log(chalk.bold.white(`\nFlyback Summary\n`) + st);
+    }
   }
 }
