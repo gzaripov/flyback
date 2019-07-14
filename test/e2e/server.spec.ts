@@ -437,10 +437,6 @@ describe('flyback', () => {
         {},
         {
           recordMode: 'NEW',
-          tapeMatcher: () => {
-            console.log('matching');
-            throw error;
-          },
           tapeDecorator: () => {
             throw error;
           },

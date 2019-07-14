@@ -1,4 +1,4 @@
-import { createFlybackServer, FlybackServer } from './server';
+import { createFlybackServer } from './server';
 import { createFlybackMiddleware } from './middleware';
 import { RecordModes, FallbackModes } from './context';
 import create from './create';
@@ -6,7 +6,8 @@ import create from './create';
 export {
   create,
   createFlybackServer,
-  FlybackServer,
+  // @deprecated, will be removed in 4.0
+  createFlybackServer as FlybackServer,
   createFlybackMiddleware,
   RecordModes,
   FallbackModes,
