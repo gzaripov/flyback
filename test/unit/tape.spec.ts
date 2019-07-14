@@ -1,6 +1,6 @@
+import qs from 'query-string';
 import Tape, { TapeJson } from '../../src/tape';
 import { mockContext } from './mocks';
-import { objectToQueryParams } from '../../src/utils/url';
 
 describe('Tape', () => {
   const context = mockContext();
@@ -227,7 +227,7 @@ describe('Tape', () => {
     it('returns correct tape name when use a tapeNameGenerator', () => {
       const context = mockContext({
         tapeNameGenerator: ({ pathname, query, method }) => {
-          return `${method + pathname.replace(/\//g, '.')}?${objectToQueryParams(query)}`;
+          return `${method + pathname.replace(/\//g, '.')}?${qs.stringify(query)}`;
         },
       });
 
