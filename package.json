@@ -29,7 +29,8 @@
     "mime-format": "^2.0.0",
     "mkdirp": "^0.5.1",
     "node-fetch": "^2.6.0",
-    "pluralize": "^8.0.0"
+    "pluralize": "^8.0.0",
+    "query-string": "^6.8.1"
   },
   "devDependencies": {
     "@babel/core": "^7.4.5",

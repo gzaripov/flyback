@@ -1,3 +1,5 @@
+import qs from 'query-string';
+import deepEqual from 'fast-deep-equal';
 import { Context } from '../context';
 
 export default class Path {
@@ -28,34 +30,25 @@ export default class Path {
 
     const basesSame = base === otherBase;
 
-    if (ignoreAllQueryParams && basesSame) {
+    if (!basesSame) {
+      return false;
+    }
+
+    if (ignoreAllQueryParams) {
       return true;
     }
 
+    const parsedParams = qs.parse(params);
+    const otherParsedParams = qs.parse(otherParams);
+
     if (ignoreQueryParams) {
-      const ignoreParams = ignoreQueryParams;
-      const matchParams = params
-        .split('&')
-        .filter((p) => {
-          const paramName = p.split('=')[0];
-
-          return !ignoreParams.includes(paramName);
-        })
-        .join('');
-
-      const otherMatchParams = otherParams
-        .split('&')
-        .filter((p) => {
-          const paramName = p.split('=')[0];
-
-          return !ignoreParams.includes(paramName);
-        })
-        .join('');
-
-      return basesSame && matchParams === otherMatchParams;
+      ignoreQueryParams.forEach((param) => {
+        delete parsedParams[param];
+        delete otherParsedParams[param];
+      });
     }
 
-    return basesSame;
+    return deepEqual(parsedParams, otherParsedParams);
   }
 
   toString() {
