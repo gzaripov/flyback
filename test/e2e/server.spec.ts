@@ -4,14 +4,9 @@ import Logger from '../../src/logger';
 import { TapeJson } from '../../src/tape';
 import { Context, Options, RecordMode, RecordModes } from '../../src/context';
 import { apiUrl } from './api-server';
-import {
-  withFlyback,
-  flybackFetch,
-  flybackUrl,
-  tapesPath,
-  readJSONFromFile,
-} from './flyback-server';
+import { flybackFetch, flybackUrl, tapesPath, readJSONFromFile } from './flyback-server';
 import { RequestJson } from '../../src/http/request';
+import TapeAnalyzer from '../../src/tape-analyzer';
 
 describe('flyback', () => {
   describe('record mode NEW', () => {
@@ -180,22 +175,6 @@ describe('flyback', () => {
       const resBodyAsText = await resClone.text();
 
       expect(JSON.parse(resBodyAsText)).toEqual({ ok: true, foo: { bar: 3 } });
-    });
-
-    // TODO
-    it.skip('calls provided callback', async () => {
-      const counter = { count: 0 };
-
-      // await withFlyback(
-      //   { recordMode: 'DISABLED' },
-      //   {
-      //     callback: () => {
-      //       counter.count += 1;
-      //     },
-      //   },
-      // );
-
-      expect(counter.count).toEqual(1);
     });
 
     it("doesn't match pretty printed tapes with different body", async () => {
@@ -448,53 +427,71 @@ describe('flyback', () => {
   });
 
   describe('error handling', () => {
-    // TODO
-    it.skip('returns a 500 if anything goes wrong', async () => {
+    it('returns a 500 if anything goes wrong', async () => {
       const logger = new Logger({} as Context);
       const loggerSpy = jest.spyOn(logger, 'error').mockImplementation(() => undefined);
       const error = new Error('Test error');
 
-      const response = await flybackFetch('/test/1', {}, { recordMode: 'DISABLED', logger });
+      const response = await flybackFetch(
+        '/test/head',
+        {},
+        {
+          recordMode: 'NEW',
+          tapeMatcher: () => {
+            console.log('matching');
+            throw error;
+          },
+          tapeDecorator: () => {
+            throw error;
+          },
+          logger,
+        },
+      );
 
       expect(loggerSpy).toHaveBeenCalledWith(error);
-      expect(response.status).toEqual(500);
+      expect(response.status).toBe(500);
     });
   });
 
-  describe.skip('summary printing', () => {
+  describe('summary printing', () => {
     it('prints the summary when enabled', async () => {
       const spy = jest.spyOn(console, 'log').mockImplementation(() => 0);
 
-      await withFlyback(() => 0);
+      await flybackFetch('/test/pretty', {}, { summary: true });
 
-      expect(spy).toBeCalledWith(expect.stringContaining('SUMMARY'));
+      expect(spy).toBeCalledWith(expect.stringContaining('Flyback Summary'));
     });
 
     it("doesn't print the summary when disabled", async () => {
-      const logger = new Logger({} as Context);
-      const spy = jest.spyOn(logger, 'log').mockImplementation(() => 0);
+      const spy = jest.spyOn(console, 'log').mockImplementation(() => 0);
 
-      await withFlyback(() => 0, { summary: false, logger });
+      await flybackFetch('/test/pretty', {}, { summary: false });
 
-      expect(spy).toBeCalledWith(expect.not.stringContaining('SUMMARY'));
+      expect(spy).not.toBeCalled();
     });
   });
 
   describe('tape usage information', () => {
-    // TODO
-    xit('should indicate that a tape has been used after usage', async () => {
-      await withFlyback(() => 0, {
-        recordMode: 'DISABLED',
-        summary: true,
-      });
+    it('should indicate that a tape has been used after usage', async () => {
+      const analyzer = new TapeAnalyzer();
 
-      const res = await flybackFetch('/test/3', {});
+      const res = await flybackFetch(
+        '/test/head',
+        {},
+        {
+          recordMode: 'NEW',
+        },
+        {
+          analyzer,
+        },
+      );
 
       expect(res.status).toEqual(200);
 
-      const body = await res.json();
+      const [stat] = analyzer.statistics().filter(({ name }) => name === 'test.head');
 
-      expect(body).toEqual({ ok: true });
+      expect(stat.new).toBe(true);
+      expect(stat.used).toBe(true);
     });
   });
 

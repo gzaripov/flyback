@@ -77,10 +77,12 @@ export async function withFlyback<T>(
   return result;
 }
 
+// eslint-disable-next-line max-params
 export function flybackFetch(
   relativeUrl: string,
   init?: RequestInit,
   flybackOpts: Partial<Options> = {},
+  ctxOpts?: ContextOptions,
 ) {
   const protocol = flybackOpts.https ? 'https' : 'http';
   const flybackUrl = `${protocol}://${flybackHost}`;
@@ -91,6 +93,7 @@ export function flybackFetch(
       ...flybackOpts,
       flybackUrl,
     },
+    ctxOpts,
   );
 }
 
