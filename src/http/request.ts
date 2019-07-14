@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import qs from 'query-string';
 import MediaFormat from './media-format';
 import Headers, { HeadersJson } from './headers';
 import Response from './response';
@@ -6,7 +7,6 @@ import { Context } from '../context';
 import Path from './path';
 import BodyCreator from './body/body-creator';
 import { Body } from './body';
-import { QueryParamsObject, queryParamsToObject, objectToQueryParams } from '../utils/url';
 
 type RequestParams = {
   path: string;
@@ -15,6 +15,8 @@ type RequestParams = {
   body?: Body | Buffer;
   context: Context;
 };
+
+export type QueryParamsObject = { [key: string]: string | string[] | null | undefined };
 
 export type RequestJson = {
   pathname: string;
@@ -72,7 +74,12 @@ export default class Request {
       return this.context.tapeNameGenerator(this.toJson());
     }
 
-    return this.pathname.substring(1).replace(/\//g, '.');
+    return (
+      this.pathname
+        // remove trailing slashes
+        .replace(/^\/|\/$/g, '')
+        .replace(/\//g, '.')
+    );
   }
 
   get pathname(): string {
@@ -145,7 +152,7 @@ export default class Request {
     const { path, method, headers, body } = this;
 
     const [pathname, queryString] = path.toString().split('?');
-    const query = queryString ? queryParamsToObject(queryString) : undefined;
+    const query = queryString ? qs.parse(queryString) : undefined;
 
     return {
       pathname,
@@ -159,7 +166,7 @@ export default class Request {
   static fromJson(json: RequestJson, context: Context): Request {
     const { pathname, query, method, body } = json;
     const headers = new Headers(json.headers);
-    const path = pathname + (query ? `?${objectToQueryParams(query)}` : '');
+    const path = pathname + (query ? `?${qs.stringify(query)}` : '');
 
     return new Request({
       path,

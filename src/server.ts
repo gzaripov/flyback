@@ -13,7 +13,7 @@ export class FlybackServer {
   private server: Server;
 
   constructor(context: Context) {
-    this.context = createContext(context);
+    this.context = context;
     this.server = this.createServer(createMiddleware(context));
   }
 

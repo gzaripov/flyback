@@ -77,6 +77,8 @@ const  middleware  =  createFlybackMiddleware(options);
 ## Api
 
 ### FlybackServer(options)
+deprecated, will be removed in 4.0
+returns server instance that can be started and closed 
 
 #### start([callback])
 Starts the HTTP server.
@@ -90,7 +92,7 @@ returns node [middleware](https://expressjs.com/en/guide/using-middleware.html)
  
 ### createFlybackServer(options)
 
-returns FlybackServer instances
+returns FlybackServer instance
 
 ### create(options)
 
