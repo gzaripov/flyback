@@ -24,7 +24,7 @@ export default class TapeFile {
   }
 
   private normalizePath(path: string) {
-    const ext = this.context.tapeExtension;
+    const ext = this.context.tapeFileExtension;
 
     return path.endsWith(`.${ext}`) ? path : `${path}.${ext}`;
   }

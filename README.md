@@ -27,7 +27,7 @@ const  options  = {
 	silent:  true,
 	summary:  false,
 	path:  "./tapes",
-	tapeExtension:  'json5'
+	tapeFileExtension:  'json5'
 };
 
 const  server  =  new  FlybackServer(opts);

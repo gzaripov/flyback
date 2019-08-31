@@ -61,7 +61,7 @@ const defaultOptions = {
   verbose: false,
   summary: true,
   debug: false,
-  tapeExtension: 'json',
+  tapeFileExtension: 'json',
 };
 
 export type Context = Options &
