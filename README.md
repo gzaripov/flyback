@@ -253,6 +253,36 @@ const tapeDecorator = (tape: TapeJson) => {
 [Polly.js](https://github.com/Netflix/pollyjs/tree/master/packages/%40pollyjs/adapter-puppeteer)
   
 
+## Docker image
+
+You can use docker image with flyback inside
+
+`docker pull gzaripov/flyback`
+
+provide your configuration file by mounting it into /usr/src/app/flyback-config.js
+
+example of configuration file:
+
+```javascript
+const path = require('path');
+const { RecordModes } = require('flyback');
+
+const CERT_PATH = path.resolve(__dirname, './flyback.cert.pem');
+
+module.exports = {
+		// use env variables for configuring image
+    proxyUrl: process.env.FLYBACK_PROXY_URL,
+    flybackUrl: process.env.FLYBACK_SERVER_URL,
+    recordMode: RecordModes.DISABLED,
+    https: {
+        keyPath: CERT_PATH,
+        certPath: CERT_PATH
+    },
+    ignoreAllHeaders: true,
+    tapeFileExtension: 'json5'
+};
+```
+
 # Licence
 
 MIT
