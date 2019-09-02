@@ -168,6 +168,7 @@ Two tapes with json bodies will be compared using deep equal tool, so order of k
 Flyback proxying and recording behavior can be controlled through the `recordMode` option.
 This option accepts either one of the possible recording modes to be used for all requests or a function that takes the request as a parameter and returns a valid recording mode.
 There are 4 possible recording modes:
+
 |Value| Description|
 |-------|------------|
 |`NEW`| If no tape matches the request, proxy it and save the response to a tape|
