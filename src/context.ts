@@ -43,6 +43,7 @@ export type Options = {
   ignoreQueryParams?: string[];
   ignoreAllQueryParams?: boolean;
   ignoreHeaders?: string[];
+  checkHeaders?: string[];
   ignoreAllHeaders?: boolean;
   ignoreBody?: boolean;
   tapeMatcher?: (tape: TapeJson, request: RequestJson) => boolean;

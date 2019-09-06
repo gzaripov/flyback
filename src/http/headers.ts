@@ -2,6 +2,11 @@ export interface HeadersJson {
   [header: string]: string | string[];
 }
 
+type EqualsOptions = {
+  ignoreHeaders?: string[];
+  checkHeaders?: string[];
+};
+
 export default class Headers {
   private headers: HeadersJson;
 
@@ -38,14 +43,9 @@ export default class Headers {
     delete this.headers[header];
   }
 
-  equals(otherHeaders: Headers, { ignoreHeaders = [] as string[] } = {}): boolean {
-    const matchHeaders = Object.keys(this.headers).filter(
-      (header) => !ignoreHeaders.includes(header),
-    );
-
-    const otherMatchHeaders = Object.keys(otherHeaders.headers).filter(
-      (header) => !ignoreHeaders.includes(header),
-    );
+  equals(otherHeaders: Headers, options: EqualsOptions = {}): boolean {
+    const matchHeaders = this.filterHeaders(this.headers, options);
+    const otherMatchHeaders = this.filterHeaders(otherHeaders.headers, options);
 
     if (matchHeaders.length !== otherMatchHeaders.length) {
       return false;
@@ -65,6 +65,19 @@ export default class Headers {
 
       return thisHeader === otherHeader;
     });
+  }
+
+  private filterHeaders(
+    headers: HeadersJson,
+    { ignoreHeaders = [], checkHeaders = [] }: EqualsOptions,
+  ) {
+    const matchedHeaders = Object.keys(headers).filter((header) => !ignoreHeaders.includes(header));
+
+    if (checkHeaders.length === 0) {
+      return matchedHeaders;
+    }
+
+    return matchedHeaders.filter((header) => checkHeaders.includes(header));
   }
 
   contentType(): string | null {

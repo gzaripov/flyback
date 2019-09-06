@@ -56,8 +56,9 @@ const  middleware  =  createFlybackMiddleware(options);
 | *agent* | `https.Agent` | https.Agent for node-fetch to make requests to proxyUrl |
 | *ignoreQueryParams* | `[String]` | Query params to ignore when matching tapes. Useful when having dynamic query params like timestamps| `[]` |
 | *ignoreAllQueryParams* | `Boolean` | Ignore all query params when matching tapes. | `['content-length', 'host]` |
-| *ignoreHeaders* | `[String]` | List of headers to ignore when matching tapes. Useful when having dynamic headers like cookies or correlation ids | `['content-length', 'host]` |
-| *ignoreAllHeaders* | `[String]` | List of headers to ignore when matching tapes. Useful when having dynamic headers like cookies or correlation ids | `['content-length', 'host]` |
+| *checkHeaders* | `[String]` | List of headers to check when matching tapes. Other headers are ignored. Useful when you want to check specific headers | `['x-user-role', 'host']` |
+| *ignoreHeaders* | `[String]` | List of headers to ignore when matching tapes. Useful when having dynamic headers like cookies or correlation ids | `['content-length', 'host']` |
+| *ignoreAllHeaders* | `[String]` | List of headers to ignore when matching tapes. Useful when having dynamic headers like cookies or correlation ids | `['content-length', 'host']` |
 | *ignoreBody* | `Boolean` | Should the request body be ignored when matching tapes | `false` |
 | *tapeMatcher* | `Function` | Customize how a request's body is matched against saved tapes. [More info](#custom-request-body-matcher) | `null` |
 | *tapeDecorator* | `Function` | Decorate tapes when they are created. [More info](#custom-response-decorator) | `null` |

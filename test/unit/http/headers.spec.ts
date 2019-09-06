@@ -93,6 +93,29 @@ describe('Headers', () => {
       expect(headers.equals(otherHeaders)).toBe(false);
       expect(headers.equals(anotherHeaders)).toBe(false);
     });
+
+    it('should check only headers from checkHeaders option', () => {
+      const headers = new Headers({
+        'header-a': 'a',
+        'header-b': 'b',
+        'header-c': 'c',
+      });
+
+      const otherHeaders = new Headers({
+        'header-a': 'a',
+        'header-b': 'b',
+      });
+
+      const anotherHeaders = new Headers({
+        'header-a': 'a',
+      });
+
+      expect(headers.equals(otherHeaders, { checkHeaders: ['header-a'] })).toBe(true);
+      expect(headers.equals(otherHeaders, { checkHeaders: ['header-c'] })).toBe(false);
+
+      expect(otherHeaders.equals(anotherHeaders, { checkHeaders: ['header-a'] })).toBe(true);
+      expect(otherHeaders.equals(anotherHeaders, { checkHeaders: ['header-b'] })).toBe(false);
+    });
   });
 
   describe('content-type and content-encoding', () => {
