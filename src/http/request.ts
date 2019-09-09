@@ -115,7 +115,7 @@ export default class Request {
   }
 
   equals(otherRequest: Request): boolean {
-    const { logger, ignoreAllHeaders, ignoreHeaders, ignoreBody } = this.context;
+    const { logger, ignoreAllHeaders, ignoreBody } = this.context;
 
     if (!this.path.equals(otherRequest.path)) {
       logger.debug(`Not same URL ${this.path.toString()} vs ${otherRequest.path.toString()}`);
@@ -129,7 +129,7 @@ export default class Request {
       return false;
     }
 
-    if (!(ignoreAllHeaders || this.headers.equals(otherRequest.headers, { ignoreHeaders }))) {
+    if (!(ignoreAllHeaders || this.headers.equals(otherRequest.headers, this.context))) {
       logger.debug(
         `Not same HEADERS values ${this.headers.toJSON()} vs ${otherRequest.headers.toJSON()}`,
       );
