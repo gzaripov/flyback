@@ -21,4 +21,11 @@ describe('Url parser', () => {
 
     expect(() => urlToListenOptions(url)).toThrow(`Cant find port in url ${url}`);
   });
+
+  it('should support ipv6 addresses', () => {
+    const { host, port } = urlToListenOptions('http://[::]');
+
+    expect(port).toBe(80);
+    expect(host).toBe('::');
+  });
 });
