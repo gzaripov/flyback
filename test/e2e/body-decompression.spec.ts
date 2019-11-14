@@ -1,5 +1,4 @@
 import zlib from 'zlib';
-import iltorb from 'iltorb';
 import path from 'path';
 import fsExtra from 'fs-extra';
 import { flybackFetch, tapesPath, readJSONFromFile } from './flyback-server';
@@ -39,7 +38,7 @@ describe('body decomression', () => {
       const bodyText = JSON.stringify(bodyJson);
 
       it('brotli', async () => {
-        const tape = await testDecompression(bodyText, iltorb.compressSync, {
+        const tape = await testDecompression(bodyText, zlib.brotliCompressSync, {
           contentEncoding: 'br',
           contentType: 'application/json',
         });
@@ -87,7 +86,7 @@ describe('body decomression', () => {
       const bodyText = 'I am happy when flyback works';
 
       it('brotli', async () => {
-        const tape = await testDecompression(bodyText, iltorb.compressSync, {
+        const tape = await testDecompression(bodyText, zlib.brotliCompressSync, {
           contentEncoding: 'br',
           contentType: 'text/plain',
         });

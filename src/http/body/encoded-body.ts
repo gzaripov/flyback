@@ -1,6 +1,4 @@
 import zlib from 'zlib';
-// we support node 8.+ so we cant use brotli from zlib as it is shipped in 10.+
-import iltorb from 'iltorb';
 import PrintableBody from './printable-body';
 import MediaFormat from '../media-format';
 import { Body } from './';
@@ -27,7 +25,7 @@ function decodeBodyData(buffer: Buffer, contentEncoding: string) {
   }
 
   if (contentEncoding === 'br') {
-    return iltorb.decompressSync(buffer);
+    return zlib.brotliDecompressSync(buffer);
   }
 
   if (contentEncoding === 'deflate') {
