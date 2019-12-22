@@ -26,22 +26,7 @@ jobs:
       - restore_cache: *restore-cache
       - run: yarn --no-progress --frozen-lockfile
       - save_cache: *save-cache
-      - run: yarn build
-
-  test-node-8:
-    working_directory: ~/flyback
-    docker:
-      - image: circleci/node:8
-    steps:
-      - checkout
-      - restore_cache: *restore-cache
-      - run: *install
-      - save_cache: *save-cache
-      - run:
-          command: yarn test
-      - codecov/upload:
-          file: coverage/coverage-final.json
-      
+      - run: yarn build 
 
   test-node-10:
     working_directory: ~/flyback
