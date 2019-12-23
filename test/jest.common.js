@@ -6,14 +6,14 @@ module.exports = {
   clearMocks: true,
   collectCoverage: true,
   collectCoverageFrom: ['src/**/*.ts'],
-  // coverageThreshold: {
-  //   global: {
-  //     branches: 100,
-  //     functions: 100,
-  //     lines: 100,
-  //     statements: 100,
-  //   },
-  // },
+  coverageThreshold: {
+    global: {
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
+  },
   transform: {
     '^.+\\.ts$': 'babel-jest',
   },
