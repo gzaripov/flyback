@@ -39,6 +39,9 @@ jobs:
       - save_cache: *save-cache
       - run:
           command: yarn test
+      - codecov/upload:
+          file: coverage/coverage-final.json
+          
 
   test-node-12:
     working_directory: ~/flyback
