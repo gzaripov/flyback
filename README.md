@@ -19,24 +19,24 @@ yarn add flyback
 
 ```javascript
 
-const { createFlybackMiddleware, FlybackServer, RecordModes } =  require("flyback");
+const { createFlybackMiddleware, FlybackServer, RecordModes } = require("flyback");
 
-const  options  = {
-	proxyUrl:  "https://api.service.com/v3/",
-	recordMode:  RecordModes.NEW,
-	silent:  true,
-	summary:  false,
-	path:  "./tapes",
-	tapeFileExtension:  'json5'
+const options = {
+	proxyUrl: "https://api.service.com/v3/",
+	recordMode: RecordModes.NEW,
+	silent: true,
+	summary: false,
+	path: "./tapes",
+	tapeFileExtension: 'json5'
 };
 
-const  server  =  new  FlybackServer(opts);
+const server = new FlybackServer(opts);
 
 server.start();
 
 // or
 
-const  middleware  =  createFlybackMiddleware(options);
+const middleware = createFlybackMiddleware(options);
 
 ```
 
@@ -113,22 +113,22 @@ All tapes have the following 2 properties:
  **Request**:  Used to match incoming requests against the tape.
 
 ```typescript
-export  type  RequestJson  = {
-	pathname:  string;
-	query?:  QueryParamsObject;
-	method:  string;
-	headers:  HeadersJson;
-	body?:  string  |  Object;
+export type RequestJson = {
+	pathname: string;
+	query?: QueryParamsObject;
+	method: string;
+	headers: HeadersJson;
+	body?: string | Object;
 };
 ```
 
 **Response**:  The HTTP response that will be returned in case the tape matches a request.
 
  ```typescript
-export  type  ResponseJson  = {
-	status:  number;
-	headers:  HeadersJson;
-	body?:  string  |  Object;
+export type ResponseJson = {
+	status: number;
+	headers: HeadersJson;
+	body?: string | Object;
 };
 ```
 
@@ -195,7 +195,7 @@ flyback exports constants for the different options values:
 
 const { RecordModes, FallbackModes } = require("flyback")
 
-const  opts  = {
+const opts = {
 	record: RecordModes.OVERWRITE,
 	fallbackMode: FallbackModes.PROXY
 }
@@ -272,16 +272,16 @@ const { RecordModes } = require('flyback');
 const CERT_PATH = path.resolve(__dirname, './flyback.cert.pem');
 
 module.exports = {
-		// use env variables for configuring image
-    proxyUrl: process.env.FLYBACK_PROXY_URL,
-    flybackUrl: process.env.FLYBACK_SERVER_URL,
-    recordMode: RecordModes.DISABLED,
-    https: {
-        keyPath: CERT_PATH,
-        certPath: CERT_PATH
-    },
-    ignoreAllHeaders: true,
-    tapeFileExtension: 'json5'
+	// use env variables for configuring image
+	proxyUrl: process.env.FLYBACK_PROXY_URL,
+	flybackUrl: process.env.FLYBACK_SERVER_URL,
+	recordMode: RecordModes.DISABLED,
+	https: {
+	    keyPath: CERT_PATH,
+	    certPath: CERT_PATH
+	},
+	ignoreAllHeaders: true,
+	tapeFileExtension: 'json5'
 };
 ```
 
