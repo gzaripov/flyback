@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.3.0](https://github.com/gzaripov/flyback/compare/v3.2.3...v3.3.0) (2020-03-12)
+
+
+### Features
+
+* implement mock middleware ([45fa3c3](https://github.com/gzaripov/flyback/commit/45fa3c3))
+
+
+
 ### [3.2.3](https://github.com/gzaripov/flyback/compare/v3.2.2...v3.2.3) (2019-10-04)
 
 
