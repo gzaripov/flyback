@@ -2,7 +2,7 @@ import TapeAnalyzer from '../../src/tape-analyzer';
 import { mockTapeFile } from './mocks';
 
 describe('Tape Analyzer', () => {
-  it.only('collects statistics', () => {
+  it('collects statistics', () => {
     const tapeFile = mockTapeFile({
       request: { pathname: '/test/1' },
     });
