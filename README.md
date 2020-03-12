@@ -22,12 +22,12 @@ yarn add flyback
 const { createFlybackMiddleware, FlybackServer, RecordModes } = require("flyback");
 
 const options = {
-	proxyUrl: "https://api.service.com/v3/",
-	recordMode: RecordModes.NEW,
-	silent: true,
-	summary: false,
-	path: "./tapes",
-	tapeFileExtension: 'json5'
+    proxyUrl: "https://api.service.com/v3/",
+    recordMode: RecordModes.NEW,
+    silent: true,
+    summary: false,
+    path: "./tapes",
+    tapeFileExtension: 'json5'
 };
 
 const server = new FlybackServer(opts);
@@ -114,11 +114,11 @@ All tapes have the following 2 properties:
 
 ```typescript
 export type RequestJson = {
-	pathname: string;
-	query?: QueryParamsObject;
-	method: string;
-	headers: HeadersJson;
-	body?: string | Object;
+    pathname: string;
+    query?: QueryParamsObject;
+    method: string;
+    headers: HeadersJson;
+    body?: string | Object;
 };
 ```
 
@@ -126,9 +126,9 @@ export type RequestJson = {
 
  ```typescript
 export type ResponseJson = {
-	status: number;
-	headers: HeadersJson;
-	body?: string | Object;
+    status: number;
+    headers: HeadersJson;
+    body?: string | Object;
 };
 ```
 
@@ -196,8 +196,8 @@ flyback exports constants for the different options values:
 const { RecordModes, FallbackModes } = require("flyback")
 
 const opts = {
-	record: RecordModes.OVERWRITE,
-	fallbackMode: FallbackModes.PROXY
+    record: RecordModes.OVERWRITE,
+    fallbackMode: FallbackModes.PROXY
 }
 
 ```
@@ -240,11 +240,11 @@ We're going to hit an `/auth` endpoint, and update just the `expiration` field o
 
 ```typescript
 const tapeDecorator = (tape: TapeJson) => {
-	if (tape.request.headers.date) {
-		tape.request.headers.data = new Date().toISOString();
-	}
-	
-	return tape;
+     if (tape.request.headers.date) {
+         tape.request.headers.data = new Date().toISOString();
+     }
+     
+     return tape;
 };
 ```
 
@@ -272,16 +272,16 @@ const { RecordModes } = require('flyback');
 const CERT_PATH = path.resolve(__dirname, './flyback.cert.pem');
 
 module.exports = {
-	// use env variables for configuring image
-	proxyUrl: process.env.FLYBACK_PROXY_URL,
-	flybackUrl: process.env.FLYBACK_SERVER_URL,
-	recordMode: RecordModes.DISABLED,
-	https: {
-	    keyPath: CERT_PATH,
-	    certPath: CERT_PATH
-	},
-	ignoreAllHeaders: true,
-	tapeFileExtension: 'json5'
+    // use env variables for configuring image
+    proxyUrl: process.env.FLYBACK_PROXY_URL,
+    flybackUrl: process.env.FLYBACK_SERVER_URL,
+    recordMode: RecordModes.DISABLED,
+    https: {
+        keyPath: CERT_PATH,
+        certPath: CERT_PATH
+    },
+    ignoreAllHeaders: true,
+    tapeFileExtension: 'json5'
 };
 ```
 
