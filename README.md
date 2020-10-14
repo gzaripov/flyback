@@ -30,7 +30,7 @@ const options = {
     tapeFileExtension: 'json5'
 };
 
-const server = new FlybackServer(opts);
+const server = new FlybackServer(options);
 
 server.start();
 
