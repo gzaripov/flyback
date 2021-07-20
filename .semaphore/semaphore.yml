@@ -40,7 +40,7 @@ blocks:
           os_image: ubuntu1804
         containers:
           - name: main
-            image: 'registry.semaphoreci.com/node:13'
+            image: 'registry.semaphoreci.com/node:14'
   - name: Unit tests v12
     dependencies: []
     task:
@@ -59,7 +59,7 @@ blocks:
             - yarn --no-progress --frozen-lockfile
             - cache store
             - yarn test
-  - name: Unit tests v13
+  - name: Unit tests v14
     dependencies: []
     task:
       agent:
@@ -68,7 +68,7 @@ blocks:
           os_image: ubuntu1804
         containers:
           - name: main
-            image: 'registry.semaphoreci.com/node:13'
+            image: 'registry.semaphoreci.com/node:14'
       jobs:
         - name: yarn test
           commands:
