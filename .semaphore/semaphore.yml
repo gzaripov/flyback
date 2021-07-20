@@ -1,26 +1,34 @@
 version: v1.0
-name: Test MyApp
+name: flyback flow
 agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu1804
 blocks:
-  - name: Prepare
+  - name: Setup
     task:
       jobs:
-        - name: Test
+        - name: checkout & npm ci
           commands:
             - checkout
             - sem-version node 12
             - cache restore
-            - npm install
+            - npm ci
             - cache store
-promotions:
-  - name: Run tests
-    pipeline_file: pipeline_2.yml
-    auto_promote:
-      when: branch = 'master' AND result = 'passed'
-  - name: Run build
-    pipeline_file: pipeline_3.yml
-    auto_promote:
-      when: branch = 'master' AND result = 'passed'
+    dependencies: []
+  - name: Unit tests
+    dependencies:
+      - Setup
+    task:
+      jobs:
+        - name: npm run test
+          commands:
+            - npm test
+  - name: Build
+    dependencies:
+      - Setup
+    task:
+      jobs:
+        - name: npm run build
+          commands:
+            - npm run build --if-present
