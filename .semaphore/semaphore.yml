@@ -13,7 +13,7 @@ blocks:
             - checkout
             - sem-version node 12
             - cache restore
-            - npm ci
+            - yarn --no-progress --frozen-lockfile
             - cache store
     dependencies: []
   - name: Unit tests
@@ -21,14 +21,14 @@ blocks:
       - Setup
     task:
       jobs:
-        - name: npm run test
+        - name: yarn test
           commands:
-            - npm test
+            - yarn test
   - name: Build
     dependencies:
       - Setup
     task:
       jobs:
-        - name: npm run build
+        - name: yarn build
           commands:
-            - npm run build --if-present
+            - yarn build
