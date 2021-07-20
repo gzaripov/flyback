@@ -23,6 +23,13 @@ blocks:
                 - '10'
                 - '12'
                 - '13'
+      agent:
+        machine:
+          type: e1-standard-8
+          os_image: ubuntu1804
+        containers:
+          - name: main
+            image: 'semaphoreci/ubuntu:18.04'
   - name: Build
     dependencies: []
     task:
@@ -35,3 +42,7 @@ blocks:
             - yarn --no-progress --frozen-lockfile
             - cache store
             - yarn build
+      agent:
+        machine:
+          type: e1-standard-8
+          os_image: ubuntu1804
