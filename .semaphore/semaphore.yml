@@ -5,31 +5,24 @@ agent:
     type: e1-standard-2
     os_image: ubuntu1804
 blocks:
-  - name: Unit tests
+  - name: Unit tests v10
     dependencies: []
     task:
       jobs:
         - name: yarn test
           commands:
             - checkout
-            - sem-version node $NODE_VERSION
             - cache restore
             - yarn --no-progress --frozen-lockfile
             - cache store
             - yarn test
-          matrix:
-            - env_var: NODE_VERSION
-              values:
-                - '10'
-                - '12'
-                - '13'
       agent:
         machine:
           type: e1-standard-2
           os_image: ubuntu1804
         containers:
           - name: main
-            image: 'semaphoreci/ubuntu:18.04'
+            image: 'registry.semaphoreci.com/node:10'
   - name: Build
     dependencies: []
     task:
@@ -37,7 +30,6 @@ blocks:
         - name: yarn build
           commands:
             - checkout
-            - sem-version node 12
             - cache restore
             - yarn --no-progress --frozen-lockfile
             - cache store
@@ -48,4 +40,40 @@ blocks:
           os_image: ubuntu1804
         containers:
           - name: main
-            image: 'semaphoreci/ubuntu:18.04'
+            image: 'registry.semaphoreci.com/node:13'
+  - name: Unit tests v12
+    dependencies: []
+    task:
+      agent:
+        machine:
+          type: e1-standard-2
+          os_image: ubuntu1804
+        containers:
+          - name: main
+            image: 'registry.semaphoreci.com/node:12'
+      jobs:
+        - name: yarn test
+          commands:
+            - checkout
+            - cache restore
+            - yarn --no-progress --frozen-lockfile
+            - cache store
+            - yarn test
+  - name: Unit tests v13
+    dependencies: []
+    task:
+      agent:
+        machine:
+          type: e1-standard-2
+          os_image: ubuntu1804
+        containers:
+          - name: main
+            image: 'registry.semaphoreci.com/node:13'
+      jobs:
+        - name: yarn test
+          commands:
+            - checkout
+            - cache restore
+            - yarn --no-progress --frozen-lockfile
+            - cache store
+            - yarn test
