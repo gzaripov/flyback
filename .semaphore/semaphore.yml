@@ -5,30 +5,33 @@ agent:
     type: e1-standard-2
     os_image: ubuntu1804
 blocks:
-  - name: Setup
+  - name: Unit tests
+    dependencies: []
     task:
       jobs:
-        - name: checkout & npm ci
+        - name: yarn test
+          commands:
+            - checkout
+            - sem-version node $NODE_VERSION
+            - cache restore
+            - yarn --no-progress --frozen-lockfile
+            - cache store
+            - yarn test
+          matrix:
+            - env_var: NODE_VERSION
+              values:
+                - '10'
+                - '12'
+                - '13'
+  - name: Build
+    dependencies: []
+    task:
+      jobs:
+        - name: yarn build
           commands:
             - checkout
             - sem-version node 12
             - cache restore
             - yarn --no-progress --frozen-lockfile
             - cache store
-    dependencies: []
-  - name: Unit tests
-    dependencies:
-      - Setup
-    task:
-      jobs:
-        - name: yarn test
-          commands:
-            - yarn test
-  - name: Build
-    dependencies:
-      - Setup
-    task:
-      jobs:
-        - name: yarn build
-          commands:
             - yarn build
